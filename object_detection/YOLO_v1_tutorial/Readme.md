@@ -115,7 +115,7 @@ Split Grid Image: <img src="./ref_imgs/split_grid_iamge.png" alt="Description" w
         7. Now we need to know which cell is responsible for outputing that <span class="boundingBox-text">bounding box</span> 
         8. Then multiply with λ<sub>coord</sub> | (lamba = λ which is a constant) 
 
-    <img src="./ref_imgs/lossFunction2.png" alt="Description" width="250"> 
+    <img src="./ref_imgs/lossfunction2.png" alt="Description" width="250"> 
 
     2. ↑ This function is similar to the one above but now we are working with <span class="boundingBox-text">bounding box</span> 
         1. here we take the square root to make sure we prioritize smaller <span class="boundingBox-text">bounding boxes</span> just as much as we do for large <span class="boundingBox-text">bounding boxes</span> 
@@ -124,18 +124,18 @@ Split Grid Image: <img src="./ref_imgs/split_grid_iamge.png" alt="Description" w
 
 
 
-    <img src="./ref_imgs/lossFunction3.png" alt="Description" width="250"> 
+    <img src="./ref_imgs/lossfunction3.png" alt="Description" width="250"> 
 
     3. ↑ This function is if there is an object in the cell. C in this function stands for the probability that theres a <span class="boundingBox-text">bounding box</span>  in the <span class="cell-text">cell</span>.
         1. We have two <span class="boundingBox-text">bounding box</span> for the predicted
         2. Here were only going to take the <span class="boundingBox-text">bounding box</span> with the highest IOU.
 
-    <img src="./ref_imgs/lossFunction4.png" alt="Description" width="250"> 
+    <img src="./ref_imgs/lossfunction4.png" alt="Description" width="250"> 
 
     4. ↑ This function is if there is NO object in the cell. noobj = no object
 
 
-    <img src="./ref_imgs/lossFunction5.png" alt="Description" width="250"> 
+    <img src="./ref_imgs/lossfunction5.png" alt="Description" width="250"> 
     
     5. ↑ This function is for the classes.
         1. it runs the identity function => it goes through each cell and looks to see if theres an object there in <span class="cell-text">cell</span> i
