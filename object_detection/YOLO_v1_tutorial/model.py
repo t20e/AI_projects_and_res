@@ -61,6 +61,16 @@ class CNNBlock(nn.Module):
     
 
 class Yolov1(nn.Module):
+    
+    
+    '''
+    
+    Yolov1 model
+    
+    Note: model has an output shape of (batch_size=1, grid_size=7, grid_size=7, channels=30), the channels 30 are for the 20 class predictions + 2 * ( 5 for (probabilty that theres an object in the cell, and the other 4 for the bounding boxes predictions))
+
+    '''
+    
     def __init__(self, in_channels=3, **kwargs): # in_channels is the number of channels in the input image so 3 for RGB
         super(Yolov1, self).__init__()
         self.architecture = architecture_config
@@ -109,16 +119,16 @@ class Yolov1(nn.Module):
     
     def _create_fcs(self, split_size, num_boxes, num_classes):
         ''' 
-            split_size = (SxS)
+            split_size = (SxS), meaning if we have S = 7 we have a 7x7 = 49 grid
         '''
         S, B, C = split_size, num_boxes, num_classes
         
         return nn.Sequential(
             nn.Flatten(),
-            nn.Linear(1024 * S * S, 496), # the orginal paper it was 4,096 instead of 496 but that would take a long time to train
+            nn.Linear(1024 * S * S, 4096), # NOTE: the orginal paper it was 4,096 instead of 496 but that would take a long time to train
             nn.Dropout(0.0), # dropout was 0.5 in the original paper
             nn.LeakyReLU(0.1),
-            nn.Linear(496, S * S * (C + B * 5)) # the orginal paper it was 4,096 instead of 496 but that would take a long time to train, this will be reshaped to be ( S, S, 30) C+B*5 = 30
+            nn.Linear(4096, S * S * (C + B * 5)) # the orginal paper it was 4,096 instead of 496 but that would take a long time to train, this will be reshaped to be ( S, S, 30) C+B*5 = 30
         )
         
 def test(S = 7, B=2, C=20):

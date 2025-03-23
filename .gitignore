@@ -13,3 +13,7 @@ __pycache__/
 images_of_places_NN
 datasets
 mis
+saved_models
+
+
+test_img.jpg

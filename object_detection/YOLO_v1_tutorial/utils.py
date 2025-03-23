@@ -4,6 +4,17 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from collections import Counter
 
+"""
+    # NOTE: I made a lot of notes on these util functons in live_feed_yolo_model.ipynb
+    and also in the res repo in .coding.res/AI.res/object_detection/YOLO.res has more resources and notes
+"""
+
+VOC_CLASSES = [
+    "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
+    "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"
+]
+
+
 def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
     """
     Calculates intersection over union
@@ -53,7 +64,7 @@ def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
 
 def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
     """
-    Does Non Max Suppression given bboxes
+    Does Non Max Suppression on predicted bboxes
 
     Parameters:
         bboxes (list): list of lists containing all bboxes with each bboxes
@@ -99,8 +110,7 @@ def mean_average_precision(
     Calculates mean average precision 
 
     Parameters:
-        pred_boxes (list): list of lists containing all bboxes with each bboxes
-        specified as [train_idx, class_prediction, prob_score, x1, y1, x2, y2]
+        pred_boxes (list): list of lists containing all bboxes with each bboxes specified as [train_idx, class_prediction, prob_score, x1, y1, x2, y2]
         true_boxes (list): Similar as pred_boxes except all the correct ones 
         iou_threshold (float): threshold where predicted bboxes is correct
         box_format (str): "midpoint" or "corners" used to specify bboxes
@@ -203,12 +213,12 @@ def mean_average_precision(
 def plot_image(image, boxes):
     """Plots predicted bounding boxes on the image
     
+    NOTE: Moving tensors from mps (Apple’s Metal Performance Shaders) to cpu can slow down training if you're frequently transferring data back and forth. However, for visualization (like plotting images), it's necessary since NumPy and Matplotlib don’t support mps tensors.
     
-    
-    moving tensors from mps (Apple’s Metal Performance Shaders) to cpu can slow down training if you're frequently transferring data back and forth. However, for visualization (like plotting images), it's necessary since NumPy and Matplotlib don’t support mps tensors.
-    
+    Parameters
+    ----------
+        image (torch.tensor): shape of torch.Size([448, 448, 3])
     """
-    
     
     if isinstance(image, torch.Tensor):
         image = image.detach().cpu().numpy()  # Ensure it’s detached before conversion
@@ -227,8 +237,13 @@ def plot_image(image, boxes):
     # box[1] is y midpoint, box[3] is height
 
     # Create a Rectangle potch
+    print("\n")
     for box in boxes:
+        class_label = box[0]
+        conf_score = box[1]
+        print(f"Object : id:{class_label}, {VOC_CLASSES[int(class_label)], {conf_score}}")
         box = box[2:]
+
         assert len(box) == 4, "Got more values than in x, y, w, h, in a box!"
         upper_left_x = box[0] - box[2] / 2
         upper_left_y = box[1] - box[3] / 2
@@ -242,16 +257,24 @@ def plot_image(image, boxes):
         )
         # Add the patch to the Axes
         ax.add_patch(rect)
+            # Add label
+        ax.text(
+            upper_left_x * width,
+            upper_left_y * height - 5,  # Slightly above the box
+            f"{VOC_CLASSES[int(class_label)]} {conf_score:.2f}",
+            color="red",
+            fontsize=8,
+            backgroundcolor="white"
+        )
 
     plt.show()
 
 def get_bboxes(
-    
     loader,
     model,
     iou_threshold,
     threshold,
-    device,# device="cuda",
+    device,# device="cuda", using mps on m1 mac
     pred_format="cells",
     box_format="midpoint",
 ):
@@ -264,9 +287,11 @@ def get_bboxes(
     train_idx = 0
 
     for batch_idx, (x, labels) in enumerate(loader):
+        # move from CPU to GPU
         x = x.to(device)
         labels = labels.to(device)
 
+        # Compute with no gradient descent
         with torch.no_grad():
             predictions = model(x)
 
@@ -311,6 +336,8 @@ def convert_cellboxes(predictions, S=7):
     code... Use as a black box? Or implement a more intuitive,
     using 2 for loops iterating range(S) and convert them one
     by one, resulting in a slower but more readable implementation.
+    
+    s (int): split size 7 = and image split into 7x7 = 49 cells
     """
 
     predictions = predictions.to("cpu")
@@ -340,6 +367,20 @@ def convert_cellboxes(predictions, S=7):
 
 
 def cellboxes_to_boxes(out, S=7):
+    '''
+    Expects an out of shape (1, 1470) the prediction of the yolo output
+    
+    Parameters
+    ----------
+        out (shape (1, 1470)) : model output
+        S (int) : Split_size, how many cells we divide an image into, 7x7=49 cells    
+    
+    Returns
+    -------
+        creates a nested list predicted bounding boxes, [ [class_id, confidence_score, x1, y1, x2, y2]* for each cell in image, etc...   ]
+    
+    '''
+    # takes yolo output and converts it into boxes of the predictions on the image
     converted_pred = convert_cellboxes(out).reshape(out.shape[0], S * S, -1)
     converted_pred[..., 0] = converted_pred[..., 0].long()
     all_bboxes = []
@@ -362,3 +403,48 @@ def load_checkpoint(checkpoint, model, optimizer):
     print("=> Loading checkpoint")
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
+    
+    
+    
+############################################## I ADDED BELOW FUNCTIONS 
+
+# def save_model(model, optimizer, filename):
+def save_model( model, model_name):
+    print("\n\n|" +  "-" * 64 + "|")
+    print(f"\nSaving model {model_name}")
+    print("\n|" +  "-" * 64 + "|\n\n")
+    
+    # A common PyTorch convention is to save tensors using .pt file extension.
+    file_path = f"{'./saved_models/'}{model_name}{'.pt'}"
+    # NOTE: it is recommended to only save the model weights
+    torch.save(model.state_dict(), file_path)
+    
+
+def load_model(modelName, model, DEVICE):
+    
+    '''
+    Load pytorch model.
+    
+    Parameters:
+        modelName (str): name of the model
+        model (model class object): needed to reinitialize the model architecture so we can load the weights into it, this is just the CLASS object 
+    Returns:
+        model (model class object): model with loaded weights
+        
+    NOTE: To load only the model weights, you need to reconstruct the model architecture first and then load the saved weights:
+        Example: Model architecture has to be the same as it was loaded on
+            model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
+            
+    Example Usage: model = load_model(
+                                "YoloV1",
+                                Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE),
+                                DEVICE # either "cude" or "cpu" or "mps" for mac
+                                )
+    '''
+    file_path = f"{'./saved_models/'}{modelName}{'.pt'}"
+    
+    
+    model.load_state_dict(torch.load(file_path, map_location=DEVICE))
+    model.eval()  # Set to evaluation mode if using for inference
+    return model
+
