@@ -1,6 +1,10 @@
 """
 
 Live Cam-Feed YOLO-V1
+
+NOTE:  I could not get it to work properly on live-feed cam. It would correctly identify the object from the web cam feed, but it would not draw the bounding box correctly around the object, however when used a image from the training dataset frame = cv2.imread('./data/images/000034.jpg'), it would correctly draw the bounding box around the trains from image. This is most likely because the model is overfitting to the training dataset.
+
+
 """
 import matplotlib.patches as patches
 import torchvision.transforms as transforms
@@ -50,14 +54,14 @@ VOC_CLASSES = [
 #     DEVICE
 # )
 
-LOAD_MODEL_FILE = "./saved_models/overfitted-YoloV1-train-on-100img-and-4096.pt" 
+# LOAD_MODEL_FILE = "./saved_models/overfitted-YoloV1-train-on-100img-and-4096.pt" 
+LOAD_MODEL_FILE = "./saved_models/YoloV1-train-on-entire-dataset-4096-03_23_25.pt" 
+
 model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=0)
-# loss_fn = YoloLoss()
 load_checkpoint(torch.load(LOAD_MODEL_FILE), model, optimizer)
 # model.eval()
-
-
+ 
 
 def draw_bboxes_on_feed(frame, bboxes, frame_shape):
     """
@@ -178,7 +182,7 @@ def run_inference_on_webcam():
         Note: resizing the cv2 frame to be (448, 448) makes it unproportional, so resize a copy of the frane and then pass it to the model, and then redraw it proportionally to the orignal frame
     """
     cap = cv2.VideoCapture(0)
-    # frame = cv2.imread('./data/images/000001.jpg')  # Replace with your image path
+    # frame = cv2.imread('./data/images/000034.jpg') 
 
     
     test_counter = 0
@@ -199,30 +203,27 @@ def run_inference_on_webcam():
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 print("Closing webcam...")
                 break
-            
-            
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # resize a copy of the frame to size that the YOLO model expects
-            frame_resize = cv2.resize(frame_rgb, (448,448))
-            # Convert NumPy array to PIL image
-            image_pil = Image.fromarray(frame_resize)
-            
-            model_input = transforms(image_pil, None)[0]
-            model_input = model_input.unsqueeze(0).to(DEVICE) # to shape (1, 3, 448, 448)
-            # print(model_input, model_input.shape)
+            # convert to RGB and transfer to PIL 
+            image_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            # Apply transform => resize and normalize
+            model_input = transforms(image_pil, [])[0]
+            # Add a batch to get shape (1, 3, 448, 448)
+            model_input = model_input.unsqueeze(0).to(DEVICE)
+
             
             # # run interference
             with torch.no_grad():
-                output = model(model_input) # forward pass the image to the yolo model
+                output = model(model_input) 
                 # ouput is of shape torch.Size([1, 1470])
 
             bboxes = cellboxes_to_boxes(output)
             # the bboxes[0] below is becuase we are only working with one image at a time, if u have a batch loop thru it and pass its idx instead
-            bboxes = non_max_suppression(bboxes[0], iou_threshold=0.5, threshold=0.4, box_format="midpoint")
+            bboxes = non_max_suppression(bboxes[0], iou_threshold=0.6, threshold=0.5, box_format="midpoint")
             
-            img = cv2.resize(frame, (448, 448))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            plot_image(img, bboxes)
+            # img = cv2.resize(frame, (448, 448))
+            # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            # plot_image(img, bboxes)
+            plot_image(model_input.squeeze(0).permute(1, 2, 0), bboxes)
             
             # draw_bboxes_on_feed(frame, bboxes, frame.shape[:2])
             
@@ -238,7 +239,7 @@ def run_inference_on_webcam():
         # Release the camera and close any OpenCV windows
         cap.release()
         cv2.destroyAllWindows()
-        print("\n\nWebcam and windows closed.")
+        print("\n\nWebcam and window closed.")
 
 
 if __name__ == "__main__":

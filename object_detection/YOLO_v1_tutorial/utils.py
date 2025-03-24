@@ -217,9 +217,10 @@ def plot_image(image, boxes):
     
     Parameters
     ----------
-        image (torch.tensor): shape of torch.Size([448, 448, 3])
+        image (torch.tensor, float32): shape of torch.Size([448, 448, 3])
     """
-    
+    # print("\nD-type", image.dtype) 
+
     if isinstance(image, torch.Tensor):
         image = image.detach().cpu().numpy()  # Ensure it’s detached before conversion
         # .detach() ensures no gradients are tracked.
@@ -227,7 +228,7 @@ def plot_image(image, boxes):
     im = np.array(image)  # Now NumPy can process it
     
     height, width, _ = im.shape
-
+    
     # Create figure and axes
     fig, ax = plt.subplots(1)
     # Display the image
