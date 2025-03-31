@@ -81,7 +81,6 @@ class Compose(object):
 
         return img, bboxes
 
-# one thing that can improve this is that u do a normalization. mean = 0 and standard deviation = 1
 transforms = Compose([
     transforms.Resize((448, 448)),
     transforms.ToTensor() # convert to tensors and NOTE: normalizes it under the hood
