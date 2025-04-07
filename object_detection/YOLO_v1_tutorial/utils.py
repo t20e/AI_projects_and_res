@@ -5,7 +5,7 @@ import matplotlib.patches as patches
 from collections import Counter
 
 """
-    # NOTE: I made a lot of notes on these util functons in live_feed_yolo_model.ipynb
+    # NOTE: I made a lot of notes on these util functons in live_feed_yolo_model.ipynb and utils-more-notes.ipynb
     and also in the res repo in .coding.res/AI.res/object_detection/YOLO.res has more resources and notes
 """
 

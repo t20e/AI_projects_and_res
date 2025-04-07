@@ -14,6 +14,7 @@ images_of_places_NN
 datasets
 mis
 saved_models
+checkpoints
 
 
 test_img.jpg
