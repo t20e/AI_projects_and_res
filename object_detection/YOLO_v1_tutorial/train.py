@@ -128,15 +128,14 @@ def main():
     train_dataset = VOCDataset(
         # first overfit on the 8examples.csv then train on the 100examples.csv
         # "data/8examples.csv",
-        # "data/100examples.csv",
-        "./data/train.csv",
+        "data/100examples.csv",
+        # "./data/train.csv",
         transform=transforms,
         img_dir=IMG_DIR,
         label_dir=LABEL_DIR,
     )
     
     test_dataset = VOCDataset(
-        # "data/train.csv"
         # first overfit on the 8examples.csv then train on the 100examples.csv
         "data/test.csv",
         transform=transforms,
@@ -184,7 +183,6 @@ def main():
         #         #     print(box[2:])
         #         plot_image(x[idx].permute(1, 2, 0).to(DEVICE), bboxes)
         #     sys.exit()
-        
         
         
         

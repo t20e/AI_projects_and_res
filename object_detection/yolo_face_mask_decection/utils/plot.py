@@ -29,6 +29,8 @@ def plot_bbox_on_img(img_tensor, bbox_coordinates):
     """
     Plots bboxes on a single image
     
+    Parameters
+    ----------
         img_tensor : (tensor)
             Image tensor, this should be the resized image that we will pass to the model
         bbox_coordinates : (tensor)

@@ -6,15 +6,15 @@ from torch.utils.data import DataLoader
 from .dataset import Dataset 
 from .loss import YoloLoss
 
-from utils.bboxes import get_true_and_pred_bboxes
+from utils.checkpoints import save_checkpoint, load_checkpoint
 
 from utils.mean_average_precision import mean_average_precision
-
+from utils.misc import generate_model_file_name
         
-# <------------- Train Pipeline ------------->
+
 def train(config, model, optimizer, transforms):
     """
-    Train the model
+    Train the model, root for training
     
     Parameters
     ----------
@@ -27,26 +27,6 @@ def train(config, model, optimizer, transforms):
         transforms : torchvision.transforms
             the transform object to resize and normalize image tensors.
     """
-    
-    
-    # def train_fn(train_loader, model, optimizer, loss_fn):
-    #     loop = tqdm(train_loader, leave=True)
-    #     mean_loss = []
-        
-    #     for batch_idx, (x, y) in enumerate(loop):
-    #         x, y = x.to(config.DEVICE), y.to(config.DEVICE)
-    #         out = model(x)
-    #         loss = loss_fn(out, y)
-    #         mean_loss.append(loss.item())
-            
-    #         optimizer.zero_grad()
-    #         loss.backward()
-    #         optimizer.step()
-            
-    #         #update the progress bar
-    #         loop.set_postfix(loss=loss.item())
-            
-    #     print(f"Mean loss: {sum(mean_loss)/len(mean_loss)}")
 
     train_dataset = Dataset(config.DATASET_DIR, S=7, B=2, C=3, transform=transforms)
     # test_dataset = etc...
@@ -60,15 +40,57 @@ def train(config, model, optimizer, transforms):
         drop_last=True
     )
     # test_loader = etc..
-
-    if config.LOAD_MODEL:
-        print("\n\nLoading Model.")
         
+    loss_fn = YoloLoss(config)    
+    
     for epoch in range(config.EPOCHS):
-        # print("\n\n" + "|" + "-" * 64 + "|")
-        # print("Epoch:", epoch + 1)
+        print("\n\n" + "|" + "-" * 64 + "|")
+        print("Epoch:", epoch + 1)
         
         # Compute mean_average_percision
-        mean_average_prec = mean_average_precision(loader = train_loader, model=model, config=config)
+        mean_average_prec = mean_average_precision(loader=train_loader, model=model, config=config)
         print(f"\nTrain mAP: {mean_average_prec}")
-        # pred_bboxes, true_bboxes = get_true_and_pred_bboxes(loader=train_loader, model=model, config=config)
+
+        # Check Point optional save model if Mean Average Percision is > than num
+        # if mean_average_prec > 0.9:
+        #     checkpoint = {
+        #         "state_dict" : model.state_dict(),
+        #         "optimizer" : optimizer.state_dict()
+        #     }
+        #     save_checkpoint(checkpoint, filename=config.LOAD_MODEL_FILE)
+    
+        train_model(train_loader, model, optimizer, loss_fn, config)
+    
+    # Save checkpoint after training the model for a certain number of epochs
+    checkpoint = {
+        "state_dict" : model.state_dict(),
+        "optimizer" : optimizer.state_dict()
+    }
+    save_checkpoint(checkpoint, filename=generate_model_file_name("Yolov1", "facemask", "objectDetection", config.EPOCHS))
+    
+    
+# <------------- Train Pipeline ------------->
+    
+def train_model(train_loader, model, optimizer, loss_fn, config):
+    """Run gradient descent to train the model"""
+    loop = tqdm(train_loader, leave=True)
+    mean_loss = []
+    
+    
+    for batch_idx, (x, y) in enumerate(loop):
+        x, y = x.to(config.DEVICE), y.to(config.DEVICE)
+        out = model(x)
+        loss = loss_fn(out, y)
+        mean_loss.append(loss.item())
+        
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        
+        # TODO implemenet a plot predictions while training the model, but do it at random epochs somewhere closer to the end of training.
+        if config.PLOT_WHILE_TRAINING:
+            pass
+        #update the progress bar
+        loop.set_postfix(loss=loss.item())
+        
+    print(f"Mean loss: {sum(mean_loss)/len(mean_loss)}")

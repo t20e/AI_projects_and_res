@@ -6,8 +6,7 @@ import torch
 def non_max_suppression(
     bboxes, 
     IOU_threshold,
-    min_threshold,
-    box_format="corners"):
+    min_threshold):
     """ 
     Performs NMS
     
@@ -44,7 +43,6 @@ def non_max_suppression(
                 or intersection_over_union(
                     torch.tensor(chosen_box[2:]), # just pass the coordinates from chosen box (x1, y1, x2, y2)
                     torch.tensor(box[2:]),
-                    box_format=box_format
                 )
                 < IOU_threshold # if the IOU is less than the threshold then we will keep that box
         ]

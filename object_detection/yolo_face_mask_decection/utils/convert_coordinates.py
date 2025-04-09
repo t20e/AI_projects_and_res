@@ -1,5 +1,5 @@
 """
-Methods to convert bounding boxes from corner_coordinates (Xmin, Ymin, Xmax, Ymax) to mid-point_coordinates (x, y, height, width) and vice versa.
+Methods to convert bounding boxes from corner_coordinates VOC (Xmin, Ymin, Xmax, Ymax) to mid-point_coordinates YOLO (x, y, height, width) and vice versa.
 
 Note: the face-mask dataset is in VOC format
 """

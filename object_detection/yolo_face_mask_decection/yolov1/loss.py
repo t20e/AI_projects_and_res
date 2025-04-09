@@ -12,64 +12,71 @@ class YoloLoss(nn.Module):
     
     Parameters
     ----------
-        grid_size : (int)
-            Size of the grid split -> 49 = 7rows x 7cols.
-        num_bboxes : (int)
-            Number of bounding boxes.
-        num_classes : (int)
-            Number of classes.
+        config : argparse.Namespace
+            configurations
     
     """
-    def __init__(self, grid_size, num_bboxes, num_classes):
+    def __init__(self, config):
         super(YoloLoss, self).__init__()
         self.mse = nn.MSELoss(reduction="sum")
-        self.grid_size = grid_size
-        self.num_bboxes = num_bboxes
-        self.num_classes = num_classes
-        self.lambda_noobj = 0.5
-        self.lambda_coord = 5
+        self.config = config
+        self.lambda_noobj = 0.5 # no object
+        self.lambda_coord = 5 # constant
         
     def forward(self, predictions, target): # call function
-        S = int(math.sqrt(self.grid_size))
-        predictions = predictions.reshape(-1, S, S, self.C + self.B * 5)
+        """
+            Predictions: model predictions
+            Target: true labels
+        """
+        config = self.config
+        S = config.S
+        B = config.B
+        C = config.C
         
-        iou_bbox1 = intersection_over_union(predictions[..., 21:25], target[..., 21:25])
-        # 0 to 19 is going to be for class probabilities
-        # 20 is going to be for the class score
-        # 21 to 25 is for the four bounding boxes for the first cell.
-        iou_bbox2 = intersection_over_union(predictions[..., 26:30], target[..., 21:25]) #target size stays the same because we are comparing the same cell
+        
+        predictions = predictions.reshape(-1, S, S, C + B * 5)
+        
+        # [..., 4:config.NUM_NODES_PER_CELL-5] grabs from 4:8 first bbox x,y,w,h
+        # [..., 9:config.NUM_NODES_PER_CELL] grabs from 9:13 second bbox x,y,w,h
+        
+        iou_bbox1 = intersection_over_union(predictions[..., 4:config.NUM_NODES_PER_CELL-5], target[..., 4:config.NUM_NODES_PER_CELL-5])
+        # 0 to 2 indexs is going to be for class probabilities
+        # 3 is going to be for the class score
+        # 4 to 8 is for x, w, y, h for the first bbox in a cell.
+        
+        iou_bbox2 = intersection_over_union(predictions[..., 9:config.NUM_NODES_PER_CELL], target[..., 4:config.NUM_NODES_PER_CELL-5]) # target stays the same because we are comparing the same cell
         
         # we unsqueeze to add a dimension at the beginning so that we can concatenate them along the first dimension
         ious = torch.cat([iou_bbox1.unsqueeze(0), iou_bbox2.unsqueeze(0)], dim=0)
         
         # iou_maxes will return the max iou value for each bounding box
-        # bestbox will returnt he argmax of the best bounding box
+        # bestbox will return the argmax of the best bounding box
         iou_maxes, bestbox = torch.max(ious, dim=0)
         
-        # at 20 its going to be 0 or 1 depending on if theres an object in that cell
-        exists_box = target[..., 20].unsqueeze(3) # identity of obj i in paper, which tells us is there an object in cell i
+        # at index 3 its going to be 0 or 1 depending on if theres an object in that cell
+        exists_box = target[..., 3].unsqueeze(3) # identity of obj i in paper, which tells us is there an object in cell i
             
         # ======================== #
         #   FOR BOX COORDINATES    #
         # ======================== #
         box_predictions = exists_box * (
             (
-            # check which is the best box, this is going to be 1 if the second bounding box is best second bounding box is from 26 to 30 Pc2, X, Y, W, H
-                bestbox * predictions[..., 26:30] 
+            # Check which is the best box, it will be a 1 if the second bbox is best or 0 if the first is best.
+                bestbox * predictions[..., 9:config.NUM_NODES_PER_CELL]
                 # however if the other one was best then
-                + (1 - bestbox) * predictions[..., 21:25] # Pc1, X, Y, W, H first bounding box
+                + (1 - bestbox) * predictions[..., 4:config.NUM_NODES_PER_CELL-5] # Pc1, X, Y, W, H first bounding box
             )
         )
         
-        box_targets = exists_box * target[..., 21:25]
+        box_targets = exists_box * target[..., 4:config.NUM_NODES_PER_CELL-5]
         
-        # Take the square root of the width and height of the bounding box 
+        # Take the square root of the w/width, h/height of the bounding box 
         box_predictions[..., 2:4] = torch.sign(box_predictions[..., 2:4]) * torch.sqrt(
             torch.abs(box_predictions[..., 2:4] + 1e-6) # + 1e-6 # 1e-6 is to prevent division by zero
         )
             
             
-        # these are labels so they wont be negative
+        # these are the labels so they wont be negative
         box_targets[..., 2:4] = torch.sqrt(box_targets[..., 2:4])
         
         # (N, S, S, 4) -> (N * S * S, 4)
@@ -84,13 +91,13 @@ class YoloLoss(nn.Module):
         # ======================== #
         # pred_box is the confidence score for the best bounding box
         pred_box = (
-            bestbox * predictions[..., 25:26] + (1 - bestbox) * predictions[..., 20:21]
+            bestbox * predictions[..., 3:4] + (1 - bestbox) * predictions[..., 8:9]
         )
         
         # (N*S*S)
         object_loss = self.mse(
             torch.flatten(exists_box * pred_box),
-            torch.flatten(exists_box * target[..., 20:21])
+            torch.flatten(exists_box * target[..., 8:9])
         )
         
         # ======================== #
@@ -98,13 +105,13 @@ class YoloLoss(nn.Module):
         # ======================== #
         # for bounding box 1
         no_object_loss = self.mse(
-            torch.flatten((1 - exists_box) * predictions[..., 20:21], start_dim=1),
-            torch.flatten((1 - exists_box) * target[..., 20:21], start_dim=1)
+            torch.flatten((1 - exists_box) * predictions[..., 3:4], start_dim=1),
+            torch.flatten((1 - exists_box) * target[..., 3:4], start_dim=1)
         )
         # for bounding box 2
         no_object_loss += self.mse(
-            torch.flatten((1 - exists_box) * predictions[..., 25:26], start_dim=1),
-            torch.flatten((1 - exists_box) * target[..., 20:21], start_dim=1)
+            torch.flatten((1 - exists_box) * predictions[..., 8:9], start_dim=1),
+            torch.flatten((1 - exists_box) * target[..., 3:4], start_dim=1)
         )
         
         
@@ -112,10 +119,10 @@ class YoloLoss(nn.Module):
         #   FOR CLASS LOSS         #
         # ======================== #
         
-        # (N,S,S,20) -> (N*S*S, 20) when we use end_dim=-2
+        # (N,S,S,3) -> (N*S*S, 3) when we use end_dim=-2
         class_loss = self.mse(
-            torch.flatten(exists_box * predictions[..., :20], end_dim=-2),
-            torch.flatten(exists_box * target[..., :20], end_dim=-2)
+            torch.flatten(exists_box * predictions[..., :3], end_dim=-2),
+            torch.flatten(exists_box * target[..., :3], end_dim=-2)
         )
         
         loss = (
