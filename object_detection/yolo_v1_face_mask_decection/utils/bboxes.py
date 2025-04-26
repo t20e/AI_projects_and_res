@@ -1,6 +1,5 @@
 import torch
 from .nms import non_max_suppression
-import sys
 
 
 def get_true_and_pred_bboxes(loader, model, config):
@@ -62,6 +61,11 @@ def convert_bboxes(bboxes, config):
     """
         Re-shapes and re-sizes bboxes tensors.
         
+        Parameters
+        ----------
+            bboxes : tensor
+                shape of (1, 637)        
+        
         Returns
         -------
             Python list
@@ -70,7 +74,6 @@ def convert_bboxes(bboxes, config):
     S = config.S
     # convert the bboxes from being relative to a cells ratio to being relative to the entire image
     converted_best_bboxes = resize_bbox_relative_to_img(bboxes, config).reshape(bboxes.shape[0], S * S, -1)
-    
     
     converted_best_bboxes[..., 0] = converted_best_bboxes[..., 0].long() # convert the value/tensor at the first index of the last dimension | i.e the confidence scores from float to int, we had values of 1.6000e+01 this just converts it into 16 class score.
     batch_size = bboxes.shape[0]
@@ -87,7 +90,6 @@ def convert_bboxes(bboxes, config):
         all_bboxes.append(b)
     return all_bboxes
     
-
     
 def resize_bbox_relative_to_img(bboxes, config):
     # TODO see if this computation could be vectorized
@@ -111,7 +113,7 @@ def resize_bbox_relative_to_img(bboxes, config):
     bboxes = bboxes.to("cpu") # move tensor to cpu
     batch_size = bboxes.shape[0]
     bboxes = bboxes.reshape(batch_size, S, S, config.NUM_NODES_PER_CELL) #reshape from (64, 637) -> (64, 7, 7, 13)
-    bboxes1 = bboxes[..., 4:config.NUM_NODES_PER_CELL-5] # grab the first bounding box coordinates( X, Y, W, H) for every cell. 
+    bboxes1 = bboxes[..., 4:config.NUM_NODES_PER_CELL-5] # grab the first bounding boxes coordinates( X, Y, W, H) for every cell. 
     bboxes2 = bboxes[..., 9:config.NUM_NODES_PER_CELL]
     
     scores = torch.cat(
@@ -145,7 +147,6 @@ def resize_bbox_relative_to_img(bboxes, config):
     best_confidence = torch.max(bboxes[..., 3], bboxes[..., 8]).unsqueeze(-1)
     # print(predicted_classes.shape, best_confidence.shape, converted_best_bboxes.shape)
     
-    # os._exit(0)
     converted = torch.cat(
         # concat ex: predicted_classes = (batch_size, 7, 7, 1)  +  best_confidence = (batch_size, 7, 7, 1) +  converted_best_bboxes = (batch_size, 7, 7, 4)   ==> (batch_size, 7, 7, 6)
         

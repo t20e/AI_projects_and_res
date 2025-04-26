@@ -16,6 +16,8 @@ import gc # python built-in memory clean-up
 
 # CLASSES = ["with_mask", "without_mask", "mask_worn_incorrectly"]
 
+    
+
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, dataset_dir, S, B, C, transform):
         """
@@ -95,7 +97,7 @@ class Dataset(torch.utils.data.Dataset):
         bbox_midpoint_cells = []
         # Make the bboxes relative to the cell its mid-point is in, instead of the image and add it to the label_matrix
         for box in bboxes:
-            c1, c2, c3, x, y, width, height = box.tolist()
+            c1, c2, c3, x, y, width, height = box.tolist() 
 
             # find which cell the bbox's mid-point is in
             # i, j represents (row, col), the cell location that contains the bbox's mid-point
@@ -119,7 +121,7 @@ class Dataset(torch.utils.data.Dataset):
                 label_matrix[i, j, self.C + 1 : self.C + 1 + 4] = box_coordinates
                 
                 # Add the classes label to the first 3 nodes
-                label_matrix[i, j, :3] = torch.tensor([c1, c2, c3])
+                label_matrix[i, j, :3] = torch.tensor([c1, c2, c3]) 
         
         if plot_img:
             visualize_grid_on_img(image, cells=bbox_midpoint_cells, split_size=self.S)
@@ -155,3 +157,4 @@ class Dataset(torch.utils.data.Dataset):
         del df # deletes dataframe to save memory
         gc.collect() # tells python to clean up-memory
         
+

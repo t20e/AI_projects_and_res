@@ -39,7 +39,6 @@ class VOCDataset(torch.utils.data.Dataset):
         if self.transform:
             image, boxes = self.transform(image, boxes)
             
-        # just  note here that the additional 5 nodes  * self.B is not going to be used, the only thing thats going to be used is the 25 first nodes, however another function assumes that this will be 30 so we add * self.B
         label_matrix = torch.zeros((self.S, self.S, self.C + 5 * self.B ))
         
         # we need to convert everything to fit the label_matrix

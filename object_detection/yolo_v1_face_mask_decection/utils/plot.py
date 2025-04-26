@@ -29,10 +29,12 @@ def plot_bbox_on_img(img_tensor, bbox_coordinates):
     """
     Plots bboxes on a single image
     
+    Note: this function was built for the dataset.py, NOT DRY.
+    
     Parameters
     ----------
         img_tensor : (tensor)
-            Image tensor, this should be the resized image that we will pass to the model
+            Image tensor, this should be the resized 448x448 image that we will pass to the model
         bbox_coordinates : (tensor)
              [class_id, X, Y, width, height]] in YOLO format, the coordinates have to be relative to the entire image, not a single cell.
     """
@@ -112,3 +114,4 @@ def visualize_grid_on_img(img_tensor, cells=None, split_size=7):
     plot_x_y_axis(img, draw)
     result = Image.alpha_composite(img, overlay)
     result.show()
+     

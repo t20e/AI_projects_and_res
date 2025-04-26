@@ -1,5 +1,7 @@
 # YOLO V1  Algorithm
 
+# While this tutorial is helpful it had a couple errors.
+
 TUTORIAL BY ALADDIN PERSSON | <a href="https://www.youtube.com/watch?v=n9_XyCGr-MI&t=2224s">Link</a>
 
 
