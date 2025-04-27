@@ -35,6 +35,7 @@ class YoloLoss(nn.Module):
         
         
         predictions = predictions.reshape(-1, S, S, C + B * 5)
+        # NOTE: ERROR HERE NUM_NODES_PER_CELL =  1,372 not 28
         
         # [..., 4:config.NUM_NODES_PER_CELL-5] grabs from 4:8 first bbox x,y,w,h
         # [..., 9:config.NUM_NODES_PER_CELL] grabs from 9:13 second bbox x,y,w,h

@@ -10,7 +10,7 @@ from PIL import Image
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, S:int, B:int, C:int, data_type:str="train", dataset_path:str="./data", transforms:Optional[Compose]=None):
+    def __init__(self, S:int, B:int, C:int, mode:str="train", dataset_path:str="./data", transforms:Optional[Compose]=None):
         """
         Dataset Class
         
@@ -22,25 +22,24 @@ class Dataset(torch.utils.data.Dataset):
                 Number of boxes that each cell predicts. 
             C : int
                 Number of classes.
-            data_type : str
+            mode : str
                 "train", "test", or "valid". Which folder to grab the images and labels.
             dataset_path : str
                 Path to the data folder, containing all datasets.
             transform : torchvision.transforms 
                 Transform -> resize and normalize images.
         """
-        
-        self.data_type = data_type
+        self.mode = mode
         self.dataset_path = dataset_path
         # get the labels and images dir
-        self.labels_dir = os.path.join(dataset_path, data_type, "labels")
-        self.imgs_dir = os.path.join(dataset_path, data_type, "images")
+        self.labels_dir = os.path.join(dataset_path, mode, "labels")
+        self.imgs_dir = os.path.join(dataset_path, mode, "images")
         self.create_csv_file()
         self.S = S
         self.B = B
         self.C = C
         self.transforms = transforms
-        self.df = pd.read_csv(os.path.join(dataset_path, data_type, f"{data_type}.csv"))
+        self.df = pd.read_csv(os.path.join(dataset_path, mode, f"{mode}.csv"))
     
     def __len__(self): # returns the size of the entire dataset
         return len(self.df) # TODO: maybe just storing the size of the dataset will save memory and will work, instead of keeping the df in memory
@@ -78,8 +77,8 @@ class Dataset(torch.utils.data.Dataset):
         if self.transforms: # apply transform
             image, bboxes = self.transforms(image, bboxes)
 
-        # NOTE we will make the shape of the label tensors the same as the model's output, this is to make the code dry. The label's second bounding box nodes will not be used. Below -> self.C + 5 * self.B. Example: 18+5*2=28, Second bbox -> pc_2, x, y, w, h
-        label_matrix = torch.zeros((self.S, self.S, self.C + 5 * self.B ))
+        # NOTE we will make the shape of the label tensors the same as the model's output, this is to make the code dry. The label's second bounding box nodes will not be used. Below -> self.B * 5 + self.C. Example: 18+5*2=28, Second bbox -> pc_2, x, y, w, h
+        label_matrix = torch.zeros((self.S, self.S, self.B * 5 + self.C ))
 
         # Add the bboxes data to the label_matrix
         for box in bboxes:
@@ -92,13 +91,11 @@ class Dataset(torch.utils.data.Dataset):
             # NOTE Resize the X and Y coordinates to be relative to the cell instead of the entire image. HOWEVER we don't do this for the width and height!
             # also: x, y can not be bigger than 1 that would mean its larger than the cell, however the height and width of the bbox can be bigger than 1.
             x_rel_cell, y_rel_cell = self.S * x - j, self.S * y - i
-            # width_rel_cell, height_rel_cell = width * self.S, height * self.S
 
             if label_matrix[i, j, self.C] == 0: # checking if theres currently no object in i and j, this is also the position of the first probability_score
                 # NOTE: if two bounding boxes are in the same cell then only one will be selected. This is less likely to occur if split_size is large ex:19x19.
                 label_matrix[i, j, self.C] = 1 # Set this cell is now taken, meaning a bbox occupies it.
                 box_coordinates = torch.tensor(
-                    # [x_rel_cell, y_rel_cell, width_rel_cell, height_rel_cell]
                     [x_rel_cell, y_rel_cell, width, height]
                 )
                 # Add the bbox coordinates at the bbox1_x_y_w_h in the label matrix
@@ -109,7 +106,7 @@ class Dataset(torch.utils.data.Dataset):
 
     def create_csv_file(self):
         """Create a CSV file that contains a dataframe of corresponding image and label filenames by row."""
-        filename = f"{self.dataset_path}/{self.data_type}/{self.data_type}.csv"
+        filename = f"{self.dataset_path}/{self.mode}/{self.mode}.csv"
 
         if os.path.exists(filename): # check if we already create the csv dataframe
             print("CSV file already exists.")
@@ -137,6 +134,6 @@ class Dataset(torch.utils.data.Dataset):
 
 
 # def test():
-#     d = Dataset(dataset_path="./data", S=7, B=2, C=18, transforms=None, data_type="test")
+#     d = Dataset(dataset_path="./data", S=7, B=2, C=18, transforms=None, mode="test")
 #     d.__getitem__(1)
 #### test()
