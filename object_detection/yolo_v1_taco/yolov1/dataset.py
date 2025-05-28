@@ -42,7 +42,7 @@ class Dataset(torch.utils.data.Dataset):
         self.df = pd.read_csv(os.path.join(dataset_path, mode, f"{mode}.csv"))
     
     def __len__(self): # returns the size of the entire dataset
-        return len(self.df) # TODO: maybe just storing the size of the dataset will save memory and will work, instead of keeping the df in memory
+        return len(self.df) # NOTE: maybe just storing the size of the dataset will save memory and will work, instead of keeping the df in memory
     
     def __getitem__(self, index) -> (Image, torch.Tensor):
         """

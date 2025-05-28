@@ -380,7 +380,7 @@ def cellboxes_to_boxes(out, S=7):
     
     Returns
     -------
-        creates a nested list predicted bounding boxes, [ [class_id, confidence_score, x1, y1, x2, y2]* for each cell in image, etc...   ]
+        creates a nested list predicted bounding boxes, [ [class_id, confidence_score, x1, y1, x2, y2]* for each bbox in image, etc...   ]
     
     '''
     # takes yolo output and converts it into boxes of the predictions on the image

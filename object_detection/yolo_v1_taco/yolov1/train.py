@@ -93,13 +93,18 @@ class Train():
         """Run gradient descent to train the model"""
         config = self.config
         loop = tqdm(self.loader, leave=True)
+        # store the loss in a list then get the mean of it.
         mean_loss = []
         
         
         for batch_idx, (x, y) in enumerate(loop):
+            # move tensors to GPU
             x, y = x.to(config.DEVICE), y.to(config.DEVICE)
+            # predict 
             out = self.yolo(x)
+            # compute loss
             loss = self.loss_fn(out, y)
+            
             mean_loss.append(loss.item())
             
             self.optimizer.zero_grad()
@@ -112,5 +117,5 @@ class Train():
             #update the progress bar
             loop.set_postfix(loss=loss.item())
         
-        self.mean_loss = mean_loss
+        self.mean_loss = sum(mean_loss)/len(mean_loss)
         print(f"Mean loss: {sum(mean_loss)/len(mean_loss)}")

@@ -16,15 +16,15 @@ config = Namespace(
     DEVICE=torch.device("mps"),  # apple silicon M series
     NUM_WORKERS=2,
     PIN_MEMORY=True,
-    EPOCHS=150,
+    EPOCHS=50,
     LEARNING_RATE=2e-5, # TODO implement a scheduled learning rate
     BATCH_SIZE=64,
     WEIGHT_DECAY=0,  # TODO play with weight decay
 
 
     # load a model with weights that u have been trained to train it more
-    CON_TRAINING=False,  # continue to train a model
-    LOAD_MODEL_FILE="Yolo_v1_taco_448_448_epoch_150_2025-04-27.pt", #ex: "Yolo_v1_taco_448_448_epoch_50_2025-04-27.pt"
+    CON_TRAINING=True,  # continue to train a model
+    LOAD_MODEL_FILE="Yolo_v1_taco_448_448_epoch_50_2025-04-27_loss_275.5003.pt", #ex: "Yolo_v1_taco_448_448_epoch_50_2025-04-27.pt"
 
     MODE="train", # "train", "test" or "valid"
     DATASET_DIR="./data",  # root path to the dataset dir

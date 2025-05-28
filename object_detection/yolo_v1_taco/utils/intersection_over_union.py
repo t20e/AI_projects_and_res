@@ -1,4 +1,4 @@
-
+"""IOU"""
 import torch 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,45 +6,44 @@ import matplotlib.patches as patches
 from collections import Counter
 
 
-def intersection_over_union(pred_bboxes, label_bboxes):
+ 
+def intersection_over_union(chosen_bbox:torch.Tensor, rest_bbox:torch.Tensor):
     """
-    Calculates Intersection Over Union, i.e compares predicted bounding boxes to the true bounding boxes.
+    Computes Intersection Over Union between one bbox and batch of bbox. vectorized.
     
-    Note: You can calculate IOU from "Mid-point" or "corner-point" format.
-        Mid-point format: [x_center, y_center, height, width]
-        Corner-point format: [x_min, y_min, x_max, y_max]
-        This function below only uses the mid-point format.
+    Note: 
+        This function requires that the bbox coordinates format are in mid-point format. And that they all be passed in with the same class_idx.
     
-    Parameters
-    ----------
-        pred_bboxes : (tensor)
-            Model bounding boxes predictions (Batch_size, 4)
-        label_bboxes : (tensor)
-            True bounding boxes (Batch_size, 4)
+    Args:
+        bbox (tensor): shape: (9). [i, j, b, class_idx, pc, x, y, w, h].
+        coords (tensor): Shape (N, 9). [i, j, b, class_idx, pc, x, y, w, h].
     
-    Returns
-    -------
-        tensor : IOU for all bboxes
+    Returns:
+        tensor : IOU values.
     """
-    # Mid-point formulas
-    box1_x1 = pred_bboxes[..., 0:1] - pred_bboxes[..., 2:3] / 2
-    box1_y1 = pred_bboxes[..., 1:2] - pred_bboxes[..., 3:4] / 2
-    box1_x2 = pred_bboxes[..., 0:1] + pred_bboxes[..., 2:3] / 2
-    box1_y2 = pred_bboxes[..., 1:2] + pred_bboxes[..., 3:4] / 2
-    box2_x1 = label_bboxes[..., 0:1] - label_bboxes[..., 2:3] / 2
-    box2_y1 = label_bboxes[..., 1:2] - label_bboxes[..., 3:4] / 2
-    box2_x2 = label_bboxes[..., 0:1] + label_bboxes[..., 2:3] / 2
-    box2_y2 = label_bboxes[..., 1:2] + label_bboxes[..., 3:4] / 2
+    # --- 1: Extract and convert coordinates to corner-points format
+    x1 = rest_bbox[:, 5] - rest_bbox[:, 7] / 2
+    y1 = rest_bbox[:, 6] - rest_bbox[:, 8] / 2
+    x2 = rest_bbox[:, 5] + rest_bbox[:, 7] / 2
+    y2 = rest_bbox[:, 6] + rest_bbox[:, 8] / 2
+
+    # Do it for chosen_bbox
+    cx, cy, cw, ch = chosen_bbox[5:9]
+    cx1, cy1 = cx - cw / 2, cy - ch / 2
+    cx2, cy2 = cx + cw / 2, cy + ch / 2
+    chosen_bbox_area = (cx2 - cx1) * (cy2 - cy1)
+
+    # --- 2: Calculate IOU
+    box_area = (x2 - x1) * (y2 - y1)
+    inter_x1 = torch.max(cx1, x1)
+    inter_y1 = torch.max(cy1, y1)
+    inter_x2 = torch.min(cx2, x2)
+    inter_y2 = torch.min(cy2, y2)
     
-    x1 = torch.max(box1_x1, box2_x1)
-    y1 = torch.max(box1_y1, box2_y1)
-    x2 = torch.max(box1_x2, box2_x2)
-    y2 = torch.max(box1_y2, box2_y2)
-    
-    # .clamp(0) is for the case where they dont intersect
-    intersection = (x2 - x1).clamp(0) * (y2 - y1).clamp(0)
-    
-    box1_area = abs((box1_x2 - box1_x1) * (box1_y2 - box1_y1))
-    box2_area = abs((box2_x2 - box2_x1) * (box2_y2 - box2_y1))
-    
-    return intersection / ( box1_area + box2_area - intersection + 1e-6)
+    inter_w = (inter_x2 - inter_x1).clamp(min=0)
+    inter_h = (inter_y2 - inter_y1).clamp(min=0)
+    inter_area = inter_w * inter_h
+
+    union_area = chosen_bbox_area + box_area - inter_area
+    iou = inter_area / (union_area + 1e-6)# example print tensor([0.8223, 0.0000])
+    return iou

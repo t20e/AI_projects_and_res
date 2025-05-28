@@ -31,14 +31,16 @@ def save_checkpoint(state:dict, epochs, loss, config):
         # Find 'epoch' and the next part
         for i, part in enumerate(parts):
             if part == 'epoch':
-                prev_epoch_num = int(parts[i+1])
+                prev_epoch_num = float(parts[i+1])
 
     epochs += prev_epoch_num
         
+    loss = float(f"{loss:.4f}")
+
+    
     # save model
     print("\n" + "#" * 32, "\n")
     print(f"-> Saving checkpoint: ")
-    # TODO add loss after trainings
     date_str = datetime.now().strftime("%Y-%m-%d")
     # {model_architecture}_{dataset_name}_{input_size}_epoch_date.pt
     file_name = f"Yolo_v1_taco_448_448_epoch_{epochs}_{date_str}_loss_{loss}.pt"
