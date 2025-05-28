@@ -2,17 +2,22 @@
 
 * The TACO (Trash Annotations in Context)
 
-* <span style="color:#FF9B42; ">Objective</span>: 
+* <span style="color:#FF9B42; ">Objective</span>:
 
-    * Identify and classify littered trash from photos.
-    * Make the code DRY and efficient only use for-loop where absolutely necessary and vectorize all computations.
+  * Identify and classify littered trash from photos.
+  * Make the code DRY and efficient only use for-loop where absolutely necessary and vectorize all computations.
 
-**How to run:**   
+<p align="center">
+  <img src="./showcase_images/img-1.png" width="45%" />
+  <img src="./showcase_images/prediction_and_label.png" width="45%" />
+</p>
+
+**How to run:**  
     1. Train models with main.py.  
     2. Use inference.ipynb to test the models.
 
-
 ## Prerequisites
+
 torch version: 2.6.0
 
 <pre style="font-size:.7em">
@@ -44,7 +49,7 @@ Classes (num=18)
 
 The bounding box annotations are normalized relative to the entire image size, ranging from 0 to 1.
 
-<img src="./showcase_images//000027_JPG_jpg.rf.14b944888cb86333dfde8b726115c2be.jpg" alt="Girl in a jacket"  height="250">
+<img src="./showcase_images/000027_JPG_jpg.rf.14b944888cb86333dfde8b726115c2be.jpg" alt="Girl in a jacket"  height="250">
 
 This image's labeled class object and its bounding boxes:
 <table border="1">
@@ -132,7 +137,6 @@ To get the **total number of nodes that each label** has for one image.
 
 * Also  7x7=49 -> 49*28 = 1,372
 * the * 5 is for the second bbox in the cell -> pc_2, x, y, w, h
-
 
 Steps.  
 

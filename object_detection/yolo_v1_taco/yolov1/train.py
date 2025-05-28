@@ -68,7 +68,7 @@ class Train():
             print("\n\n" + "|" + "-" * 64 + "|")
             print("Epoch:", epoch + 1)
             
-            # Compute mean_average_percision # TODO
+            #  # TODO Compute mean_average_percision
             # mean_average_prec = mean_average_precision(loader=train_loader, model=model, config=config)
             # print(f"\nTrain mAP: {mean_average_prec}")
 
@@ -110,8 +110,7 @@ class Train():
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            
-            # TODO implemenet a plot predictions while training the model, but do it at random epochs somewhere closer to the end of training.
+
             # if config.PLOT_WHILE_TRAINING:
             #     pass
             #update the progress bar

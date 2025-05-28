@@ -39,7 +39,7 @@ config = Namespace(
     EPOCHS = 50,
     LEARNING_RATE = 2e-5,
     BATCH_SIZE = 64,
-    WEIGHT_DECAY = 0, #TODO plasplay with weight decay
+    WEIGHT_DECAY = 0,
 
     # load a model with weights that u have been trained to train it more
     CON_TRAIN = False, # continue to train a model
