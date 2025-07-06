@@ -5,44 +5,15 @@ import torch.optim as optim
 from yolov1 import Train
 from utils.checkpoints import load_checkpoint
 from yolov1 import YOLOv1
-
+from utils.load_config import load_config
 
 torch.manual_seed(1)
 
 # Dataset structure for one cell -> [*classes, pc_1, x, y, w, h, pc_2, x, y, w, h]. pc_1 is probability score
 
 # <------------- Hyperparameters/Config ------------->
-config = Namespace(
-    DEVICE=torch.device("mps"),  # apple silicon M series
-    NUM_WORKERS=2,
-    PIN_MEMORY=True,
-    EPOCHS=50,
-    LEARNING_RATE=2e-5, # TODO implement a scheduled learning rate
-    BATCH_SIZE=64,
-    WEIGHT_DECAY=0,  # TODO play with weight decay
+config = load_config()
 
-
-    # load a model with weights that u have been trained to train it more
-    CON_TRAINING=True,  # continue to train a model
-    LOAD_MODEL_FILE="Yolo_v1_taco_448_448_epoch_50_2025-04-27_loss_275.5003.pt", #ex: "Yolo_v1_taco_448_448_epoch_50_2025-04-27.pt"
-
-    MODE="train", # "train", "test" or "valid"
-    DATASET_DIR="./data",  # root path to the dataset dir
-    IMAGE_SIZE=448,
-
-
-    C=18,  # how many classes in the dataset
-    B=2,  # how many bounding boxes does the model predict per cell
-    S=7,  # split_size, how to split the image, 7x7=49 grid cells,
-    IOU_THRESHOLD=0.5,  # the iou threshold when comparing bounding boxes for NMS
-    MIN_THRESHOLD=0.4,  # the minimal confidence to keep a predicted bounding box
-)
-
-# The total number of nodes that a single cell has in a label for one image, which would be the size -> [*classes, pc_1, bbox1_x_y_w_h, pc_2, bbox2_x_y_w_h]. If S=7 C=18 B=2 --> 28 nodes.
-config.NUM_NODES_PER_CELL = config.C + 5 * config.B
-
-# The total number of nodes that each label has for one image. If S=7 C=18 B=2 --> 7 * 7 * (18 + 2 * 5) = 1,372 | 7x7=49 -> 49*28 = 1,372 | the * 5 is for the second bbox in the cell -> pc_2, x, y, w, h
-config.NUM_NODES_PER_IMG = config.S * config.S * (config.C + config.B * 5)
 
 
 # <------------- Transforms ------------->
