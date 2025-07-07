@@ -12,11 +12,8 @@ from .dataset import Dataset
 
 from utils.checkpoints import save_checkpoint
 
-
-# from utils.mean_average_precision import mean_average_precision
-        
-
-
+    
+ 
 class Train():
     def __init__(self, config:Namespace, yolo:nn.Module, optimizer:torch.optim, transforms:T, mode:str="train"):
         """
@@ -47,7 +44,7 @@ class Train():
         self.train()
 
     def setup_loader(self):
-        """Set up the dataset loader"""
+        """ Set up the dataset loader """
         config = self.config
 
         dataset = Dataset(S=config.S, B=config.B, C=config.C, mode=self.mode, dataset_path=config.DATASET_DIR, transforms=self.transforms)
@@ -61,24 +58,24 @@ class Train():
         )
 
     def train(self):
-        """Train model."""
+        """ Train model """
         config = self.config
 
         for epoch in range(config.EPOCHS):
             print("\n\n" + "|" + "-" * 64 + "|")
-            print("Epofinch:", epoch + 1)
+            print("Epoch:", epoch + 1)
             
-            #  # TODO Compute mean_average_precision, look into the res folder the todo
-            # mean_average_prec = mean_average_precision(loader=train_loader, model=model, config=config)
-            # print(f"\nTrain mAP: {mean_average_prec}")
+            # TODO Compute mean_average_precision, look into the res folder the todo
+                # mean_average_prec = mean_average_precision(loader=train_loader, model=model, config=config)
+                # print(f"\nTrain mAP: {mean_average_prec}")
 
-            # Check Point optional save model if Mean Average Percision is > than num
-            # if mean_average_prec > 0.9:
-            #     checkpoint = {
-            #         "state_dict" : model.state_dict(),
-            #         "optimizer" : optimizer.state_dict()
-            #     }
-            #     save_checkpoint(checkpoint, filename=config.LOAD_MODEL_FILE)
+                # Check Point optional save model if Mean Average Percision is > than num
+                # if mean_average_prec > 0.9:
+                #     checkpoint = {
+                #         "state_dict" : model.state_dict(),
+                #         "optimizer" : optimizer.state_dict()
+                #     }
+                #     save_checkpoint(checkpoint, filename=config.LOAD_MODEL_FILE)
         
             self.run_gradient_descent()
         
@@ -90,12 +87,11 @@ class Train():
         save_checkpoint(checkpoint, config.EPOCHS, self.mean_loss, self.config)
 
     def run_gradient_descent(self):
-        """Run gradient descent to train the model"""
+        """ Run gradient descent to train the model """
         config = self.config
         loop = tqdm(self.loader, leave=True)
         # store the loss in a list then get the mean of it.
         mean_loss = []
-        
         
         for batch_idx, (x, y) in enumerate(loop):
             # move tensors to GPU

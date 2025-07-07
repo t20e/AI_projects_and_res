@@ -33,7 +33,7 @@ class Resize(object):
     """Resize the image. No change needed for bboxes since they are normalized (0-1)."""
 
     def __init__(self, size):
-        self.size = size  # (width, height) like (448,448)
+        self.size = size  # (width, height) ex: (448,448)
 
     def __call__(self, img, bboxes):
         img = T.Resize(self.size)(img)
@@ -49,7 +49,7 @@ class ToTensor(object):
 
 
 transforms = Compose(
-    # transform object to resize the bboxes and images.  Normalize image tensors
+    # transform object to resize the bboxes and images.  Normalize image tensors.
     [
         Resize((448, 448)),  # Resize image to 448x448
         ToTensor(),  # Convert image to tensor

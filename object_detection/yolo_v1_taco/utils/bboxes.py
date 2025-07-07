@@ -30,16 +30,16 @@ def extract_bboxes(t: torch.Tensor, config: Namespace):
         config.NUM_NODES_PER_CELL,
     )
 
-    # --- 1: create new tensors to store class probs, first bbox and second bbox from every cell.
+    # --- 1: Create new tensors to store class probs, first bbox and second bbox from every cell.
     class_probs = t[..., :18]  # (7, 7, 18)
-    bbox_1 = t[..., C : C + 5]  # (7, 7, 5)
+    bbox_1 = t[..., C : C + 5]  # (7, 7, 5) #pc1, x1, y1, w1, h1
     bbox_2 = t[..., C + 5 : NUM_NODES_PER_CELL]  # (7, 7, 5)
     bboxes = torch.stack([bbox_1, bbox_2], dim=2)  # shape: (7, 7, 2, 5)
 
     # Get the highest predicted object from indexes 0-17. Store as index.
     class_idx = class_probs.argmax(dim=-1)  # shape: (7, 7)
 
-    # --- 2: Create cell index mapping tensor for i a, j, and b coords.
+    # --- 2: Create cell index mapping tensor for i, j, and b coords.
     # note: example variable prints visualized @ matrices_visualize/i_j_b_coords.py
     i_coords, j_coords = torch.meshgrid(
         torch.arange(S, device=DEVICE), torch.arange(S, device=DEVICE), indexing="ij"
@@ -84,7 +84,6 @@ def convert_yolo_to_corners(bboxes, S, img_s):
         t (Tensor): Shape(N, 9) -> [ i, j, b, class_idx, pc, x, y, w, h]
     Returns:
         Tensor: Shape(N, 4) -> [x1, y1, x2, y2]
-
     """
     cell_size = img_s / S  # for 448 images -> 64px per cell
 

@@ -96,33 +96,36 @@ This image's labeled class object and its bounding boxes:
 
 * The **X** and **Y** values are the coordinates of the **mid-point** of the bounding box **relative** to the entire image, later we will **process** the dataset and make the **X** and **Y** coordinates **relative** to the **cell** its in.  
 
-  X coord= 63%, img_width  = 416p, 63% of 416p = **262 pixels**.  
-  Y coord= 80%, img_height = 416p, 80% of 416p = **333 pixels**.  
-  X,Y location is at 262 x 333 pixels on the image.  
+    Note: 416p is from the dataset, we resize to 448x448, below is an example.  
+    X coord= 63%, img_width  = 416p, 63% of 416p = **262 pixels**.  
+    Y coord= 80%, img_height = 416p, 80% of 416p = **333 pixels**.  
+    X,Y location is at 262 x 333 pixels on the image.  
 
 * The **weight** and **height** are fractions of full image width/height and represent the size of that bounding box compared to the entire image.
 
-  W coord = 16%, img_width = 416p, 16% of 416p = **67 pixels**.  
-  H coord = 13%, img_height = 416p, 13% of 416p = **54 pixels**.  
-  The bounding boxes width is 67 pixels long and 54 pixels tall.
+    Note: 416p is from the dataset, we resize to 448x448, below is an example.   
+    W coord = 16%, img_width = 416p, 16% of 416p = **67 pixels**.  
+    H coord = 13%, img_height = 416p, 13% of 416p = **54 pixels**.  
+    The bounding boxes width is 67 pixels long and 54 pixels tall.
 
-**Notes from the dataset publisher:**    
-The dataset includes 6004 images. Litter bounding boxes are annotated in YOLOv8 format.
+#### Notes From The Dataset Publisher:
 
-The following pre-processing was applied to each image:
+- The dataset includes 6004 images. Litter bounding boxes are annotated in YOLOv8 format.
 
-* Auto-orientation of pixel data (with EXIF-orientation stripping)
-* Resize to 416x416 (Stretch)
+- The following pre-processing was applied to each image:
 
-The following augmentation was applied to create 2 versions of each source image:
+    * Auto-orientation of pixel data (with EXIF-orientation stripping)
+    * Resize to 416x416 (Stretch)
 
-* 50% probability of horizontal flip
-* 50% probability of vertical flip
-* Equal probability of one of the following 90-degree rotations: none, clockwise, upside-down
+- The following augmentation was applied to create 2 versions of each source image:
 
-train: contains 4200 images  
-val: contains 1704 images  
-test: contains 100 images  
+    * 50% probability of horizontal flip.
+    * 50% probability of vertical flip.
+    * Equal probability of one of the following 90-degree rotations: none, clockwise, upside-down.
+- Image count:
+    * train: contains 4200 images.
+    * val: contains 1704 images.
+    * test: contains 100 images.
 
 
 ## How To Structure Dataset To Train Model
@@ -133,24 +136,31 @@ From paper: "Each bounding box consists of 5 predictions: x, y, w, h, and confid
 **B** = 2 | <i>The number of bounding boxes the model predicts for each cell.</i>  
 **C** = 18 | <i> The number of classes in the dataset, in the paper they had 20 classes.</i>  
 
-### How Are Dateset Tensors structured
+* **We resize images to 448x448**
+
+### How Are Tensors Structured
 
 * Structuring is done in ./yolov1/dataset.py
 
 <img src="./showcase_images/tensor_ex.png" width="300">
 
+
 A tensor representing a single cell is structured as:  
 **[18 class_nodes, pc<sub>1</sub>, x<sub>1</sub>, y<sub>1</sub>, w<sub>1</sub>, h<sub>1</sub>, pc<sub>2</sub>, x<sub>2</sub>, y<sub>2</sub>, w<sub>2</sub>, h<sub>2</sub>]**  
 *(Total nodes per cell: 18 (class scores) + 5 (bbox<sub>1</sub>) + 5 (bbox<sub>2</sub>) = 28)*
 
-**Note:**  
+
+**Notes:**  
+
+
 For the **label**, only the first bounding box *(pc<sub>1</sub>, x<sub>1</sub>, y<sub>1</sub>, w<sub>1</sub>, h<sub>1</sub>)* is used. The second bounding box is filled with zeros and is only used during **prediction**, where the model outputs two bounding boxes per cell and selects the better one.
 
 - **pc<sub>1</sub>** and **pc<sub>2</sub>** represent the **objectness scores** (probability that an object exists in the bbox).
 
 To get the **total number of nodes that each label** has for one image.
 
-* S * S * (C + B * 5) --> 7 * 7 * (18 + 2 * 5) = 1,372
+* num_cells_per_cell: 28 *= C + B * 5*
+* S * S * (C + B * 5) --> 7 * 7 * 28 + 2 * 5) = 1,372
 * Also  7x7=49 -> 49*28 = 1,372
 
 
@@ -160,28 +170,48 @@ To get the **total number of nodes that each label** has for one image.
 
 This architecture is a sequence of convolution and max pooling layers used to process input images into high-level feature maps. 
 
+**NOTE:** the architecture below follows the original paper so S, C, B will be as listed below, but for my projects dataset C = 18, and num_cells_per_cell=28.
 
-1. (kernel: 7x7 , filters: 64, stride: 2 , padding: 3) - Conv layer. **Note:** the padding: 3 is on the diagram 448x448x3 (first layer/box).
+**C:** = 20 *num of classes in the dataset*.  
+**B:** = 2 *num of bboxes that each cell predicts*.  
+**S:** = 7 *split_size, how many cells we are splitting the image into, 7x7=49*.  
+num_cells_per_cell: = 30 *= B × 5 + C*.   
+
+
+1. (kernel: 7x7 , filters: 64, stride: 2 , padding: 3) - Conv layer. **Note:** the padding: 3 is on the diagram 448x448x3 (first layer/box), and the kernel: 7x7; the 7 here doesn't correlate to S.
 2. *Max pool*
 3. (kernel: 3x3, filters: 192, stride: 1, padding: 1) - Conv layer
 4. *Max pool*
-5. (kernel: 1x1, filters: 128, stride: 1, padding: 0)
-6. (kernel: 3x3, filters: 256, stride: 1, padding: 1)
-7. (kernel: 1x1, filters: 256, stride: 1, padding: 0)
-8. (kernel: 3x3, filters: 512, stride: 1, padding: 1)
+5. (kernel: 1x1, filters: 128, stride: 1, padding: 0) - Conv layer
+6. (kernel: 3x3, filters: 256, stride: 1, padding: 1) - Conv layer
+7. (kernel: 1x1, filters: 256, stride: 1, padding: 0) - Conv layer
+8. (kernel: 3x3, filters: 512, stride: 1, padding: 1) - Conv layer
 9. *Max pool*
 10. **Repeat layers 4 times**
-    - (kernel: 1x1, filters: 256, stride: 1, padding: 0)
-    - (kernel: 3x3, filters: 512, stride: 1, padding: 1)
-11. (kernel: 1x1, filters: 512, stride: 1, padding: 0)
-12. (kernel: 3x3, filters: 1024, stride: 1, padding: 1)
+    - (kernel: 1x1, filters: 256, stride: 1, padding: 0) - Conv layer
+    - (kernel: 3x3, filters: 512, stride: 1, padding: 1) - Conv layer
+11. (kernel: 1x1, filters: 512, stride: 1, padding: 0) - Conv layer
+12. (kernel: 3x3, filters: 1024, stride: 1, padding: 1) - Conv layer
 13. *Max pool*
 14. **Repeat layers 2 times**
-    - (kernel: 1x1, filters: 512, stride: 1, padding: 0)
-    - (kernel: 3x3, filters: 1024, stride: 1, padding: 1)
-15. (kernel: 3x3, filters: 1024, stride: 1, padding: 1)
-16. (kernel: 3x3, filters: 1024, stride: 2, padding: 1)
-17. (kernel: 3x3, filters: 1024, stride: 1, padding: 1)
-18. (kernel: 3x3, filters: 1024, stride: 1, padding: 1)
+    - (kernel: 1x1, filters: 512, stride: 1, padding: 0) - Conv layer
+    - (kernel: 3x3, filters: 1024, stride: 1, padding: 1) - Conv layer
+15. (kernel: 3x3, filters: 1024, stride: 1, padding: 1) - Conv layer
+16. (kernel: 3x3, filters: 1024, stride: 2, padding: 1) - Conv layer
+17. (kernel: 3x3, filters: 1024, stride: 1, padding: 1) - Conv layer
+18. (kernel: 3x3, filters: 1024, stride: 1, padding: 1) - Conv layer
+19. Feeding thru fully connected layers.
+    - Output from 18 is shape (7x7x1024).
+    - flatten output to get a 1D vector --> 7x7x1024= 50176.
+    - Pass thru the first FC (fully connected layer) which has 4096 neurons.
+        - Activation function: likely Leaky ReLU
+    - Pass thru second FC, this FC will output a shape of S × S × (B × 5 + C) 
+        - Note: "× 5" here is for the nodes of a  single bbox, we multiply it by the B to get the total number of bounding box per cell.
+        - Final output size S × S × (B × 5 + C) = S × S × num_cells_per_cell = 1470
+        - Reshape output -> S x S x num_cells_per_cell to extract predictions.
+            - each cell contains 30(num_cells_per_cell) -> 20 class predictions + 5(bbox) * B
 
- ßå
+### Loss Function
+
+Check out [./loss_fn.ipynb](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/loss_fn.ipynb)
+
