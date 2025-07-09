@@ -1,26 +1,29 @@
-"""Tensor bounding boxes utils"""
+"""Utils for Tensor bounding boxes extract, etc.."""
 
 import torch
 from argparse import Namespace
 
 
 # Extract bounding boxes
+# NOTE: Do not implement this function before the loss_fn(). Use this function before plot_bboxes(), and non_max_suppression().
 def extract_bboxes(t: torch.Tensor, config: Namespace):
     """
-    Extract bounding boxes from a tensor into flat (N, 9) tensor: [i, j, b, class_idx, pc, x, y, w, h]. The return tensor will have bboxes sorted by pc (descending).
+    Extract bounding boxes from a single image's (predicted or labeled) tensor, converting them into a flat (N, 9) representation, and finally sorting based on their probability score (pc) in descending order.
 
-    NOTE:
+    Note:
+        - N = S * S * B or total number of bboxes per image.
+        - Nested 9 nodes looks like -> [i, j, b, class_idx, pc, x, y, w, h], sorted by pc descending for each image.
         - i,j is the bboxes cell location in the grid.
         - b is if the bbox is either bbox1 or bbox2 in its cell. Its value is either 0 or 1.
         - pc is the probability score that an object exists in that cell.
         - class_idx is a value between 0 and 17 that indicates which object the cell predicts to be present. It’s obtained by applying argmax() to the class object probability scores at indices 0 through 17. Note object probability scores here is not the same as pc.
-        - The return tensor will be sorted with bboxes with the highest pc at the beginning.
+        - The return tensor will have bboxes sorted by pc (descending).
 
     Args:
         t (tensor) : Shape (S, S, NUM_NODES_PER_CELL)
 
     Returns:
-        tensor: shape ( S * S * B , 9), Sorted with bboxes with the highest pc at the beginning.[[ i, j, b, class_idx, pc, x, y, w, h]] -> num nodes = 9
+        (tensor) : shape (S * S * B , 9), Sorted by bboxes with the highest pc at the beginning. [[ i, j, b, class_idx, pc, x, y, w, h]] -> num nodes = 9.
     """
     S, B, C, DEVICE, NUM_NODES_PER_CELL = (
         config.S,
@@ -30,51 +33,61 @@ def extract_bboxes(t: torch.Tensor, config: Namespace):
         config.NUM_NODES_PER_CELL,
     )
 
-    # --- 1: Create new tensors to store class probs, first bbox and second bbox from every cell.
-    class_probs = t[..., :18]  # (7, 7, 18)
-    bbox_1 = t[..., C : C + 5]  # (7, 7, 5) #pc1, x1, y1, w1, h1
-    bbox_2 = t[..., C + 5 : NUM_NODES_PER_CELL]  # (7, 7, 5)
-    bboxes = torch.stack([bbox_1, bbox_2], dim=2)  # shape: (7, 7, 2, 5)
+    # --- 1: Create new tensors to store class probs, first bbox and second bbox from every cell across the batch.
+    class_probs = t[..., :C]  # ( S, S, C)
 
-    # Get the highest predicted object from indexes 0-17. Store as index.
-    class_idx = class_probs.argmax(dim=-1)  # shape: (7, 7)
+    bbox_1 = t[..., C : C + 5]  # ( S, S, 5) #pc1, x1, y1, w1, h1
+    bbox_2 = t[..., C + 5 : NUM_NODES_PER_CELL]  # ( S, S, 5)
+    bboxes = torch.stack([bbox_1, bbox_2], dim=2)  # shape: ( S, S, 2, 5)
 
-    # --- 2: Create cell index mapping tensor for i, j, and b coords.
-    # note: example variable prints visualized @ matrices_visualize/i_j_b_coords.py
-    i_coords, j_coords = torch.meshgrid(
+    #   Get the highest predicted object from indexes 0-17. Store as index.
+    class_idx = class_probs.argmax(dim=-1)  # shape: ( S, S)
+
+    # --- 2: Create grid cell indice mapping tensor for i, j, and b coords.
+    # Note: (i,j) -> i = row_indices and j = col_indices
+    row_indices, col_indices = torch.meshgrid(
         torch.arange(S, device=DEVICE), torch.arange(S, device=DEVICE), indexing="ij"
-    )  # (7, 7)
+    )  # (S, S)
 
-    i_coords = i_coords.unsqueeze(-1).expand(-1, -1, B)  # from (7,7) -> (7, 7, 2)
-    j_coords = j_coords.unsqueeze(-1).expand(-1, -1, B)  # (7, 7, 2)
-    b_coords = torch.arange(B, device=DEVICE).view(1, 1, B).expand(S, S, B)  # (7, 7, 2)
+    #       Reshape and expand to include the number bounding boxes per cell.
+    row_indices = row_indices.unsqueeze(-1).expand(
+        -1, -1, B
+    )  # from (S, S) -> (S, S, 2)
+    col_indices = col_indices.unsqueeze(-1).expand(
+        -1, -1, B
+    )  # from (S, S) -> (S, S, 2)
+    box_indices = (
+        torch.arange(B, device=DEVICE).view(1, 1, B).expand(S, S, B)
+    )  # (S, S, 2)
 
-    # --- 3: Expand class_idx tensor to match (7, 7, 2)
-    cls_coords = class_idx.unsqueeze(-1).expand(-1, -1, B)  # (7, 7) -> (7, 7, 2)
+    # --- 3: Expand class_idx tensor to match (S, S, 2)
+    cls_indices = class_idx.unsqueeze(-1).expand(
+        -1, -1, B
+    )  # (7, 7) -> (7, 7, 2)
 
-    # --- 4: Stack and concat everything
-    metadata = torch.stack([i_coords, j_coords, b_coords], dim=-1)  # (7, 7, 2, 3)
-    # a nested tensor in the metadata tensor looks like  [4=i, 1=j, 0=b]
+    # --- 4: Stack metadata
+    metadata = torch.stack(
+        [row_indices, col_indices, box_indices], dim=-1
+    )  # (7, 7, 2, 3)
 
-    cls_coords = cls_coords.unsqueeze(-1)  # (7, 7, 2) -> (7, 7, 2, 1)
+    cls_indices = cls_indices.unsqueeze(-1)  # ( 7, 7, 2) -> ( 7, 7, 2, 1)
 
-    # Concatenate: [i, j, b, class_idx, pc, x, y, w, h]
+    #       Concatenate: (S, S , 2, 9) 9 = [i, j, b, class_idx, pc, x, y, w, h]
     full = torch.cat(
-        [metadata.float(), cls_coords.float(), bboxes], dim=-1
+        [metadata.float(), cls_indices.float(), bboxes], dim=-1
     )  # (7, 7, 2, 9)
 
-    full = full.view(
-        -1, 9
-    )  # ( N = S*S*2, 9)    # Visualized @ matrices_visualize/bboxes_extract_full.py, but its not sorted
+    #      Reshape full into flat form: ( S, S, 2, 9) -> ( N, 9) where N=S*S*2 or total num bboxes per image.
+    full = full.view( -1, 9)
 
-    # --- 5: Sort the bboxes with the highest probability at the beginning.
+    # --- 5: Sort by pc (column 4)
     sorted_indices = full[:, 4].argsort(
         descending=True
-    )  # Sort by pc (probability score) -> index 3
+    )
 
     return full.index_select(
         0, sorted_indices
-    )  #  Visualized @ matrices_visualize/sorted_bboxes_extracted.py
+    )
 
 
 def convert_yolo_to_corners(bboxes, S, img_s):
@@ -107,7 +120,7 @@ def convert_yolo_to_corners(bboxes, S, img_s):
     return torch.stack([x1, y1, x2, y2], dim=1)
 
 
-# NOTE; The reconstruct was not necessary
+# NOTE: The reconstruct was not necessary.
 def reconstruct_tensor(bboxes: torch.Tensor, config):
     """
     Reconstruct the filtered bboxes (N, 9) that passed IOU back into a shape of (S, S, NUM_NODES_PER_CELL), the other values will be zero-ed out.

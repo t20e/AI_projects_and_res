@@ -23,7 +23,7 @@ class Dataset(torch.utils.data.Dataset):
             C : int
                 Number of classes.
             mode : str
-                "train", "test", or "valid". Which folder to grab the images and labels.
+                "train", "test", or "valid". Which folder to grab the images and labels. Default: "train".
             dataset_path : str
                 Path to the data folder, containing all datasets.
             transform : torchvision.transforms 
@@ -107,9 +107,9 @@ class Dataset(torch.utils.data.Dataset):
     def create_csv_file(self):
         """Create a CSV file that contains a dataframe of corresponding image and label filenames by row."""
         filename = f"{self.dataset_path}/{self.mode}/{self.mode}.csv"
-
+        print("Checking csv dataframe file:", end=" ")
         if os.path.exists(filename): # check if we already create the csv dataframe
-            print("CSV file already exists.")
+            print("csv dataframe file already exists.")
             return 
         
         # Get all image and label filenames and store in a list

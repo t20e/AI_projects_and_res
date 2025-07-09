@@ -1,8 +1,7 @@
 """Non-Max Suppression"""
 
-from .intersection_over_union import intersection_over_union
 import torch
-from utils.bboxes import extract_bboxes, reconstruct_tensor
+from torchvision.ops import nms  # fast C++/CUDA implementation
 
 
 def non_max_suppression(pred_bboxes, config):
@@ -10,10 +9,12 @@ def non_max_suppression(pred_bboxes, config):
     Computes NMS by filtering out overlapping bboxes per class.
 
     Note:
-        Non-Maximum Suppression (NMS) is a vital post-processing step in many computer vision tasks, particularly in object detection. It is used to refine the output of object detection models by eliminating redundant bounding boxes and ensuring that each object is detected only once.
+        Non-Maximum Suppression (NMS) is a vital post-processing step in many computer vision tasks, particularly in object detection. It is used to refine predictions of object detection models by eliminating redundant bounding boxes and ensuring that each object is detected only once.
 
     Args:
         pred_bboxes (Tensor): (N, 9) [ i, j, b, class_idx, pc, x, y, w, h]
+            - x,y are cell-relative ∈ [0,1];  w,h are image-relative ∈ [0,1].
+
         config : Namespace configurations.
             Project configurations.
 
@@ -25,85 +26,91 @@ def non_max_suppression(pred_bboxes, config):
         Tensor : (M, 9) with filtered bboxes.
     """
 
-    DEVICE, IOU_THRESHOLD, MIN_THRESHOLD = (
-        config.DEVICE,
+    S, IOU_THRESHOLD, MIN_THRESHOLD = (
+        config.S,
         config.IOU_THRESHOLD,
         config.MIN_THRESHOLD,
     )
-    
-    # --- 1: Filter out low-confidence bboxes; tensors where pc/probability_score (column 4) < min_threshold.
-    mask = pred_bboxes[:, 4] >= MIN_THRESHOLD
-    bboxes = pred_bboxes[mask]
 
-    # --- 2: Perform NMS
-    # store the bboxes that pass IOU
-    output = []
+    # === 1: Filter out low-confidence bboxes; tensors where pc/probability_score (column 4) is less than min_threshold.
+    keep_mask = pred_bboxes[:, 4] > MIN_THRESHOLD
+    bboxes = pred_bboxes[keep_mask]
 
-    # --- 3: Loop thru the number of unique class_idx
-    for cls_idx in bboxes[:, 3].unique():
+    #   Return if no boxes survives.
+    if bboxes.numel() == 0:
+        print(
+            "No bounding boxes has a probability score (pc) > MIN_THRESHOLD. The model is not good enough or something is wrong in code."
+        )
+        return bboxes
 
-        # --- 4: Use a mask so we can put the boxes with the same class_idx into a tensor.
-        class_mask = bboxes[:, 3] == cls_idx
-        classes_bboxes = bboxes[
-            class_mask
-        ]  # classes_bboxes -> is a tensor that contains boxes with the same class_idx!
-        keep = []  # Stores boxes to keep
+    # === 2: Convert midpoint coords (x, y, w, h) -> corner-point coordinates (x1, y1, x2, y2).
+    i, j = bboxes[:, 0], bboxes[:, 1]
+    cx = (j + bboxes[:, 5]) / S
+    cy = (i + bboxes[:, 6]) / S
+    w, h = bboxes[:, 7], bboxes[:, 8]
 
-        # --- 5: Queue -> Loop thru the boxes of the same class_idx.
-        while len(classes_bboxes) > 0:
-            """This queue works like so
-            1. classes_bboxes = [box1, box2, box3, etc..] all of the same class_idx
-            2. chosen_box = box1
-            3. box1 is add to keep
-            3. box1 is compared with all the other boxes vectorized
-            4. if any box# overlap too much/doesn't pass IOU with box1, then those boxes are removed from queue list.
-            5. then we loop back up, and chosen_box is the next box in queue that didn't overlap with box1 etc..
-            """
-            # --- 6: Get the first box, which will always be the box with the highest pc for every class.
-            chosen_bbox = classes_bboxes[0]
-            keep.append(chosen_bbox)  # since it has the highest pc, safe to keep it
+    x1 = cx - w / 2
+    y1 = cy - h / 2
+    x2 = cx + w / 2
+    y2 = cy + h / 2
+    corners = torch.stack([x1, y1, x2, y2], dim=1)
 
-            # Handle final case
-            if len(classes_bboxes) == 1:
-                break
+    # === 3: Perform class-wise NMS
+    final_idx = []
+    for cls in bboxes[:, 3].unique():
+        cls_mask = bboxes[:, 3] == cls
+        cls_boxes = corners[cls_mask]
+        cls_scores = bboxes[cls_mask, 4]  # pc
+        # TODO I need to do the NMS line below myself instead of calling from a library
+        keep = nms(cls_boxes, cls_scores, IOU_THRESHOLD)
+        base_idx = torch.nonzero(cls_mask, as_tuple=False).squeeze(1)
+        final_idx.append(base_idx[keep])
 
-            # Pop the chosen_bbox, so we get a tensor with the rest of the box of the same class_idx.
-            rest = classes_bboxes[1:]
-
-            #  --- 7: Compute IOU
-            iou = intersection_over_union(chosen_bbox=chosen_bbox, rest_bbox=rest)
-
-            # --- 8: Remove overlapping boxes
-            classes_bboxes = rest[iou < IOU_THRESHOLD]
-
-        # Add valid boxes to output
-        output.extend(keep)
-    if len(output) == 0:
-        print("OUTPUT LENGTH EMPTY")
-    return torch.stack(output, dim=0)
+    final_idx = torch.cat(final_idx)
+    return bboxes[final_idx]
 
 
-# test function
+#  NOTE: =============================================
+#   - Special case function below only meant to be called by the non_max_suppression() function.
+#   - while below seems intuitive its better to keep bboxes shape as the grid structure instead of [(N, 9) that the below is expecting its args tensor shapes to be] when using for Loss function. Above function handles that.
+#   - Unfortunately had to use two IOU functions for two different use cases.
+def iou_for_non_max_suppression(chosen_bbox: torch.Tensor, rest_bbox: torch.Tensor):
+    """
+    THIS FUNCTION IS SPECIAL CASE ONLY MEANT TO BE USED BY THE NON_MAX_SUPPRESSION() function. Computes Intersection Over Union between one bbox and batch of bbox.
 
-# from types import SimpleNamespace
+    Note:
+        This function requires that the bbox coordinates format are in mid-point format. And that they all be passed in with the same class_idx.
 
-# # Simulated config
-# config = SimpleNamespace(DEVICE="cpu", IOU_THRESHOLD=0.5)
+    Args:
+        bbox (tensor): shape: (9). [i, j, b, class_idx, pc, x, y, w, h].
+        coords (tensor): Shape (N, 9). [i, j, b, class_idx, pc, x, y, w, h].
 
-# # Create test tensor [i, j, b, class_idx, pc, x, y, w, h]
-# test_tensor = torch.tensor(
-#     [
-#         [0, 0, 0, 1, 0.95, 0.5, 0.5, 0.4, 0.4],  # keep
-#         [0, 0, 1, 1, 0.85, 0.52, 0.52, 0.4, 0.4],  # suppress (overlaps)
-#         [0, 0, 0, 1, 0.30, 0.9, 0.9, 0.3, 0.3],  # keep (low overlap)
-#         [0, 1, 1, 2, 0.88, 0.5, 0.5, 0.2, 0.2],  # keep (diff class)
-#         [0, 1, 0, 2, 0.70, 0.51, 0.51, 0.2, 0.2],  # suppress (same class + overlaps)
-#     ]
-# )
+    Returns:
+        tensor : IOU values.
+    """
+    # --- 1: Extract and convert coordinates to corner-points format
+    x1 = rest_bbox[:, 5] - rest_bbox[:, 7] / 2
+    y1 = rest_bbox[:, 6] - rest_bbox[:, 8] / 2
+    x2 = rest_bbox[:, 5] + rest_bbox[:, 7] / 2
+    y2 = rest_bbox[:, 6] + rest_bbox[:, 8] / 2
 
-# # Run
-# filtered = vectorized_nms(test_tensor, config)
+    # Do it for chosen_bbox
+    cx, cy, cw, ch = chosen_bbox[5:9]
+    cx1, cy1 = cx - cw / 2, cy - ch / 2
+    cx2, cy2 = cx + cw / 2, cy + ch / 2
+    chosen_bbox_area = (cx2 - cx1) * (cy2 - cy1)
 
-# # Print results
-# print("Filtered BBoxes:")
-# print(filtered)
+    # --- 2: Calculate IOU
+    box_area = (x2 - x1) * (y2 - y1)
+    inter_x1 = torch.max(cx1, x1)
+    inter_y1 = torch.max(cy1, y1)
+    inter_x2 = torch.min(cx2, x2)
+    inter_y2 = torch.min(cy2, y2)
+
+    inter_w = (inter_x2 - inter_x1).clamp(min=0)
+    inter_h = (inter_y2 - inter_y1).clamp(min=0)
+    inter_area = inter_w * inter_h
+
+    union_area = chosen_bbox_area + box_area - inter_area
+    iou = inter_area / (union_area + 1e-6)  # example print tensor([0.8223, 0.0000])
+    return iou

@@ -24,7 +24,7 @@ def load_config():
     # set DEVICE to torch.device
     config.DEVICE = torch.device(config.DEVICE)
 
-    # Convert "2e-5" to a float()
+    # Convert "1e-4" to a float() -> 0.0001
     config.LEARNING_RATE = float(config.LEARNING_RATE)
 
     return config

@@ -1,0 +1,3 @@
+2025-07-08 18:30:55,799 | INFO | Starting training loop...
+2025-07-08 18:30:55,799 | WARNING | GPU memory almost full!
+2025-07-08 18:30:55,800 | ERROR | Model checkpoint failed to save
