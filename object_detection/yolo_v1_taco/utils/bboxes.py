@@ -33,7 +33,7 @@ def extract_bboxes(t: torch.Tensor, config: Namespace):
         config.NUM_NODES_PER_CELL,
     )
 
-    # --- 1: Create new tensors to store class probs, first bbox and second bbox from every cell across the batch.
+    # === 1: Create new tensors to store class probs, first bbox and second bbox from every cell across the batch.
     class_probs = t[..., :C]  # ( S, S, C)
 
     bbox_1 = t[..., C : C + 5]  # ( S, S, 5) #pc1, x1, y1, w1, h1
@@ -43,7 +43,7 @@ def extract_bboxes(t: torch.Tensor, config: Namespace):
     #   Get the highest predicted object from indexes 0-17. Store as index.
     class_idx = class_probs.argmax(dim=-1)  # shape: ( S, S)
 
-    # --- 2: Create grid cell indice mapping tensor for i, j, and b coords.
+    # === 2: Create grid cell indice mapping tensor for i, j, and b coords.
     # Note: (i,j) -> i = row_indices and j = col_indices
     row_indices, col_indices = torch.meshgrid(
         torch.arange(S, device=DEVICE), torch.arange(S, device=DEVICE), indexing="ij"
@@ -60,12 +60,12 @@ def extract_bboxes(t: torch.Tensor, config: Namespace):
         torch.arange(B, device=DEVICE).view(1, 1, B).expand(S, S, B)
     )  # (S, S, 2)
 
-    # --- 3: Expand class_idx tensor to match (S, S, 2)
+    # === 3: Expand class_idx tensor to match (S, S, 2)
     cls_indices = class_idx.unsqueeze(-1).expand(
         -1, -1, B
     )  # (7, 7) -> (7, 7, 2)
 
-    # --- 4: Stack metadata
+    # === 4: Stack metadata
     metadata = torch.stack(
         [row_indices, col_indices, box_indices], dim=-1
     )  # (7, 7, 2, 3)
@@ -80,7 +80,7 @@ def extract_bboxes(t: torch.Tensor, config: Namespace):
     #      Reshape full into flat form: ( S, S, 2, 9) -> ( N, 9) where N=S*S*2 or total num bboxes per image.
     full = full.view( -1, 9)
 
-    # --- 5: Sort by pc (column 4)
+    # === 5: Sort by pc (column 4)
     sorted_indices = full[:, 4].argsort(
         descending=True
     )

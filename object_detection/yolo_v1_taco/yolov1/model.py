@@ -116,10 +116,23 @@ class YOLOv1(nn.Module):
         self.fcs = self._create_fcs(**kwargs)
 
     def forward(self, input):  # call method
-        x = self.conv(input)  # pass thru all the Convolutional layers
 
-        # pass thru fully connected layers/dense neural network
-        return self.fcs(torch.flatten(x, start_dim=1))
+        # pass thru all the Convolutional layers
+        out = self.conv(input)
+        # # pass thru fully connected layers/dense neural network
+        out = self.fcs(torch.flatten(out, 1))
+
+        # TODO below is new, see if below was implemented in the og paper
+        out = out.view(input.size(0), self.S, self.S, 28)
+        C = self.C
+        act = torch.sigmoid
+        out[..., C] = act(out[..., C])  # pc1
+        out[..., C + 1 : C + 3] = act(out[..., C + 1 : C + 3])  # x1,y1
+        out[..., C + 3 : C + 5] = act(out[..., C + 3 : C + 5])  # w1,h1
+        out[..., C + 5] = act(out[..., C + 5])  # pc2
+        out[..., C + 6 : C + 8] = act(out[..., C + 6 : C + 8])  # x2,y2
+        out[..., C + 8 : C + 10] = act(out[..., C + 8 : C + 10])  # w2,h2
+        return out
 
     def _create_conv_layers(self):
         """Create the convolutional layers"""
@@ -166,10 +179,10 @@ class YOLOv1(nn.Module):
                         ),
                     ]
                     # update in_channels to be conv2 from conv1 to be the input of the next layer
-                    in_c = conv2[1]  
+                    in_c = conv2[1]
         return nn.Sequential(
-            *layers # *layers is to unpack the list of layers and convert it into a sequential.
-        ) 
+            *layers  # *layers is to unpack the list of layers and convert it into a sequential.
+        )
 
     def _create_fcs(self, **kwargs):
         """
@@ -184,16 +197,7 @@ class YOLOv1(nn.Module):
             nn.LeakyReLU(0.1),
             nn.Linear(
                 # From paper: S * S * ( B * 5 + C)
-                4096, S * S * (B * 5 + C)
-            ), 
+                4096,
+                S * S * (B * 5 + C),
+            ),
         )
-
-
-# def test(S=7, B=2, C=18):
-#     model = YOLOv1(in_channels=3, S=S, B=B, C=C)
-#     x = torch.randn((2, 3, 448, 448)) # 2 = two image examples
-#     print(model(x).shape)
-
-    ## NUM_NODES_PER_IMG = 1372
-    ## NUM_NODES_PER_CELL = 28
-    ## Ex: 7 * 7 * 28 = 1372 -> model predicted output shape should be torch.Size([2, 1372]) prediction for 2 images.# test()

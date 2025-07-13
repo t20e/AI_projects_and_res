@@ -1,0 +1,44 @@
+# 💡 Project Configurations: For this project most attributes are hard-coded to match the original paper.
+
+# NOTE: If you change the Key names please be sure to update the YOLOConfig class in ./configs/config_loader
+
+# --------------------------- DEVICE AND SYSTEM ---------------------------
+DEVICE: "mps" # GPU device ->  "mps": Apple silicon M series | "cuda": Nvidia GPU | "cpu": if no GPUs available use CPU
+NUM_WORKERS: 2
+PIN_MEMORY: True
+
+# --------------------------- HYPERPARAMETERS ---------------------------
+EPOCHS: 25 #50 # if epoch = 1, model sees dataset 1 time.
+LEARNING_RATE: 1e-2
+BATCH_SIZE: 64 # 64 images per batch
+WEIGHT_DECAY: 0 # TODO play with weight decay, try to keep it the same as paper
+
+# ----------------- CONTINUE TRAINING PRE-TRAINED MODELS -----------------
+CON_TRAINING: False # Boolean | continue to train a model
+LOAD_MODEL_FILE: "" # ex: "yolo_v1_taco_D_2025-07-08_EPOCH_2_LOSS_4769247.0_S_448.pt"
+LAST_EPOCH: 0 # (int) The last epoch the model was trained on, don't change from 0.
+
+
+# --------------------------- ARCHITECTURE ---------------------------
+C: 20 # How many classes in the dataset
+B: 2 # How many bounding boxes does the model predict per cell
+S: 7 # split_size how to split the image, 7x7=49 grid cells
+IOU_THRESHOLD: 0.6 # The iou threshold when comparing bounding boxes for NMS
+MIN_THRESHOLD: 0.5 # The minimal confidence to keep a predicted bounding box
+
+LABEL_NODES: 1470 # config.S * config.S * (config.C + config.B * 5) === The total number of nodes that each label has for one image. If S=7 C=20 B=2 --> 7 * 7 * (C + B * 5) = 1470 | 7x7=49 -> 49*30 = 1470 | the (* 5) adds the second bounding box in the cell -> [pc_2, x, y, w, h].
+CELL_NODES: 30 # The total number of nodes that a single cell has in a label for one image. Which would be the size (C + 5 * B) -> [*classes, pc_1, bbox1_x_y_w_h, pc_2, bbox2_x_y_w_h]. If S=7 C=20 B=2 --> 30 nodes.
+
+
+# --------------------------- DATASET ---------------------------
+DATASET: "VOC2012_train_val" # The dataset to grabs from (./datasets) ex:VOC2012_train_val
+IMAGE_SIZE: 448 # 448x448
+CLASS_NAMES: [ 'person', 'bird', 'cat', 'cow', 'dog',
+               'horse', 'sheep', 'aeroplane', 'bicycle', 'boat',
+               'bus', 'car', 'motorbike', 'train', 'bottle',
+               'chair', 'dining table', 'potted plant', 'sofa', 'tvmonitor'] # note tvmonitor should be tv/moniter but the labeled data has it as tvmoniter 
+
+# The number of images to grab when training.
+#   Set to 0: to train on entire dataset 
+NUM_IMAGES: 10
+ 

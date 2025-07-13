@@ -16,13 +16,12 @@ def data_loader(config:Namespace, transforms:T, Dataset):
         S=config.S,
         B=config.B,
         C=config.C,
-        mode=config.MODE,
-        dataset_path=config.DATASET_DIR,
+        whichDataset=config.WHICH_DATASET,
         transforms=transforms,
     )
-    if config.MODE == "train":
+    if config.WHICH_DATASET == "train":
         drop_last = True
-    else: # For validation/test mode you usually want the entire dataset.
+    else: # ==> When validating or testing you usually want the entire dataset.
         drop_last = False
 
     return DataLoader(

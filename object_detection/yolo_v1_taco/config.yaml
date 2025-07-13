@@ -12,28 +12,27 @@ NUM_WORKERS: 2
 PIN_MEMORY: True
 
 # === Hyperparameters
-EPOCHS: 50 #50 # if epoch = 1, model sees dataset 1 time.
-LEARNING_RATE: 1e-4
+EPOCHS: 25 #50 # if epoch = 1, model sees dataset 1 time.
+LEARNING_RATE: 1e-2 # Scheduled Learning rate is implemented.
 BATCH_SIZE: 64 # 64 images per batch
 WEIGHT_DECAY: 0 # TODO play with weight decay, try to keep it the same as paper
 
-
 # === Continue Training Pre-Trained Models
 CON_TRAINING: False # Boolean | continue to train a model
-LOAD_MODEL_FILE: "" # ex: "yolo_v1_taco_D_2025-07-08_EPOCH_2_LOSS_4769247.0_S_448.pt"
+LOAD_MODEL_FILE: "yolo_v1_taco_D_2025-07-11_EPOCH_25_LOSS_7642.7793_SIZE_448.pt" # ex: "yolo_v1_taco_D_2025-07-08_EPOCH_2_LOSS_4769247.0_S_448.pt"
 LAST_EPOCH: 0 # (int) The last epoch the model was trained on, don't change from 0.
 
 # === Dataset
-MODE: "train" # "train" or "test" or "valid" which dataset to grab.
-DATASET_DIR: "./data" # root path to the dataset dir
+# The folder that contains all datasets is hardcoded to "./data"
+WHICH_DATASET: "test-case-overfit-one-image" # "train" or "test" or "valid" or custom dataset => grabs the dataset from ./data dir ./data/test or ./data/test-case-1 etc..
 IMAGE_SIZE: 448 # 448x448
 
 # === Architecture
-C: 18 # how many classes in the dataset
-B: 2 # how many bounding boxes does the model predict per cell
+C: 18 # How many classes in the dataset
+B: 2 # How many bounding boxes does the model predict per cell
 S: 7 # split_size how to split the image, 7x7=49 grid cells
-IOU_THRESHOLD: 0.8 # the iou threshold when comparing bounding boxes for NMS
-MIN_THRESHOLD: 0.6 # the minimal confidence to keep a predicted bounding box
+IOU_THRESHOLD: 0.6 # The iou threshold when comparing bounding boxes for NMS
+MIN_THRESHOLD: 0.5 # The minimal confidence to keep a predicted bounding box
 
 # === NOTE === : the below code is add at the load_config() function/ also maybe this could be hardcoded in.
 

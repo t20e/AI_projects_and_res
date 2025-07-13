@@ -1,0 +1,33 @@
+
+# To create the environment: conda env create -f environment.yml
+# To activate the environment: conda activate yolov1_env
+
+
+name: yolov1_env
+
+channels:
+  - pytorch # Prioritize the pytorch channel for torch packages
+  - defaults
+
+dependencies:
+  # Python and Core Libraries
+  - python=3.11
+  - pip>=25.0
+  - jupyter
+  - ipykernel
+
+  # Data Science & Utility Libraries
+  - matplotlib
+  - pandas
+  - pandas-datareader
+  - pillow
+  - pyyaml
+  - requests
+  - scipy
+  - tqdm
+  # - libjpeg-turbo
+
+  # Install pytorch with pip. Recommended approach by the PyTorch team.
+  - pip: 
+    - torch>= 2.6
+    - torchvision

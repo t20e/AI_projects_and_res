@@ -26,7 +26,7 @@ config = Namespace(
     WEIGHT_DECAY = 0, #TODO plasy with wight decay
 
     # load a model with weights that u have been trained to train it more
-    LOAD_MODEL = True,
+    LOAD_MODEL = False,
     LOAD_MODEL_FILE = "./checkpoints/Yolov1_facemask_objectDetection_epoch50_2025-04-09-18h_31m.pt",
     
     DATASET_DIR = "./data", # root path to the dataset dir

@@ -42,7 +42,7 @@ def save_checkpoint(state:dict, epochs, loss, config):
     # === Create file name
     date_str = datetime.now().strftime("%Y-%m-%d")
     # {model_architecture}_{dataset_name}__{date}_{input_size}_epoch.pt
-    file_name = f"yolo_v1_taco_D_{date_str}_EPOCH_{epochs}_LOSS_{loss}_S_{img_siz}.pt"
+    file_name = f"yolo_v1_taco_D_{date_str}_EPOCH_{epochs}_LOSS_{loss}_SIZE_{img_siz}.pt"
 
     # === save model
     print("\n" + "#" * 32, "\n")
@@ -60,7 +60,7 @@ def load_checkpoint(file_name: str, yolo: nn.Module, optimizer: torch.optim, sch
     Parameters
     ----------
         file_name: str
-            The models file_name. ex: Yolo_v1_taco_448_448_2025-04-27.pt.
+            The models file_name. ex: yolo_v1_taco_D_2025-07-08_EPOCH_50_LOSS_4.2496_SIZE_448.pt
         yolo:
             The Yolov1 class object.
         optimizer:
@@ -81,7 +81,9 @@ def load_checkpoint(file_name: str, yolo: nn.Module, optimizer: torch.optim, sch
 
     yolo.load_state_dict(checkpoint["model"])
     optimizer.load_state_dict(checkpoint["optimizer"])
-    scheduler.load_state_dict(checkpoint["scheduler"])
+
+    # TODO add back in if scheduler is added back
+    # scheduler.load_state_dict(checkpoint["scheduler"])
 
     # Load the last epoch the model was trained on to resume from there.
     last_epoch = checkpoint["epoch"]

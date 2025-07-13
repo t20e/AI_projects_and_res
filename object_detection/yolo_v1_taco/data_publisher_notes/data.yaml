@@ -1,0 +1,19 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 18 # number of classes
+
+# NOTE: below should be 'bottle', 'bottle cap'. Thats how I implemented it in my project - t
+names: ['Aluminium foil', 'Bottle cap', 'Bottle', 'Broken glass', 'Can', 'Carton', 'Cigarette', 'Cup', 'Lid', 'Other litter', 'Other plastic', 'Paper', 'Plastic bag - wrapper', 'Plastic container', 'Pop tab', 'Straw', 'Styrofoam piece', 'Unlabeled litter']
+
+#  NOTE: IN MY PROJECT CLASSES LOOK LIKE BELOW.
+names: [ 'Aluminum foil', 'Bottle', 'Bottle cap', 'Broken glass', 'Can', 'Carton', 'Cigarette', 'Cup', 'Lid', 'Other litter', 'Other plastic', 'Paper', 'Plastic bag & wrapper', 'Plastic container', 'Pop tab', 'Straw', 'Styrofoam piece', 'Unlabeled litter']
+
+
+roboflow:
+  workspace: divya-lzcld
+  project: taco-mqclx
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/divya-lzcld/taco-mqclx/dataset/3

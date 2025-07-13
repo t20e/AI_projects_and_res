@@ -5,7 +5,8 @@ of the box relative to the bounds of the grid cell. The width
 and height are predicted relative to the whole image. "
 
 
-# Got bored of this dataset, moved on to TACO dataset in the same repo. The training is all implemented. Code is not dry, and not efficient, also model did poorly.
+# ⚠️ Got bored of this dataset, moved on to TACO dataset in the same repo. 
+This project's training is all implemented but the code is not dry, and not efficient, also model did poorly.
 
 
 # Face Mask detection With YOLO V1 Paper Model

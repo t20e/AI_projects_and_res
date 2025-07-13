@@ -1,10 +1,6 @@
 """IOU"""
-import torch 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from collections import Counter
 
+import torch
 
 
 def intersection_over_union(pred_bboxes, label_bboxes, box_format="midpoint"):
@@ -28,19 +24,21 @@ def intersection_over_union(pred_bboxes, label_bboxes, box_format="midpoint"):
         YOLOv1 uses mid-point format for its predictions, however its simpler to use corner-points for NMS, and IOU calculations. They are easily convertible.
 
     Args:
-        pred_bboxes (tensor): Predictions of bounding boxes (batch_size, 4)
+        pred_bboxes (tensor): Predictions of bounding boxes (batch_size, 4) where 4 is [x, y, w, h].
         label_bboxes (tensor): True bounding boxes (batch_size, 4)
         box_format (str) : "midpoint" or "corners" used to specify layout.
             - "midpoint": [x, y, w, h]
             - "corners": [x1, y1, x2, y2]
-    
+
     Returns:
         tensor: Intersection over union for all examples in a batch.
     """
 
     # --- 1: Convert "midpoints" coordinates to "corners"-points, its easier to calculates IOU with corner points.
     if box_format == "midpoint":
-        box1_x1 = pred_bboxes[..., 0:1] - pred_bboxes[..., 2:3] / 2 # pred_bboxes[..., 0:1] is the midpoint, pred_bboxes[..., 2:3] is the width of that bbox, so if we divide it by 2, then well get the top-left x1 coordinate
+        box1_x1 = (
+            pred_bboxes[..., 0:1] - pred_bboxes[..., 2:3] / 2
+        )  # pred_bboxes[..., 0:1] is the midpoint, pred_bboxes[..., 2:3] is the width of that bbox, so if we divide it by 2, then well get the top-left x1 coordinate
         box1_y1 = pred_bboxes[..., 1:2] - pred_bboxes[..., 3:4] / 2
         box1_x2 = pred_bboxes[..., 0:1] + pred_bboxes[..., 2:3] / 2
         box1_y2 = pred_bboxes[..., 1:2] + pred_bboxes[..., 3:4] / 2
@@ -59,7 +57,7 @@ def intersection_over_union(pred_bboxes, label_bboxes, box_format="midpoint"):
         box2_y1 = label_bboxes[..., 1:2]
         box2_x2 = label_bboxes[..., 2:3]
         box2_y2 = label_bboxes[..., 3:4]
-    
+
     # --- 3: Calculate the intersection. Get the coordinates of the overlapping box where pred_bboxes and label_bboxes overlap (the intersection).
     x1 = torch.max(box1_x1, box2_x1)
     y1 = torch.max(box1_y1, box2_y1)
@@ -67,15 +65,20 @@ def intersection_over_union(pred_bboxes, label_bboxes, box_format="midpoint"):
     y2 = torch.min(box1_y2, box2_y2)
 
     # --- 4: Calculate the intersection Area. The box where (box1, box2) intersect.
-    intersection = (x2 - x1).clamp(0) * (y2 - y1).clamp(0) # the .clamp(0) is only for cases when the bounding boxes don't intersect, if they dont it replaces all negative values with 0.
+    intersection = (x2 - x1).clamp(min=0) * (y2 - y1).clamp(
+        min=0
+    )  # the .clamp() is only for cases when the bounding boxes don't intersect, if they dont it replaces all negative values with 0.
 
     # --- 5: Calculating the Union Area. The union is the total area covered by both (box1, box2)
-    box1_area = abs((box1_x2 - box1_x1) * (box1_y2 - box1_y1)) # the abs() is to make sure we dont have negatives.
-    box2_area = abs((box2_x2 - box2_x1) * (box2_y2 - box2_y1))
+    box1_area = torch.clamp(box1_x2 - box1_x1, min=0) * torch.clamp(
+        box1_y2 - box1_y1, min=0
+    )
+    box2_area = torch.clamp(box2_x2 - box2_x1, min=0) * torch.clamp(
+        box2_y2 - box2_y1, min=0
+    )
+
     union = box1_area + box2_area - intersection
-    
+
     # --- 6: Calculate Final IoU scores.
-    epsilon = 1e-6 # Add a small epsilon to avoid division by zero
-    return intersection / (union + epsilon)
-
-
+    epsilon = 1e-6  # Add a small epsilon to avoid division by zero
+    return intersection / (union + epsilon).clamp(0.0, 1.0)

@@ -10,3 +10,4 @@ from .bboxes import extract_bboxes, reconstruct_tensor, convert_yolo_to_corners
 from .load_config import load_config
 
 from .data_loader import data_loader
+from .setup_transforms import setup_transforms
