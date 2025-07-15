@@ -19,6 +19,12 @@ git sparse-checkout init --cone
 git sparse-checkout set "$PROJECT"
 git checkout main
 echo "✅ Successfully extracted '$PROJECT' -> from -> $REPO_URL"
+
+# 1. (cd) to that project.
+cd "$PROJECT"
+# 2. ⭐️ Read that projects README.md
+code README.md
+
 ```
 
 

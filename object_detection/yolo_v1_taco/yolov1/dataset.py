@@ -68,12 +68,15 @@ class Dataset(torch.utils.data.Dataset):
         # open the image
         image = Image.open(os.path.join(self.imgs_dir, self.df.iloc[index, 0]))
 
+        # #######
+        # TODO MAKE SURE THAT THE BBOXES ARE IN PERCENTAGE VALUES BEFORE APPLYING TRANSFORMS OR ELSE IT MESS UP EVERYTHING.
+        # #######
+
         if self.transforms: # apply transform
             image, bboxes = self.transforms(image, bboxes)
 
         # NOTE we will make the shape of the label tensors the same as the model's output, this is to make the code dry. The label's second bounding box nodes will not be used. Below -> self.B * 5 + self.C. Example: 18+5*2=28, Second bbox -> pc_2, x, y, w, h
         label_matrix = torch.zeros((self.S, self.S, self.B * 5 + self.C ))
-
         # ==> Add the bboxes data to the label_matrix
         for box in bboxes:
             class_label, x, y, width, height = box.tolist()
@@ -86,6 +89,8 @@ class Dataset(torch.utils.data.Dataset):
             #       x, y can not be bigger than 1 that would mean its larger than the cell, however the height and width of the bbox can be bigger than 1.
             x_rel_cell, y_rel_cell = self.S * x - j, self.S * y - i
 
+            # TODO did I add a 1 to class_idx????
+            
             if label_matrix[i, j, self.C] == 0: # checking if theres currently no object in i and j, this is also the position of the first probability_score
                 # NOTE: if two bounding boxes are in the same cell then only one will be selected. This is less likely to occur if split_size is large ex:19x19.
                 label_matrix[i, j, self.C] = 1 # Set this cell is now taken, meaning a bbox occupies it.

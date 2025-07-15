@@ -5,7 +5,7 @@
 
 ⭐️ **Objective**: "Using our system, you only look once (YOLO) at an image to predict what objects are present and where they are."
 
-⭐️ **Nowte**: I'm aiming for direct adherence to the paper's approach, so the code's design will favor easy comprehension, even if it means less vectorization and therefore reduced efficiency.
+⭐️ **Note**: I'm aiming for direct adherence to the paper's approach, so the code's design will favor easy comprehension, even if it means less vectorization and therefore reduced efficiency.
 
 ## Prerequisites
 
@@ -57,7 +57,7 @@ Classes: (num=20)
 *-'tvmonitor' should be 'tv/moniter' but the annotated data has it as 'tvmoniter'.*
 
 
-**Note:** The VOC dataset comes with object parts, for example: the human objects can also be divided into parts like 'head', 'hand', and 'foot' but for this project we will only grab the main objects bbox.
+**Note:** The VOC dataset comes with object parts for example: human objects can also be divided into parts like 'head', 'hand', and 'foot' but for this project we will only grab the main objects bbox.
 
 <!-- TODO once model predicts correctly on one image add the image with bboxes here -->
 
@@ -68,14 +68,17 @@ Classes: (num=20)
 ## How To Structure Dataset
 
 
-### Understanding Bounding Box Coordinate Formats
+### Understanding Bounding Box Coordi**corner-points** with Absolute nate Formats
 
 
 ⭐️ If you don't know the difference between corner-points and mid-points [Please read](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md).
 
 **Coordinate Format Nodes For Yolov1:**
 
-- *YOLOv1* uses mid-points to train and predict, however its simpler to use corner-points for *IoU*, *visualization*, and *Non-Max-Suppression*. They are easily convertible.
+- When **training** and **predicting** we use **mid-points** with normalized values. This allows for more stable numerical computations because the values are between [0-1].
+
+- When computing **IoU** and **NMS** we use **corner-points** with Absolute or normalized values.
+- When **Plotting** we use **corner-points** with Absolute values.
 
 - The **VOC dataset** for this project is labeled in **corner-points** coordinates, we will convert it to **mid-points** when needed to train the model.*
 

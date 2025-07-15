@@ -30,7 +30,7 @@ class Resize(object):
 
 
 class ToTensor(object):
-    """Convert image to Tensor. Leave bboxes as they are."""
+    """Convert image to Tensor. Leave label bboxes as they are."""
 
     def __call__(self, img, bboxes):
         img = T.ToTensor()(img)  # Automatically normalize image between 0-1
@@ -39,7 +39,7 @@ class ToTensor(object):
 
 def setup_transforms(img_size):
     """
-    Resize and convert Image data to tensors. Performs image normalization under the hood.
+    Resize and convert Image data to tensors. Performs image normalization under the hood. Won't alter label tensors.
     """
     return Compose(
         [
