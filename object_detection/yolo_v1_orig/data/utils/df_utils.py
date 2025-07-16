@@ -88,5 +88,5 @@ def test():
     dataset_path = os.path.join(cwd, "datasets", "VOC2012_train_val")
     print(create_df(dataset_path, num_to_load=10, save_to_csv=False))
 
-
-# test()
+if __name__ == '__main__':
+    test()

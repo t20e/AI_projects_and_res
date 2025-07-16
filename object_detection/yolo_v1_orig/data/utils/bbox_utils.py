@@ -82,5 +82,5 @@ def test():
     # --- Test extract_and_convert_bboxes() -> with Tensors are in mid-point format and normalized percentage.
     print(extract_and_convert_bboxes(label, cfg))
 
-
-# test()
+if __name__ == '__main__':
+    test()

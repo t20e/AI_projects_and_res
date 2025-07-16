@@ -1,5 +1,5 @@
 
-# Yolo V1 from paper
+# Yolo V1 From Paper
 
 🔗 [YOLO v1 Paper]("https://arxiv.org/pdf/1506.02640")
 
@@ -39,10 +39,9 @@ python train.py
 
 ## Dataset
 
-🔗 [VOC 2012](https://www.kaggle.com/datasets/gopalbhattrai/pascal-voc-2012-dataset/data)  
+🔗 [VOC Dataset Publisher](http://host.robots.ox.ac.uk/pascal/VOC/voc2012)
 
-
-🔗 [VOC 2012 G.G publisher](http://host.robots.ox.ac.uk/pascal/VOC/voc2012)
+🔗 [Download VOC 2012](https://www.kaggle.com/datasets/gopalbhattrai/pascal-voc-2012-dataset/data)  
 
 
 Classes: (num=20)  
@@ -52,9 +51,7 @@ Classes: (num=20)
 |       'person'            |       'bird'       |         'cat'      |     'cow'       |     'dog'        |
 |       'horse'             |       'sheep'      |      'aeroplane'   |   'bicycle'     |     'boat'       |
 |       'bus'               |       'car'        |      'motorbike'   |    'train'      |    'bottle'      |
-|       'chair'             |    'dining table'  |    'potted plant'  |     'sofa'      |   'tvmonitor'   | 
-
-*-'tvmonitor' should be 'tv/moniter' but the annotated data has it as 'tvmoniter'.*
+|       'chair'             |    'diningtable'  |    'pottedplant'  |     'sofa'      |   'tvmonitor'   | 
 
 
 **Note:** The VOC dataset comes with object parts for example: human objects can also be divided into parts like 'head', 'hand', and 'foot' but for this project we will only grab the main objects bbox.
@@ -73,7 +70,7 @@ Classes: (num=20)
 
 ⭐️ If you don't know the difference between corner-points and mid-points [Please read](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md).
 
-**Coordinate Format Nodes For Yolov1:**
+**Bounding Box Coordinate Format Nodes For Yolov1:**
 
 - When **training** and **predicting** we use **mid-points** with normalized values. This allows for more stable numerical computations because the values are between [0-1].
 
@@ -140,8 +137,9 @@ This architecture is a sequence of convolution and max pooling layers used to pr
 **C:** = 20 *num of classes in the dataset*.  
 **B:** = 2 *num of bboxes that each cell predicts*.  
 **S:** = 7 *split_size, how many cells we are splitting the image into, 7x7=49*.  
-num_cells_per_cell: = 30 *= B × 5 + C*.   
+**CELL_NODES**: = 30 *= B × 5 + C*.
 
+- All maxpooling layers will have  a kernel_size=2 stride=2.
 
 1. (kernel: 7x7 , filters: 64, stride: 2 , padding: 3) - Conv layer. **Note:** the padding: 3 is on the diagram 448x448x3 (first layer/box), and the kernel: 7x7; the 7 here doesn't correlate to S.
 2. *Max pool*
@@ -166,21 +164,20 @@ num_cells_per_cell: = 30 *= B × 5 + C*.
 17. (kernel: 3x3, filters: 1024, stride: 1, padding: 1) - Conv layer
 18. (kernel: 3x3, filters: 1024, stride: 1, padding: 1) - Conv layer
 19. Feeding thru fully connected layers.
-    - The output from 18. is shape (7x7x1024).
-    - flatten output to get a 1D vector --> 7x7x1024= 50176.
+    - The tensor output from step 18 is of shape (7x7x1024).
+    - Flatten it to get a 1D vector --> 7x7x1024= 50176.
     - Pass thru the first FC (fully connected layer) which has 4096 neurons.
         - Activation function: likely Leaky ReLU
     - Pass thru second FC, this FC will output a shape of S × S × (B × 5 + C) 
         - Note: "× 5" here is for the nodes of a  single bbox, we multiply it by the B to get the total number of bounding box per cell.
-        - Final output size S × S × (B × 5 + C) = S × S × num_cells_per_cell = 1470
-        - Reshape output -> S x S x num_cells_per_cell to extract predictions.
-            - each cell contains 30(num_cells_per_cell) -> 20 class predictions + 5(bbox) * B
+        - Final output size S × S × (B × 5 + C) = S × S × CELL_NODES = 1470
+        - Reshape output -> S x S x CELL_NODES to extract predictions.
 
 ### Loss Function
 
 **Check out:**
 - [res repo loss function notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/loss_fn.ipynb)  
-- And this project's loss function.
+- TODO And this project's loss function.
 
 
 

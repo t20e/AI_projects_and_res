@@ -13,12 +13,12 @@ from configs.config_loader import YOLOConfig, load_config
 from data.utils.setup_transforms import setup_transforms
 from data.utils.df_utils import create_df
 
-from data.utils.setup_transforms import Compose
+from data.utils.setup_transforms import CustomCompose
 from data.utils.VOC_extraction_pipeline import VOCAnnotationsExtraction
 
 
 class VOCDataset(torch.utils.data.Dataset):
-    def __init__(self, cfg: YOLOConfig, transforms: Optional[Compose] = None):
+    def __init__(self, cfg: YOLOConfig, transforms: Optional[CustomCompose] = None):
         """
         Dataset Class: Structures the images and annotations.
 
@@ -107,6 +107,8 @@ class VOCDataset(torch.utils.data.Dataset):
 
 
 def test():
+    print("\n\n🚧 TESTING: voc_dataset module \n\n")
+
     cfg = load_config("yolov1.yaml")
     t = setup_transforms(cfg.IMAGE_SIZE)
     d = VOCDataset(cfg, t)
@@ -115,4 +117,5 @@ def test():
 
 # Test run module:
 #   $          python -m data.voc_dataset
-# test()
+if __name__ == '__main__':
+    test()

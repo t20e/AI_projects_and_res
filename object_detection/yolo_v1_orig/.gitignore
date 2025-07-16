@@ -1,5 +1,5 @@
 datasets
-checkpoints
+checkpoints/models
 pre-trained
 
 __pycache__

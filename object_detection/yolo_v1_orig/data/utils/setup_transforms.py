@@ -6,7 +6,7 @@ Set up Compose  Object that will apply transformations to images and label tenso
 import torchvision.transforms as T
 
 # <------------- Transforms ------------->
-class Compose(object):
+class CustomCompose(object):
     """Apply a sequence of transforms safely on (image, bboxes)."""
 
     def __init__(self, transforms):
@@ -41,7 +41,7 @@ def setup_transforms(img_size):
     """
     Resize and convert Image data to tensors. Performs image normalization under the hood. Won't alter label tensors.
     """
-    return Compose(
+    return CustomCompose(
         [
             Resize((img_size, img_size)),  # Resize image to e.g. 448x448
             ToTensor(),  # Convert image to tensor

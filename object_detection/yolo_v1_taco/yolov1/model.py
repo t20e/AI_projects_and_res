@@ -5,7 +5,7 @@ import torch.nn as nn
 
 
 """
-    Architecture config contains the layers of the YOLO v1 architecture, it doesn't include the fully connected layers (fcs).
+    Architecture config contains the layers of the YOLO v1 architecture, it doesn't include the fully connected layers (fc).
 
     Tuple: (kernel_size, num_filters, stride, padding)
 
@@ -113,14 +113,14 @@ class YOLOv1(nn.Module):
         self.B = B
         self.C = C
         self.conv = self._create_conv_layers()
-        self.fcs = self._create_fcs(**kwargs)
+        self.fc = self._create_fc(**kwargs)
 
     def forward(self, input):  # call method
 
         # pass thru all the Convolutional layers
         out = self.conv(input)
         # # pass thru fully connected layers/dense neural network
-        out = self.fcs(torch.flatten(out, 1))
+        out = self.fc(torch.flatten(out, 1))
 
         # TODO below is new, see if below was implemented in the og paper
         out = out.view(input.size(0), self.S, self.S, 28)
@@ -184,7 +184,7 @@ class YOLOv1(nn.Module):
             *layers  # *layers is to unpack the list of layers and convert it into a sequential.
         )
 
-    def _create_fcs(self, **kwargs):
+    def _create_fc(self, **kwargs):
         """
         Create the fully connected layers/dense neural network
         """

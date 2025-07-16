@@ -7,6 +7,8 @@ import yaml
 @dataclass
 class YOLOConfig:
 
+    MODE: str = "train"
+
     # === Device and system
     DEVICE: int = "mps"
     NUM_WORKERS: int = 2
@@ -23,7 +25,6 @@ class YOLOConfig:
     LOAD_MODEL_FILE: str = ""
     LAST_EPOCH: int = 0
 
-
     # === Architecture
     C: int = 20
     B: int = 2
@@ -37,7 +38,7 @@ class YOLOConfig:
     # === Dataset
     DATASET: str = ""
     IMAGE_SIZE: int = 448
-    CLASS_NAMES: list[str] = None 
+    CLASS_NAMES: list[str] = None
     NUM_IMAGES: int = 0
 
 
@@ -57,11 +58,13 @@ def load_config(file_name: str = None, overrides: dict = None) -> YOLOConfig:
     if file_name:
         with open(f"./configs/{file_name}", "r") as f:
             cfg_dict.update(yaml.safe_load(f))
+    
+    # Make sure LEARNING_RATE is a float when passing string: '1e-2'.
+    if 'LEARNING_RATE' in cfg_dict:
+        cfg_dict['LEARNING_RATE'] = float(cfg_dict['LEARNING_RATE'])
 
     # Apply any manual overrides (from CLI or script)
     if overrides:
         cfg_dict.update(overrides)
 
     return YOLOConfig(**cfg_dict)
-
-

@@ -7,12 +7,12 @@ from typing import Optional, Tuple
 
 # My modules imports
 from configs.config_loader import YOLOConfig, load_config
-from data.utils.setup_transforms import Compose
+from data.utils.setup_transforms import CustomCompose
 from data.utils.setup_transforms import setup_transforms
 
 
 class VOCAnnotationsExtraction:
-    def __init__(self, cfg: YOLOConfig, transforms: Optional[Compose]):
+    def __init__(self, cfg: YOLOConfig, transforms: Optional[CustomCompose]):
         """
         VOCAnnotationsExtraction handles the entire pipeline for extracting an image and its annotations from the VOC dataset.
 
@@ -177,6 +177,8 @@ class VOCAnnotationsExtraction:
 
 
 def test():
+    print("\n\n🚧 TESTING: VOC_extraction_pipeline module \n\n")
+
     cfg = load_config("yolov1.yaml")
     cwd = os.getcwd()
     xml_path = f"{cwd}/datasets/VOC2012_train_val/Annotations/2007_000032.xml"
@@ -184,11 +186,11 @@ def test():
     t = setup_transforms(cfg.IMAGE_SIZE)
     e = VOCAnnotationsExtraction(cfg=cfg, transforms=t)
 
-    print("\nTesting load_sample()\n\n ")
-    e.load_sample(anno_xml_path=xml_path, img_path=img_path)
+    # print("\nTesting load_sample()\n\n ")
+    # e.load_sample(anno_xml_path=xml_path, img_path=img_path)
 
-    # print("\n\nTesting extract_annotations(), output: \n")
-    # print(e.extract_annotations(xml_path=xml_path))
+    print("\n\nTesting extract_annotations(), output: \n")
+    print(e.extract_annotations(xml_path=xml_path))
 
     # print("\n\nTesting convert_abs_to_mid_points(), output: \n")
     # a = {
@@ -219,4 +221,5 @@ def test():
 
 # Test module with:
 # $     python -m data.utils.VOC_extraction_pipeline
-# test()
+if __name__ == '__main__':
+    test()

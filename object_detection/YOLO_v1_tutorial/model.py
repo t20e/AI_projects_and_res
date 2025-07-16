@@ -76,12 +76,12 @@ class Yolov1(nn.Module):
         self.architecture = architecture_config
         self.in_channels = in_channels
         self.darknet = self._create_conv_layers(self.architecture)
-        self.fcs = self._create_fcs(**kwargs) # fcs is fully connected layer
+        self.fc = self._create_fc(**kwargs) # fc is fully connected layer
     
     def forward(self, x):
         x = self.darknet(x)
         # flatten then send to fully connected layer
-        return self.fcs(torch.flatten(x, start_dim=1))
+        return self.fc(torch.flatten(x, start_dim=1))
     
     def _create_conv_layers(self, architecture):
         layers = []
@@ -117,7 +117,7 @@ class Yolov1(nn.Module):
                     
         return nn.Sequential(*layers) # *layers is to unpack the list of layers and convert it to a nn.Sequential
     
-    def _create_fcs(self, split_size, num_boxes, num_classes):
+    def _create_fc(self, split_size, num_boxes, num_classes):
         ''' 
             split_size = (SxS), meaning if we have S = 7 we have a 7x7 = 49 grid
         '''
@@ -125,10 +125,10 @@ class Yolov1(nn.Module):
         
         return nn.Sequential(
             nn.Flatten(),
-            nn.Linear(1024 * S * S, 4096), # NOTE: the orginal paper it was 4,096 instead of 496 but that would take a long time to train
+            nn.Linear(1024 * S * S, 4096), # You could decrease 4096 to 496 to less training time
             nn.Dropout(0.0), # dropout was 0.5 in the original paper
             nn.LeakyReLU(0.1),
-            nn.Linear(4096, S * S * (C + B * 5)) # the orginal paper it was 4,096 instead of 496 but that would take a long time to train, this will be reshaped to be ( S, S, 30) C+B*5 = 30
+            nn.Linear(4096, S * S * (C + B * 5)) # You could decrease  4096 to 496 to less training time, this will be reshaped to be ( S, S, 30) C+B*5 = 30
         )
         
 def test(S = 7, B=2, C=20):
