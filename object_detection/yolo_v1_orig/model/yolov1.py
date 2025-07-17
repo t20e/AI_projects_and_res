@@ -75,7 +75,7 @@ class CNNBlock(nn.Module):
             bias=False,  # bias set to False because we are using batchnorm.
             **kwargs
         )
-        # Note: batch normalization wasn't used in the original paper because it wasn't invented yet. It normalize the feature maps across the batch dimension to stabilize and speed up training.
+        # NOTE: batch normalization wasn't used in the original paper because it wasn't invented yet. It normalize the feature maps across the batch dimension to stabilize and speed up training.
         self.batch_norm = nn.BatchNorm2d(out_channels)
         self.leakyReLU = nn.LeakyReLU(0.1)  # Activation function.
 

@@ -50,7 +50,6 @@ def test():
     for batch_idx, (x, y) in enumerate(loop):
         print("Batch index:", batch_idx)
 
-
 # The if __name__ == '__main__': guard is specifically for preventing code from being re-executed when a module is imported by another process (like the DataLoader workers).
 if __name__ == '__main__':
     test()

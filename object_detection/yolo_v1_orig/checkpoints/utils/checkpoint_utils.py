@@ -2,6 +2,8 @@ import torch
 import torch.optim
 import torch.nn as nn
 from datetime import datetime
+import os
+from configs.config_loader import YOLOConfig
 
 # My modules
 from configs.config_loader import YOLOConfig
@@ -36,22 +38,24 @@ def save_checkpoint(state: dict, epochs, loss, cfg: YOLOConfig):
 
     # === Create file name
     date_str = datetime.now().strftime("%Y-%m-%d")
-    file_name = f"yolo_v1_dataset_{cfg.DATASET}_date_{date_str}_EPOCH_{epochs}_LOSS_{loss}_SIZE_{img_siz}.pt"
+    file_name = f"{cfg.CUSTOM_FILE_NAME}_yolo_v1_dataset_{cfg.DATASET}_date_{date_str}_EPOCH_{epochs}_LOSS_{loss}_SIZE_{img_siz}.pt"
 
     # === save model
     print("\n" + "#" * 32, "\n")
     print(f"-> Saving checkpoint: ")
-    torch.save(state, f"../../checkpoints/models/{file_name}")
+    cwd = os.getcwd()
+    path = os.path.join(cwd, "checkpoints/models")
+    torch.save(state, f"{path}/{file_name}")
     print(f"Saved to {file_name}")
     print("\n" + "#" * 32, "\n")
 
 
-def load_checkpoint(file_name: str, yolov1: YOLOv1, optimizer: torch.optim, scheduler):
+def load_checkpoint(cfg:YOLOConfig, yolov1: YOLOv1, optimizer: torch.optim, scheduler):
     """
     Loads a models checkpoint from deserialized state_dict to continue training it.
 
     Args:
-        file_name (str): The models file_name.
+        cfg (YOLConfig): Project Configurations.
         yolo: Instance of the YOLOv1 class.
         optimizer: The optimizer used.
         scheduler: Learning rate scheduler.
@@ -59,18 +63,18 @@ def load_checkpoint(file_name: str, yolov1: YOLOv1, optimizer: torch.optim, sche
         last_epoch (int): the last epoch the model was trained on.
     """
     print("\n" + "#" * 64, "\n")
-    print(f"Loading model Checkpoint | model_name: {file_name}")
+    print(f"Loading model Checkpoint | model_name: {cfg.LOAD_MODEL_FILE}\n")
 
-    path = f"../../checkpoints/models/{file_name}"
-
+    cwd = os.getcwd()
+    path = os.path.join(cwd, "checkpoints/models", cfg.LOAD_MODEL_FILE)
     checkpoint = torch.load(path)
     print_checkpoint(checkpoint)
 
     yolov1.load_state_dict(checkpoint["model"])
     optimizer.load_state_dict(checkpoint["optimizer"])
 
-    # TODO add back in if scheduler is added back
-    # scheduler.load_state_dict(checkpoint["scheduler"])
+    if cfg.USE_SCHEDULER:
+        scheduler.load_state_dict(checkpoint["scheduler"])
 
     # Load the last epoch the model was trained on to resume from there.
     last_epoch = checkpoint["epoch"]

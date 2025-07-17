@@ -49,7 +49,7 @@ def create_df(dataset_path: str, num_to_load: int = 0, save_to_csv: bool = False
 
     # --- Match files by name.
     matched_data = []
-    # Note: I could just combine the two sorted arrays into a df but that could invite some issues like missing Pairs.
+    # Note: I could just combine the two sorted arrays into a df but that could invite some issues like missing Pairs, missing images, etc...
     for img_f in image_files:
         anno_xml = (
             img_f.rsplit(".", 1)[0] + ".xml"

@@ -27,15 +27,14 @@ code README.md
 
 ```
 
-
-
 ### 📌 Notable projects
 
-<!-- TODO add taco back in after its been fixed -->
-<!-- - 🔗 [yolo_v1_taco](./object_detection/yolo_v1_taco)
-    - Object detection.
-    - Vectorized.
-    - [yolo_v1 resource](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection/YOLO.res) -->
+**Object detection.**
 
-### Less-Notable projects
+- 🔗 [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig)
+    - Implements the YOLO v1 paper closely.
+    - [YOLOv1 notes](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection/YOLO.res)
+
+
+#### Less-Notable projects
 

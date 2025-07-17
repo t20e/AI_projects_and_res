@@ -1,5 +1,6 @@
 import torch
 import torch.optim as optim
+from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, SequentialLR
 
 
 # My Modules
@@ -31,25 +32,23 @@ if __name__ == "__main__":
     optimizer = optim.Adam(yolo.parameters(), lr=cfg.LEARNING_RATE)
 
     # ==> Init Learning rate scheduler with a warm-up
-    # TODO add scheduler and warmup
-    # warm_up = LinearLR(  # warmups help prevent exploding gradients early on.
-    #     optimizer=optimizer, start_factor=0.1, total_iters=5
-    # )  # 10% of LR over first 5 epochs, then back to regular LR.
+    warm_up = LinearLR(  # warmups help prevent exploding gradients early on.
+        optimizer=optimizer, start_factor=0.1, total_iters=5
+    )  # 10% of LR over first 5 epochs, then back to regular LR.
 
-    # cosine = CosineAnnealingLR(optimizer, T_max=config.EPOCHS - 5)
-    scheduler = None
-    # scheduler = SequentialLR(
-    #     optimizer,
-    #     schedulers=[warm_up, cosine],
-    #     milestones=[5],  # <== switch from warm_up to cosine after epoch 5
-    # )
+    cosine = CosineAnnealingLR(optimizer, T_max=cfg.EPOCHS - 5)
+    if cfg.USE_SCHEDULER:
+        scheduler = SequentialLR(
+            optimizer,
+            schedulers=[warm_up, cosine],
+            milestones=[5],  # Switch from warm_up to cosine after epoch 5.
+        )
+    else:
+        scheduler = None
 
     # ==> Load pre-trained model.
     if cfg.CON_TRAINING:
-        #  TODO retrieve the last LEARNING RATE the pre-trained model was trained on, instead of starting over with the default config LEARNING_RATE
-        #           NOTE: chatgpt says it doesnt matter as long as u load the model correclty the lr should overright default in optimizer, etc.. BUT DOUBLE CHECK
-        cfg.LAST_EPOCH = load_checkpoint(
-            cfg.LOAD_MODEL_FILE, yolov1=yolo, optimizer=optimizer, scheduler=scheduler
+        cfg.LAST_EPOCH = load_checkpoint(cfg, yolov1=yolo, optimizer=optimizer, scheduler=scheduler
         )
 
     # ==> Init Dataset Loader

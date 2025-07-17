@@ -56,8 +56,8 @@ class VOCDataset(torch.utils.data.Dataset):
         cfg = self.cfg
         S, B, C = cfg.S, cfg.B, cfg.C
 
-        # --- 1 Make sure the index doesn't go out of bounds of the dataframe.
-        if index >= cfg.NUM_IMAGES:
+        # --- 1 Make sure the index doesn't go out of bounds of the dataframe. However when cfg.NUM_IMAGES == 0 that means grab entire dataset
+        if index >= cfg.NUM_IMAGES and cfg.NUM_IMAGES != 0:
             print(
                 f"\n\nERROR: Index is out of bounds. Index: {index}, size of dataframe: {self.__len__()}, index starts at zero. \n\nOccurred at: VOCDataset.__getitem__()"
             )
@@ -117,5 +117,5 @@ def test():
 
 # Test run module:
 #   $          python -m data.voc_dataset
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

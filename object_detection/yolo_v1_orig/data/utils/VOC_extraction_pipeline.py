@@ -4,6 +4,7 @@ from typing import List, Dict
 import os
 import torch
 from typing import Optional, Tuple
+import sys
 
 # My modules imports
 from configs.config_loader import YOLOConfig, load_config
@@ -133,10 +134,10 @@ class VOCAnnotationsExtraction:
                 {
                     "obj_name": obj_name,
                     "class_idx": class_idx,
-                    "xmin": int(box.find("xmin").text),
-                    "ymin": int(box.find("ymin").text),
-                    "xmax": int(box.find("xmax").text),
-                    "ymax": int(box.find("ymax").text),
+                    "xmin": int(float(box.find("xmin").text)),
+                    "ymin": int(float(box.find("ymin").text)),
+                    "xmax": int(float(box.find("xmax").text)),
+                    "ymax": int(float(box.find("ymax").text)),
                 }
             )
         return annos
@@ -181,16 +182,17 @@ def test():
 
     cfg = load_config("yolov1.yaml")
     cwd = os.getcwd()
-    xml_path = f"{cwd}/datasets/VOC2012_train_val/Annotations/2007_000032.xml"
-    img_path = f"{cwd}/datasets/VOC2012_train_val/JPEGImages/2007_000032.jpg"
+    xml_path = f"{cwd}/datasets/VOC2012_train_val/Annotations/2009_001412.xml"
+    img_path = f"{cwd}/datasets/VOC2012_train_val/JPEGImages/2009_001412.jpg"
+
     t = setup_transforms(cfg.IMAGE_SIZE)
     e = VOCAnnotationsExtraction(cfg=cfg, transforms=t)
 
-    # print("\nTesting load_sample()\n\n ")
-    # e.load_sample(anno_xml_path=xml_path, img_path=img_path)
+    print("\nTesting load_sample()\n\n ")
+    print(e.load_sample(anno_xml_path=xml_path, img_path=img_path))
 
-    print("\n\nTesting extract_annotations(), output: \n")
-    print(e.extract_annotations(xml_path=xml_path))
+    # print("\n\nTesting extract_annotations(), output: \n")
+    # print(e.extract_annotations(xml_path=xml_path))
 
     # print("\n\nTesting convert_abs_to_mid_points(), output: \n")
     # a = {
@@ -221,5 +223,5 @@ def test():
 
 # Test module with:
 # $     python -m data.utils.VOC_extraction_pipeline
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

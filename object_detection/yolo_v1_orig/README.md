@@ -1,11 +1,18 @@
 
 # Yolo V1 From Paper
 
+Goal:   
+<img src="./showcase_images/prediction.png" width="250">
+
+
+
 🔗 [YOLO v1 Paper]("https://arxiv.org/pdf/1506.02640")
 
 ⭐️ **Objective**: "Using our system, you only look once (YOLO) at an image to predict what objects are present and where they are."
 
-⭐️ **Note**: I'm aiming for direct adherence to the paper's approach, so the code's design will favor easy comprehension, even if it means less vectorization and therefore reduced efficiency.
+⭐️ **Note**: I'm aiming for direct adherence to the paper's approach with slight improvements, so the code's design will favor easy comprehension, even if it means less vectorization and therefore reduced efficiency.
+
+<!-- TODO When I add taco dataset elborate on 1. this projects main focus was the VOCDataset but I test other datasets, the run function of this project will only download the VOC dataset, add links to the Taco dataset and how to implement it. -->
 
 ## Prerequisites
 
@@ -24,12 +31,12 @@ bash setup.bs
 conda activate yolov1_env
 ```
 3. Train Model
-<!-- TODO -->
 ```bash 
-python train.py
+# Set MODE="train" in configuration file of the dataset used.
+python main.py 
 ```
 4. RUN 
-<!-- TODO maybe live model or other -->
+<!-- TODO maybe implement live-cam feed or other -->
 
 ## Vocab
 
@@ -55,10 +62,6 @@ Classes: (num=20)
 
 
 **Note:** The VOC dataset comes with object parts for example: human objects can also be divided into parts like 'head', 'hand', and 'foot' but for this project we will only grab the main objects bbox.
-
-<!-- TODO once model predicts correctly on one image add the image with bboxes here -->
-
-
 
 
 
@@ -176,8 +179,11 @@ This architecture is a sequence of convolution and max pooling layers used to pr
 ### Loss Function
 
 **Check out:**
-- [res repo loss function notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/loss_fn.ipynb)  
-- TODO And this project's loss function.
+
+- [Loss Function Notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/loss_fn.ipynb).
+
+- [Loss Function implemented](https://github.com/t20e/AI_public_projects/blob/main/object_detection/yolo_v1_orig/loss.py).
+
 
 
 

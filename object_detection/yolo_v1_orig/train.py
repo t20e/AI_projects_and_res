@@ -33,7 +33,6 @@ def train(
         # TODO --> compute mean average precision look into the the todo in the res folder
 
         # === Helper function.
-        # TODO is this mean_loss here correct? This is the last loss from the last epoch correct? It can be noted down?
         # The mean_loss from mean_loss is the average loss for the current epoch.
         mean_loss = train_one_epoch(
             cfg=cfg, loader=loader, yolo=yolo, loss_fn=loss_fn, optimizer=optimizer
@@ -41,16 +40,20 @@ def train(
 
         # === Update Learning Rate: at the end of every epoch. Note: different learning rates need to be updated in different areas of code; example: OneCycleLR is done per-batch.
         if isinstance(scheduler, torch.optim.lr_scheduler.SequentialLR):
-            scheduler.step
+            scheduler.step()
+    print(optimizer.param_groups[0]["lr"])
 
-    return
     # === Save model checkpoint.
+    if cfg.USE_SCHEDULER:
+        scheduler_state = scheduler.state_dict()
+    else:  # Dont save the scheduler
+        scheduler_state = None
     save_checkpoint(
         state={
             "epoch": epoch,
             "model": yolo.state_dict(),
             "optimizer": optimizer.state_dict(),
-            # "scheduler": scheduler.state_dict(),
+            "scheduler": scheduler_state,
             "mean_loss": mean_loss,
         },
         epochs=epoch,
@@ -83,7 +86,7 @@ def train_one_epoch(cfg: YOLOConfig, loader, yolo, loss_fn, optimizer):
         # === Forward-propagation | Predict
         out = yolo(x)  # (b_s, 1470)
 
-        # --- Reshape output.
+        # --- Reshape output from (b_s, 1470) -> (batch_size, S, S, CELL_NODES).
         b_s = x.size(0)  # Batch size not hardcoded for worst-case.
         out = out.view(b_s, cfg.S, cfg.S, cfg.CELL_NODES)
 
@@ -104,5 +107,4 @@ def train_one_epoch(cfg: YOLOConfig, loader, yolo, loss_fn, optimizer):
     # --- Calculate the mean loss for the epoch
     epoch_mean_loss = sum(loss_history) / len(loss_history)
     print(f"Mean loss: {epoch_mean_loss}")
-
     return epoch_mean_loss

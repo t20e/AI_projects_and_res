@@ -18,7 +18,7 @@ torch.manual_seed(1)
 # <------------- Load Hyperparameters/Config ------------->
 config = load_config()
 
-
+# TODO move taco dataset to yolo_v1_orig and delete this project
 
 def main(config):
     """Root function"""
