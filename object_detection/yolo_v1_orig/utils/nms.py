@@ -16,7 +16,7 @@ def nms(cfg: YOLOConfig, boxes: torch.Tensor):
     Args:
         cfg: Project configurations.
         boxes (torch.Tensor): Bounding boxes extracted from the models prediction.
-            - A tensor of shape (N, 6) with format  [best_cls_idx, pc, x1, y1, x2, y2]
+            - A tensor of shape (N, 6) with format  [image_idx, best_cls_idx, pc, x1, y1, x2, y2]
             - In corner-points with absolute pixel values.
     Returns:
         torch.Tensor: Bounding boxes that have passed NMS, with the same format.
@@ -29,11 +29,12 @@ def nms(cfg: YOLOConfig, boxes: torch.Tensor):
         cfg.MIN_THRESHOLD,
     )
 
-    # === TODOP TEST CASE del variables after ===
-    IOU_THRESHOLD, MIN_THRESHOLD = 0.6, 0.3
+    # ONLY FOR TESTING OVERFIT MODEL WITH LOW IOU AND MIN
+    # IOU_THRESHOLD, MIN_THRESHOLD = 0.4, 0.2
 
-    # ==> 1: Filter out low-confidence bounding boxes; tensors where probability scores (column 20) is less than min_threshold.
-    keep_mask = boxes[:, 1] > MIN_THRESHOLD
+
+    # ==> 1: Filter out low-confidence bounding boxes; tensors where probability scores is less than min_threshold.
+    keep_mask = boxes[:, 2] > MIN_THRESHOLD
     bboxes = boxes[keep_mask]
 
     #   Return if no boxes survives.
@@ -52,10 +53,10 @@ def nms(cfg: YOLOConfig, boxes: torch.Tensor):
         cls_bboxes = bboxes[cls_mask]
 
         # torch_nms need boxes in (x1, y1, x2, y2) format and their scores.
-        box_coords = cls_bboxes[:, 2:6]
+        box_coords = cls_bboxes[:, 3:7]
         box_scores = cls_bboxes[:, 1]
 
-        # perform NMS
+        # perform NMS TODO write the NMS myself
         keep_indices = torch_nms(box_coords, box_scores, IOU_THRESHOLD)
 
 

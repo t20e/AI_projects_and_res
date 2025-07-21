@@ -32,7 +32,7 @@ code README.md
 **Object detection.**
 
 - 🔗 [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig)
-    - Implements the YOLO v1 paper closely.
+    - Implements the YOLO v1 paper.
     - [YOLOv1 notes](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection/YOLO.res)
 
 

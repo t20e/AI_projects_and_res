@@ -50,7 +50,6 @@ def main(config):
     
     # ==> Load pre-trained model.
     if config.CON_TRAINING:
-        #  TODO retrieve the last LEARNING RATE the pre-trained model was trained on, instead of starting over with the default config LEARNING_RATE
         #           NOTE: chatgpt says it doesnt matter as long as u load the model correclty the lr should overright default in optimizer, etc.. BUT DOUBLE CHECK
         config.LAST_EPOCH = load_checkpoint(
             file_name=config.LOAD_MODEL_FILE,

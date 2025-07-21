@@ -68,11 +68,11 @@ def IoU(
 
 
 # Test as module:
-# $ python -m utils.IoU
+# $     python -m utils.IoU
 def test():
     from configs.config_loader import load_config
 
-    cfg = load_config("yolov1.yaml")
+    cfg = load_config("config_voc_dataset.yaml")
     # Create test tensors note these will not match the actual pred/label tensors
     pred = torch.Tensor(cfg.BATCH_SIZE, cfg.S, cfg.S, 4).to(cfg.DEVICE)
     label = torch.Tensor(cfg.BATCH_SIZE, cfg.S, cfg.S, 4).to(cfg.DEVICE)

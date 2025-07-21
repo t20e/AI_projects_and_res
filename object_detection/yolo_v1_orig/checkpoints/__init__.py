@@ -1,1 +1,0 @@
-"""Saved checkpoints to continue training models"""

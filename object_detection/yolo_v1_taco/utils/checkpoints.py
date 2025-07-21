@@ -82,7 +82,6 @@ def load_checkpoint(file_name: str, yolo: nn.Module, optimizer: torch.optim, sch
     yolo.load_state_dict(checkpoint["model"])
     optimizer.load_state_dict(checkpoint["optimizer"])
 
-    # TODO add back in if scheduler is added back
     # scheduler.load_state_dict(checkpoint["scheduler"])
 
     # Load the last epoch the model was trained on to resume from there.

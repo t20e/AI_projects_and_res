@@ -15,7 +15,6 @@ PIN_MEMORY: True
 EPOCHS: 25 #50 # if epoch = 1, model sees dataset 1 time.
 LEARNING_RATE: 1e-2 # Scheduled Learning rate is implemented.
 BATCH_SIZE: 64 # 64 images per batch
-WEIGHT_DECAY: 0 # TODO play with weight decay, try to keep it the same as paper
 
 # === Continue Training Pre-Trained Models
 CON_TRAINING: False # Boolean | continue to train a model

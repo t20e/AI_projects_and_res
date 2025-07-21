@@ -173,9 +173,9 @@ class YOLOv1(nn.Module):
 
 
 # Test as module:
-# python -m model.yolov1
+#        python -m model.yolov1
 def test():
-    cfg = load_config("yolov1.yaml")
+    cfg = load_config("config_voc_dataset.yaml")
     yolo = YOLOv1(cfg=cfg, in_channels=3)
 
     # Test with 2 images examples

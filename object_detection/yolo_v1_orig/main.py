@@ -9,14 +9,16 @@ from data.utils.setup_transforms import setup_transforms
 from model.yolov1 import YOLOv1
 from data.dataset_loader import dataset_loader
 from data.voc_dataset import VOCDataset
-from checkpoints.utils.checkpoint_utils import load_checkpoint
+from model.model_utils import load_checkpoint
 from train import train
-from loss import YOLOLoss
+from model.loss import YOLOLoss
 
 torch.manual_seed(0)
 
+# TODO use a pretrained model to train a full model.
+
 # Get configurations
-cfg = load_config("yolov1.yaml", overrides=None)
+cfg = load_config("config_voc_dataset.yaml", overrides=None)
 # Get transformations
 transforms = setup_transforms(cfg.IMAGE_SIZE)
 
@@ -48,11 +50,32 @@ if __name__ == "__main__":
 
     # ==> Load pre-trained model.
     if cfg.CON_TRAINING:
-        cfg.LAST_EPOCH = load_checkpoint(cfg, yolov1=yolo, optimizer=optimizer, scheduler=scheduler
+        cfg.LAST_EPOCH = load_checkpoint(
+            cfg, yolov1=yolo, optimizer=optimizer, scheduler=scheduler
         )
 
-    # ==> Init Dataset Loader
-    loader = dataset_loader(cfg=cfg, transforms=transforms, Dataset=VOCDataset)
+    # ==> Init Dataset Loaders.
+    loader = dataset_loader(
+        cfg=cfg,
+        which_dataset=cfg.TRAIN_DIR_NAME,
+        num_samples=cfg.NUM_TRAIN_SAMPLES,
+        transforms=transforms,
+        Dataset=VOCDataset,
+        batch_size=cfg.BATCH_SIZE,
+    )
+
+    val_loader = None
+    if cfg.COMPUTE_MEAN_AVERAGE_PRECISION:
+        # Load the Validation set.
+        val_loader = dataset_loader(
+            cfg=cfg,
+            which_dataset=cfg.VALIDATION_DIR_NAME,
+            num_samples=cfg.NUM_VAL_SAMPLES,
+            transforms=transforms,
+            Dataset=VOCDataset,
+            # For validation we only need one batch.
+            batch_size=cfg.VAL_BATCH_SIZE
+        )
 
     # ==> Train the model
     if cfg.MODE == "train":
@@ -61,6 +84,7 @@ if __name__ == "__main__":
             yolo=yolo,
             loss_fn=loss_fn,
             loader=loader,
+            val_loader=val_loader,
             optimizer=optimizer,
             scheduler=scheduler,
         )

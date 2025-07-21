@@ -44,7 +44,7 @@ def save_checkpoint(state: dict, epochs, loss, cfg: YOLOConfig):
     print("\n" + "#" * 32, "\n")
     print(f"-> Saving checkpoint: ")
     cwd = os.getcwd()
-    path = os.path.join(cwd, "checkpoints/models")
+    path = os.path.join(cwd, "model/checkpoints")
     torch.save(state, f"{path}/{file_name}")
     print(f"Saved to {file_name}")
     print("\n" + "#" * 32, "\n")
@@ -66,7 +66,7 @@ def load_checkpoint(cfg:YOLOConfig, yolov1: YOLOv1, optimizer: torch.optim, sche
     print(f"Loading model Checkpoint | model_name: {cfg.LOAD_MODEL_FILE}\n")
 
     cwd = os.getcwd()
-    path = os.path.join(cwd, "checkpoints/models", cfg.LOAD_MODEL_FILE)
+    path = os.path.join(cwd, "model/checkpoints", cfg.LOAD_MODEL_FILE)
     checkpoint = torch.load(path)
     print_checkpoint(checkpoint)
 

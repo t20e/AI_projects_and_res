@@ -33,7 +33,6 @@ def non_max_suppression(pred_bboxes, config):
     )
 
     # === 1: Filter out low-confidence bboxes; tensors where pc/probability_score (column 4) is less than min_threshold.
-    # TODO fix below line
     keep_mask = pred_bboxes[:, 4] > MIN_THRESHOLD
     bboxes = pred_bboxes[keep_mask]
 

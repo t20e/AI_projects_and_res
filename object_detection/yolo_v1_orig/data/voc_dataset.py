@@ -18,24 +18,31 @@ from data.utils.VOC_extraction_pipeline import VOCAnnotationsExtraction
 
 
 class VOCDataset(torch.utils.data.Dataset):
-    def __init__(self, cfg: YOLOConfig, transforms: Optional[CustomCompose] = None):
+    def __init__(
+        self,
+        cfg: YOLOConfig,
+        which_dataset: str,
+        num_samples: int = 10,
+        transforms: Optional[CustomCompose] = None,
+    ):
         """
         Dataset Class: Structures the images and annotations.
 
-        Note: Dataset format must be in corner-points format, which will then be converted in __getitem__().
+        Note: The dataset format must be in corner-points format, which will then be converted in __getitem__() to mid-points with normalized percentage values.
 
         Args:
             cfg (YOLOConfig): Model configurations.
-            transfroms (torchvision.transforms): Transformations to apply to images and its annotations/labeled data.
+            which_dataset (str): Name of dataset to grab "VOC2012_train", "VOC2012_val" or "VOC2012_test"
+            num_samples (int): The number of samples (images/labels) to load from the dataset and create a dataframe.
+            transforms (torchvision.transforms): Transformations to apply to images and its annotations/labeled data.
         """
         self.cfg = cfg
         self.transforms = transforms
-
-        self.dataset_dir = os.path.join(os.getcwd(), "datasets", cfg.DATASET)
+        self.num_samples = num_samples
+        self.dataset_path = os.path.join(os.getcwd(), "datasets", which_dataset)
         # Load a dataframe
-        self.annotations = create_df(
-            dataset_path=self.dataset_dir, num_to_load=cfg.NUM_IMAGES
-        )
+        self.annotations = create_df(cfg=cfg, dataset_path=self.dataset_path, num_to_load=num_samples, save_to_csv=False)
+
         self.voc_extraction = VOCAnnotationsExtraction(cfg=cfg, transforms=transforms)
 
     def __len__(self) -> int:  # Returns the size of the dataset
@@ -56,8 +63,8 @@ class VOCDataset(torch.utils.data.Dataset):
         cfg = self.cfg
         S, B, C = cfg.S, cfg.B, cfg.C
 
-        # --- 1 Make sure the index doesn't go out of bounds of the dataframe. However when cfg.NUM_IMAGES == 0 that means grab entire dataset
-        if index >= cfg.NUM_IMAGES and cfg.NUM_IMAGES != 0:
+        # --- 1 Make sure the index doesn't go out of bounds of the dataframe. However when self.num_samples == 0 that means grab entire dataset
+        if index >= self.num_samples and self.num_samples != 0:
             print(
                 f"\n\nERROR: Index is out of bounds. Index: {index}, size of dataframe: {self.__len__()}, index starts at zero. \n\nOccurred at: VOCDataset.__getitem__()"
             )
@@ -65,10 +72,10 @@ class VOCDataset(torch.utils.data.Dataset):
 
         # --- 2: Use the index to retrieve the image and its annotation's .xml from the dataframe to create their file paths.
         anno_xml_path = os.path.join(
-            self.dataset_dir, "Annotations", self.annotations.iloc[index, 1]
+            self.dataset_path, cfg.ANNOTATIONS_DIR_NAME, self.annotations.iloc[index, 1]
         )
         img_path = os.path.join(
-            self.dataset_dir, "JPEGImages", self.annotations.iloc[index, 0]
+            self.dataset_path, cfg.IMAGES_DIR_NAME, self.annotations.iloc[index, 0]
         )
 
         # --- 3: Extract Annotations.
@@ -106,16 +113,25 @@ class VOCDataset(torch.utils.data.Dataset):
         return img, label_matrix
 
 
+# Test run module:
+#   $          python -m data.voc_dataset
 def test():
     print("\n\n🚧 TESTING: voc_dataset module \n\n")
 
-    cfg = load_config("yolov1.yaml")
+    cfg = load_config("config_voc_dataset.yaml")
     t = setup_transforms(cfg.IMAGE_SIZE)
-    d = VOCDataset(cfg, t)
-    d.__getitem__(1)
+    # d = VOCDataset(cfg, which_dataset=cfg.TRAIN_DIR_NAME, transforms=t)
+    d = VOCDataset(
+        cfg,
+        which_dataset=cfg.VALIDATION_DIR_NAME,
+        num_samples=cfg.NUM_VAL_SAMPLES,
+        transforms=t,
+    )
+    # print(d.__len__())
+    print(len(d))
+    # image, label = d.__getitem__(1)
+    # print(image.shape, label.shape)
 
 
-# Test run module:
-#   $          python -m data.voc_dataset
 if __name__ == "__main__":
     test()

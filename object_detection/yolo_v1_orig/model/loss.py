@@ -140,10 +140,10 @@ class YOLOLoss(nn.Module):
 
 
 # Test as module:
-# $ python -m loss
+# $ python -m model.loss
 def test(label):
     loss_fn = YOLOLoss(cfg)
-    # Create test tensors note the pred tensors is random
+    # Create a RANDOM test tensors.
     pred = torch.Tensor(1, cfg.S, cfg.S, cfg.CELL_NODES).to(cfg.DEVICE)
     # add one batch dimension to label
     label = label.unsqueeze(0)
@@ -160,9 +160,9 @@ if __name__ == "__main__":
     )  # shows all the values when printing tensors
     from data.utils.setup_transforms import setup_transforms
 
-    cfg = load_config("yolov1.yaml")
+    cfg = load_config("config_voc_dataset.yaml")
 
     t = setup_transforms(cfg.IMAGE_SIZE)
-    d = VOCDataset(cfg=cfg, transforms=t)
+    d = VOCDataset(cfg=cfg, which_dataset=cfg.TRAIN_DIR_NAME, transforms=t)
     img, label = d.__getitem__(0)
     test(label.to(cfg.DEVICE))

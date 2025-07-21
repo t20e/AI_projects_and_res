@@ -1,7 +1,12 @@
 datasets
-checkpoints/models
 pre-trained
 
-__pycache__
+model/saved_models
+model/checkpoints
 
+__pycache__
+__MACOSX
 .DS_Store
+
+worst-case-delete-when-not-needed
+

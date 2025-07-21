@@ -177,13 +177,16 @@ class VOCAnnotationsExtraction:
         return annos
 
 
+# Test module with:
+# $     python -m data.utils.VOC_extraction_pipeline
 def test():
     print("\n\n🚧 TESTING: VOC_extraction_pipeline module \n\n")
 
-    cfg = load_config("yolov1.yaml")
+    cfg = load_config("config_voc_dataset.yaml")
     cwd = os.getcwd()
-    xml_path = f"{cwd}/datasets/VOC2012_train_val/Annotations/2009_001412.xml"
-    img_path = f"{cwd}/datasets/VOC2012_train_val/JPEGImages/2009_001412.jpg"
+    xml_path = f"{cwd}/datasets/VOC_2012_dataset/train/Annotations/2007_000027.xml"
+    img_path = f"{cwd}/datasets/VOC_2012_dataset/train/JPEGImages/2007_000027.jpg"
+
 
     t = setup_transforms(cfg.IMAGE_SIZE)
     e = VOCAnnotationsExtraction(cfg=cfg, transforms=t)
@@ -221,7 +224,5 @@ def test():
     # print(e.convert_abs_to_mid_points(a))
 
 
-# Test module with:
-# $     python -m data.utils.VOC_extraction_pipeline
 if __name__ == "__main__":
     test()

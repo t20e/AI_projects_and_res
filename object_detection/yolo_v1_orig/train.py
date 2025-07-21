@@ -1,23 +1,39 @@
 import torch
 import torch.optim as optim
 from tqdm import tqdm
+from typing import Optional
 
 # My Modules
 from configs.config_loader import YOLOConfig
 from data.dataset_loader import dataset_loader
-from checkpoints.utils.checkpoint_utils import save_checkpoint
-from loss import YOLOLoss
+from model.model_utils import save_checkpoint
+from model.loss import YOLOLoss
 from model.yolov1 import YOLOv1
+from utils.mAP import mAP  # Mean Average Precision
 
 
 def train(
     cfg: YOLOConfig,
     yolo: YOLOv1,
     loader: dataset_loader,
+    val_loader: Optional[dataset_loader],
     loss_fn: YOLOLoss,
     optimizer: optim,
     scheduler,
 ):
+    """
+    Train YOlO v1 model
+
+    Args:
+        cfg: Project Configurations.
+        yolo: An instance of the YOLO model.
+        loader: Train dataset loader.
+        val_loader: Validation dataset loader.
+        loss_fn: Loss function.
+        optimizer: Optimizer.
+        scheduler: Learning rate scheduler.
+    """
+
     print("\n" + "#" * 64)
     print(f"\nTraining Model")
     print("\n" + "#" * 64)
@@ -30,36 +46,43 @@ def train(
         print("\n\n" + "|" + "-" * 64 + "|")
         print(f"Epoch: {epoch}/{max_epoch} | Lr = {optimizer.param_groups[0]['lr'] }")
 
-        # TODO --> compute mean average precision look into the the todo in the res folder
-
         # === Helper function.
         # The mean_loss from mean_loss is the average loss for the current epoch.
         mean_loss = train_one_epoch(
             cfg=cfg, loader=loader, yolo=yolo, loss_fn=loss_fn, optimizer=optimizer
         )
 
+        # === compute mean average precision every 10th epoch
+        if epoch % 10 == 0:
+            if cfg.COMPUTE_MEAN_AVERAGE_PRECISION:
+                mean_average_per = mAP(cfg=cfg, val_loader=val_loader, yolo=yolo)
+                # TODO save the model not the checkpoint if it has a good mean_average_precision
+                # if mean_average_per > 0.9:
+
         # === Update Learning Rate: at the end of every epoch. Note: different learning rates need to be updated in different areas of code; example: OneCycleLR is done per-batch.
         if isinstance(scheduler, torch.optim.lr_scheduler.SequentialLR):
             scheduler.step()
+
     print(optimizer.param_groups[0]["lr"])
 
     # === Save model checkpoint.
-    if cfg.USE_SCHEDULER:
-        scheduler_state = scheduler.state_dict()
-    else:  # Dont save the scheduler
-        scheduler_state = None
-    save_checkpoint(
-        state={
-            "epoch": epoch,
-            "model": yolo.state_dict(),
-            "optimizer": optimizer.state_dict(),
-            "scheduler": scheduler_state,
-            "mean_loss": mean_loss,
-        },
-        epochs=epoch,
-        loss=mean_loss,
-        cfg=cfg,
-    )
+    if cfg.SAVE_MODEL:
+        if cfg.USE_SCHEDULER:
+            scheduler_state = scheduler.state_dict()
+        else:  # Dont save the scheduler
+            scheduler_state = None
+        save_checkpoint(
+            state={
+                "epoch": epoch,
+                "model": yolo.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "scheduler": scheduler_state,
+                "mean_loss": mean_loss,
+            },
+            epochs=epoch,
+            loss=mean_loss,
+            cfg=cfg,
+        )
 
 
 def train_one_epoch(cfg: YOLOConfig, loader, yolo, loss_fn, optimizer):

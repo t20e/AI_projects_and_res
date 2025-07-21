@@ -7,8 +7,12 @@ import pandas as pd
 import gc  # built-in memory clean-up
 from PIL import Image
 
+from configs.config_loader import YOLOConfig
 
-def create_df(dataset_path: str, num_to_load: int = 0, save_to_csv: bool = False):
+
+def create_df(
+    cfg: YOLOConfig, dataset_path: str, num_to_load: int = 0, save_to_csv: bool = False
+):
     """
     Creates a dataframe of corresponding image and label file_names by row.
         Example CSV format (e.g., test.csv):
@@ -18,17 +22,16 @@ def create_df(dataset_path: str, num_to_load: int = 0, save_to_csv: bool = False
             | 2.jpeg  | 116.xml   |
             | ...     | ...       |
     Args:
-        dataset_path (str): Path to a directory inside the dataset directory.
-            - Path to the dataset. i.e. datasets/VOC2012_train_val
-            - Needs to contain two directories -> /Annotations and /JPEGImages
-        num_to_load (int): Number of images/annotations to load.
+        cfg: Project configurations.
+        dataset_path (str) : Path from root to the train, val or test sets.
+        num_to_load (int): Number of images/annotations samples to load.
             - Set to 0 to load entire dataframe.
         save_to_csv (bool): Whether to save dataframe to csv.
 
     """
-    imgs_dir = os.path.join(dataset_path, "JPEGImages")
+    imgs_dir = os.path.join(dataset_path, cfg.IMAGES_DIR_NAME)
     # annos for annotations
-    annos_path = os.path.join(dataset_path, "Annotations")
+    annos_path = os.path.join(dataset_path, cfg.ANNOTATIONS_DIR_NAME)
 
     # --- Get the image and label filenames and store in a sorted list.
     image_files = sorted(
@@ -43,9 +46,14 @@ def create_df(dataset_path: str, num_to_load: int = 0, save_to_csv: bool = False
     )
 
     # --- If num_to_load > 0, only grab that much imgs/annotations.
+    # Note: this has nothing to do with the batch_size, this creates the dataset which will then be divided by the batch_size.
     if num_to_load > 0:
         image_files = image_files[:num_to_load]
         anno_files = anno_files[:num_to_load]
+    # Else grab the entire dataset.
+
+    # print(f"DEBUG: Found {len(image_files)} image files to check.")
+    # print(f"DEBUG: Found {len(anno_files)} annotation files in directory.")
 
     # --- Match files by name.
     matched_data = []
@@ -58,6 +66,10 @@ def create_df(dataset_path: str, num_to_load: int = 0, save_to_csv: bool = False
             anno_xml in anno_files
         ):  # check if the the filename exists in the label directory.
             matched_data.append({"img": img_f, "annotation": anno_xml})
+        else:
+            print(
+                f"WARNING: No matching annotation found for image: {img_f} (expected {anno_xml})"
+            )
 
     # --- Create dataframe
     df = pd.DataFrame(matched_data)
@@ -76,17 +88,33 @@ def create_df(dataset_path: str, num_to_load: int = 0, save_to_csv: bool = False
         f"\Checking if dataframe csv file with {num_to_load} size already exists."
         if not os.path.exists(file_path):
             print(
-                f"\n\nSaving dataset with {num_to_load} examples to CSV file ->", file_path
+                f"\n\nSaving dataset with {num_to_load} examples to CSV file ->",
+                file_path,
             )
             df.to_csv(file_path, index=False)
 
     return df
 
 
+# Test as Module
+#       python -m data.utils.df_utils
 def test():
-    cwd = os.getcwd()
-    dataset_path = os.path.join(cwd, "datasets", "VOC2012_train_val")
-    print(create_df(dataset_path, num_to_load=10, save_to_csv=False))
+    from configs.config_loader import load_config
 
-if __name__ == '__main__':
+    cwd = os.getcwd()
+    cfg = load_config("config_voc_dataset.yaml")
+
+    dataset_path = os.path.join(cwd, "datasets", cfg.TRAIN_DIR_NAME)
+
+    print(
+        create_df(
+            cfg,
+            dataset_path=dataset_path,
+            num_to_load=cfg.NUM_TRAIN_SAMPLES,
+            save_to_csv=False,
+        )
+    )
+
+
+if __name__ == "__main__":
     test()

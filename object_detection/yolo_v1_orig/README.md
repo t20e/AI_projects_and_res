@@ -5,37 +5,55 @@ Goal:
 <img src="./showcase_images/prediction.png" width="250">
 
 
+🔗 [YOLO v1 Paper](https://arxiv.org/pdf/1506.02640)
 
-🔗 [YOLO v1 Paper]("https://arxiv.org/pdf/1506.02640")
-
-⭐️ **Objective**: "Using our system, you only look once (YOLO) at an image to predict what objects are present and where they are."
+⭐️ **Objective**: "Using our system, You-Only-Look-Once (YOLO) at an image to predict what objects are present and where they are."
 
 ⭐️ **Note**: I'm aiming for direct adherence to the paper's approach with slight improvements, so the code's design will favor easy comprehension, even if it means less vectorization and therefore reduced efficiency.
 
-<!-- TODO When I add taco dataset elborate on 1. this projects main focus was the VOCDataset but I test other datasets, the run function of this project will only download the VOC dataset, add links to the Taco dataset and how to implement it. -->
+⭐️ Ran on **Mac-os** silicon, haven't tested on other OSs.
+
+<!-- TODO When I add taco dataset elaborate on 1. this projects main focus was the VOCDataset but I test other datasets, the run function of this project will only download the VOC dataset, add links to the Taco dataset and how to implement it. -->
 
 ## Prerequisites
 
-torch version: 2.7    
-conda version: 24.11.1
+- torch version: 2.7    
+- conda version: 24.11.1
+- Knowedge
+    - [Firm Understanding of Coordinate formats](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md)
+    - [intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/intersection_over_union.ipynb)
 
 
-## How To Run 
 
-1. Setup Project  -> Create the environment, and download the dataset.
-```bash 
-bash setup.bs
+## How To Run
+
+**Setup Project**  -> Create the environment, download the **VOCDataset**, and structure the project.
+
+- 🚨 Note: VOC Dataset is very large ~4GB.
+- If any errors occur when downloading the dataset, use the [kaggle link](#Dataset_link) to manually download, and construct it to look like the [VOCDataset tree](#Dataset_tree_link) is the MISC section.
+
+1. Create a conda environment.
+```shell 
+    conda env create -f configs/environment.yaml
 ```
-2. Activate Conda Environment
-```bash 
-conda activate yolov1_env
+
+2. Activate the conda environment.
+```shell 
+    conda activate yolov1_env
 ```
-3. Train Model
-```bash 
+
+3. Download VOCDataset and structure directories.
+```shell
+    python setup.py
+```
+
+4. Train Model #TODO ADD training a pre-trained model on VOC dataset.
+```shell 
 # Set MODE="train" in configuration file of the dataset used.
-python main.py 
+    python main.py 
 ```
-4. RUN 
+
+5. RUN 
 <!-- TODO maybe implement live-cam feed or other -->
 
 ## Vocab
@@ -44,24 +62,26 @@ python main.py
 - LABEL_NODES = *The total number of nodes that a label tensor has for one image.*
 - CELL_NODES = *The number of nodes that a single cell tensor has.*
 
-## Dataset
+## Dataset <span id="Dataset_link"><span>
+
 
 🔗 [VOC Dataset Publisher](http://host.robots.ox.ac.uk/pascal/VOC/voc2012)
 
-🔗 [Download VOC 2012](https://www.kaggle.com/datasets/gopalbhattrai/pascal-voc-2012-dataset/data)  
+🔗 [Download VOC 2012 Dataset](https://www.kaggle.com/datasets/gopalbhattrai/pascal-voc-2012-dataset/data)  
 
 
 Classes: (num=20)  
-*Class_names:*
+*Class_names=index*
+
 |                           |                    |                    |                 |                  |
 |---------------------------|--------------------|--------------------|-----------------|------------------|
-|       'person'            |       'bird'       |         'cat'      |     'cow'       |     'dog'        |
-|       'horse'             |       'sheep'      |      'aeroplane'   |   'bicycle'     |     'boat'       |
-|       'bus'               |       'car'        |      'motorbike'   |    'train'      |    'bottle'      |
-|       'chair'             |    'diningtable'  |    'pottedplant'  |     'sofa'      |   'tvmonitor'   | 
+|       'person'=0            |       'bird'=1       |         'cat'=2      |     'cow'=3       |     'dog'=4        |
+|       'horse'=5             |       'sheep'=6      |      'aeroplane'=7   |   'bicycle'=8     |     'boat'=9       |
+|       'bus'=10               |       'car'=11        |      'motorbike'=12   |    'train'=13      |    'bottle'=14      |
+|       'chair'=15             |    'diningtable'=16  |    'pottedplant'=17  |     'sofa'=18      |   'tvmonitor'=19   | 
 
 
-**Note:** The VOC dataset comes with object parts for example: human objects can also be divided into parts like 'head', 'hand', and 'foot' but for this project we will only grab the main objects bbox.
+**Note:** The VOC dataset comes with object parts for example: human objects can also be divided into parts like 'head', 'hand', and 'foot' but for this project we will only grab the main objects bbox e.g. "person".
 
 
 
@@ -91,7 +111,6 @@ Classes: (num=20)
 
 
 ### Dataset Pipeline
-
 
 From paper: "Each bounding box consists of 5 predictions: x, y, w, h, and confidence. The (x,y) coordinates represent the center of the box relative to the bounds of the grid cell. The width and height are predicted relative to the whole image".
 
@@ -175,6 +194,8 @@ This architecture is a sequence of convolution and max pooling layers used to pr
         - Note: "× 5" here is for the nodes of a  single bbox, we multiply it by the B to get the total number of bounding box per cell.
         - Final output size S × S × (B × 5 + C) = S × S × CELL_NODES = 1470
         - Reshape output -> S x S x CELL_NODES to extract predictions.
+20. Once we have output, we need to apply [Non Max Suppression](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/non-max-suppression.md) to remove redundant bounding boxes.
+21. Plot
 
 ### Loss Function
 
@@ -184,11 +205,41 @@ This architecture is a sequence of convolution and max pooling layers used to pr
 
 - [Loss Function implemented](https://github.com/t20e/AI_public_projects/blob/main/object_detection/yolo_v1_orig/loss.py).
 
+- Note we use [Mean Average Precision](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/mean_average_percision.ipynb) during training to test how well the model performs on Validation dataset.
+
+-----------------------
+
+## Misc
+
+**VOCDataset Tree:**   <span id="Dataset_tree_link"><span>
+
+    datasets
+    └── VOC_2012_dataset
+        ├── test
+        │   ├── Annotations
+        │   ├── ImageSets
+        │   │   ├── Action
+        │   │   ├── Layout
+        │   │   ├── Main
+        │   │   └── Segmentation
+        │   └── JPEGImages
+        ├── train
+        │   ├── Annotations (~13,700 items)
+        │   ├── ImageSets
+        │   │   ├── Action
+        │   │   ├── Layout
+        │   │   ├── Main
+        │   │   └── Segmentation
+        │   ├── JPEGImages
+        │   ├── SegmentationClass
+        │   └── SegmentationObject
+        └── val
+            ├── Annotations (~3425 items)
+            └── JPEGImages
 
 
 
-
-
+-----------------------
 
 <!-- STYLES -->
 

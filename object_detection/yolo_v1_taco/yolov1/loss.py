@@ -57,8 +57,6 @@ class YoloLoss(nn.Module):
         #   Get class predictions index 0-17. (n_s, S, S, C)
         pred_cls = pred[..., :C]
 
-        # TODO added one line below understand Y, ALSO: The original YOLO v1 paper used a sum-squared error loss for all predictions, including class probabilities. It did not apply softmax to the class predictions before calculating the MSE loss. 
-        # pred_cls = torch.softmax(pred_cls, dim=-1)  
 
 
 
