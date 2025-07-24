@@ -1,12 +1,13 @@
 datasets
 pre-trained
 
-model/saved_models
-model/checkpoints
+
+model/checkpoints/
+model/saved_models/
+model/pre_trained
 
 __pycache__
 __MACOSX
 .DS_Store
 
 worst-case-delete-when-not-needed
-

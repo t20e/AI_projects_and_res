@@ -1,6 +1,8 @@
-# YOLO V1  Algorithm
+# ⭐️  This tutorial had a couple errors, instead please check out my [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig) project and my [yolo res](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection/YOLO_v1.res)
 
-## While this tutorial is helpful it had a couple errors, instead please check out my [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig) project and my [yolo res](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection/YOLO.res)
+
+## YOLO V1 From Tutorial
+
 
 TUTORIAL BY ALADDIN PERSSON | <a href="https://www.youtube.com/watch?v=n9_XyCGr-MI&t=2224s">Link</a>
 

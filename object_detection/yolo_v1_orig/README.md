@@ -1,9 +1,9 @@
 
 # Yolo V1 From Paper
+# 🏋️‍♀️ Still under work
 
 Goal:   
 <img src="./showcase_images/prediction.png" width="250">
-
 
 🔗 [YOLO v1 Paper](https://arxiv.org/pdf/1506.02640)
 
@@ -20,8 +20,9 @@ Goal:
 - torch version: 2.7    
 - conda version: 24.11.1
 - Knowedge
+    - [My YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
     - [Firm Understanding of Coordinate formats](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md)
-    - [intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/intersection_over_union.ipynb)
+    - [intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/intersection_over_union.ipynb)
 
 
 
@@ -29,8 +30,9 @@ Goal:
 
 **Setup Project**  -> Create the environment, download the **VOCDataset**, and structure the project.
 
+<!-- TODO Add an option to not download if they dont want to download the large VOC dataset. -->
 - 🚨 Note: VOC Dataset is very large ~4GB.
-- If any errors occur when downloading the dataset, use the [kaggle link](#Dataset_link) to manually download, and construct it to look like the [VOCDataset tree](#Dataset_tree_link) is the MISC section.
+- If any errors occur when downloading the dataset when running `python setup.py`; then manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
 
 1. Create a conda environment.
 ```shell 
@@ -47,7 +49,8 @@ Goal:
     python setup.py
 ```
 
-4. Train Model #TODO ADD training a pre-trained model on VOC dataset.
+<!-- #TODO ADD training a pre-trained model on VOC dataset. -->
+4. Train Model 
 ```shell 
 # Set MODE="train" in configuration file of the dataset used.
     python main.py 
@@ -194,18 +197,18 @@ This architecture is a sequence of convolution and max pooling layers used to pr
         - Note: "× 5" here is for the nodes of a  single bbox, we multiply it by the B to get the total number of bounding box per cell.
         - Final output size S × S × (B × 5 + C) = S × S × CELL_NODES = 1470
         - Reshape output -> S x S x CELL_NODES to extract predictions.
-20. Once we have output, we need to apply [Non Max Suppression](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/non-max-suppression.md) to remove redundant bounding boxes.
+20. Once we have output, we need to apply [Non Max Suppression](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/non-max-suppression.md) to remove redundant bounding boxes.
 21. Plot
 
 ### Loss Function
 
 **Check out:**
 
-- [Loss Function Notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/loss_fn.ipynb).
+- [Loss Function Notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/loss_fn.ipynb).
 
-- [Loss Function implemented](https://github.com/t20e/AI_public_projects/blob/main/object_detection/yolo_v1_orig/loss.py).
+- [Loss Function implemented](https://github.com/t20e/AI_public_projects/blob/main/object_detection/yolo_v1_orig/model/loss.py).
 
-- Note we use [Mean Average Precision](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO.res/mean_average_percision.ipynb) during training to test how well the model performs on Validation dataset.
+- Note we use [Mean Average Precision](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/mean_average_percision.md) during training to test how well the model performs on Validation dataset.
 
 -----------------------
 

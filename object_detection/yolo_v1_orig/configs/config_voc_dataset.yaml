@@ -12,11 +12,11 @@ NUM_WORKERS: 2 # Set to 0 will give you a better error trace when debugging. Def
 PIN_MEMORY: False
 
 # --------------------------------- HYPERPARAMETERS ---------------------------------
-EPOCHS: 1 # Ex: epoch = 1 means the model sees the dataset 1 time.
-LEARNING_RATE: 1e-6
+EPOCHS: 15 # Ex: epoch = 1 means the model sees the dataset 1 time.
+LEARNING_RATE: 1e-5
 
-BATCH_SIZE: 5 # The number of images per batch. It must be < NUM_TRAIN_SAMPLES if NUM_TRAIN_SAMPLES != 0.
-VAL_BATCH_SIZE: 2 # Batch size for the validation dataset. Must be < NUM_VAL_SAMPLES if NUM_VAL_SAMPLES != 0.
+BATCH_SIZE: 64 # The number of images per batch. It must be < NUM_TRAIN_SAMPLES if NUM_TRAIN_SAMPLES != 0.
+VAL_BATCH_SIZE: 64 # Batch size for the validation dataset. Must be < NUM_VAL_SAMPLES if NUM_VAL_SAMPLES != 0.
 
 # Note paper: used 'a momentum of 0.9 and a decay of 0.0005', I decided to use the Adam optimizer instead, this is a slight deviation from the paper.
 MOMENTUM: 0.9
@@ -27,7 +27,7 @@ CON_TRAINING: False # Boolean | continue to train a model
 
 SAVE_MODEL: True # Should the model be saved. Set to False when writing code and we don't want to save the model.
 # Custom file name to add to filename when saving checkpoint or trained models. Ex: "overfit_one_image"
-CUSTOM_FILE_NAME: ""
+CUSTOM_FILE_NAME: "Large_model_10k_images"
 
 # File name of model to load it can be either a checkpoint or a trained model.
 LOAD_MODEL_FILE: "ttoverfit_one_image_yolo_v1_dataset_VOCDataset_date_2025-07-19_EPOCH_100_LOSS_1.5732_SIZE_448.pt" #EX: yolo_v1_dataset_VOC2012_train_val_date_2025-07-16_EPOCH_15_LOSS_4.9248_SIZE_448.pt
@@ -46,7 +46,7 @@ CELL_NODES: 30 # The total number of nodes that a single cell has in a label for
 # Whether to use a learning rate scheduler and warm-up.
 USE_SCHEDULER: False
 # Whether to compute mean average precision
-COMPUTE_MEAN_AVERAGE_PRECISION: False
+COMPUTE_MEAN_AVERAGE_PRECISION: True
 
 # ------------------------------------- DATASET -------------------------------------
 # Dataset names.
@@ -63,6 +63,6 @@ CLASS_NAMES: [ "person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeropla
 
 # The number of samples (images/annotations) to grab from the dataset and create a dataframe.
 #   Note: error will occur if BATCH_SIZE > NUM_TRAIN_SAMPLES.
-NUM_TRAIN_SAMPLES: 10 # Set to 0 -> to create a dataframe of the entire dataset.
-NUM_VAL_SAMPLES: 10 # Same applies to NUM_VAL_SAMPLES as NUM_TRAIN_SAMPLES.
+NUM_TRAIN_SAMPLES: 10000 # Set to 0 -> to create a dataframe of the entire dataset.
+NUM_VAL_SAMPLES: 256 # Same applies to NUM_VAL_SAMPLES as NUM_TRAIN_SAMPLES.
 

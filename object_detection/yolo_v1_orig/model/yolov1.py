@@ -84,7 +84,7 @@ class CNNBlock(nn.Module):
 
 
 class YOLOv1(nn.Module):
-    def __init__(self, cfg: YOLOConfig, in_channels: int, *args, **kwargs):
+    def __init__(self, cfg: YOLOConfig, in_channels: int = 3, *args, **kwargs):
         """
         YOLO v1 model.
 

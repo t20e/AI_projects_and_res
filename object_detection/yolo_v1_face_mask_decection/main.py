@@ -23,7 +23,7 @@ config = Namespace(
     EPOCHS = 50,
     LEARNING_RATE = 2e-5,
     BATCH_SIZE = 16, #64,
-    WEIGHT_DECAY = 0, #TODO plasy with wight decay
+    WEIGHT_DECAY = 0, 
 
     # load a model with weights that u have been trained to train it more
     LOAD_MODEL = False,

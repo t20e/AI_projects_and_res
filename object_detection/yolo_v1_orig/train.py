@@ -56,8 +56,12 @@ def train(
         if epoch % 10 == 0:
             if cfg.COMPUTE_MEAN_AVERAGE_PRECISION:
                 mean_average_per = mAP(cfg=cfg, val_loader=val_loader, yolo=yolo)
-                # TODO save the model not the checkpoint if it has a good mean_average_precision
-                # if mean_average_per > 0.9:
+                # TODO
+                # If the model has a good mAP save it, but not as a checkpoint.
+                #   YOLO v1 achieved mAP score of 63.4 on the VOC 2007+2012 dataset. Paper: 'YOLO 2007+2012 63.4 45'.
+                if mean_average_per > 63.4:
+                    print(f"Model mAP score: {mean_average_per}")
+                    pass
 
         # === Update Learning Rate: at the end of every epoch. Note: different learning rates need to be updated in different areas of code; example: OneCycleLR is done per-batch.
         if isinstance(scheduler, torch.optim.lr_scheduler.SequentialLR):

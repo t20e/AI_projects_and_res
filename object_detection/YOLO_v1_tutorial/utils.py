@@ -7,7 +7,7 @@ import sys
 
 """
     # NOTE: I made a lot of notes on these util functons in live_feed_yolo_model.ipynb and utils-more-notes.ipynb
-    and also in the res repo in .coding.res/AI.res/object_detection/YOLO.res has more resources and notes
+    and also in the res repo in .coding.res/AI.res/object_detection/YOLO_v1.res has more resources and notes
 """
 
 VOC_CLASSES = [

@@ -92,7 +92,6 @@ def convert_bboxes(bboxes, config):
     
     
 def resize_bbox_relative_to_img(bboxes, config):
-    # TODO see if this computation could be vectorized
     """
     Converts the best bounding boxes from each cell, from being relative to single cell that contains its midpoint to being relative to the entire image.
     

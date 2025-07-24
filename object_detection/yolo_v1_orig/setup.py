@@ -20,7 +20,12 @@ if __name__ == "__main__":
     # Dataset Paths
     CWD = os.getcwd()
     DATASET_PATH = os.path.join(CWD, "datasets")
+
+    # Create directories that are not committed to repo.
     create_directory(DATASET_PATH)
+    create_directory(CWD, f"model/saved_models")
+    create_directory(CWD, f"model/checkpoints")
+    create_directory(CWD, f"model/pre_trained")
 
     print_header("Setting Up YOLO Project...")
     time.sleep(2)  # Sleep for 2 seconds to allow user to see print.

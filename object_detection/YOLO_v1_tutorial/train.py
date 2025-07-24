@@ -34,7 +34,7 @@ import random
 
 """
     # NOTE: I made a lot of notes on these util functons in live_feed_yolo_model.ipynb
-    and also in the res repo in .coding.res/AI.res/object_detection/YOLO.res has more resources and notes
+    and also in the res repo in .coding.res/AI.res/object_detection/YOLO_v1.res has more resources and notes
 """
 
 seed = 123 # 123 seed to follow tutorial
@@ -198,8 +198,8 @@ def main():
         
         print(f"\nTrain mAP: {mean_average_prec}")
         
-        # checkpoint save the model if mean average precision is greater than 0.9
-        # if mean_average_prec > 0.9:
+        # checkpoint save the model if mean average precision is greater than 0.65 # keep same from paper
+        # if mean_average_prec > 0.65:
         #    checkpoint = {
         #        "state_dict": model.state_dict(),
         #        "optimizer": optimizer.state_dict(),

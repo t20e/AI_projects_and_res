@@ -114,11 +114,10 @@ def mAP(cfg: YOLOConfig, val_loader: dataset_loader, yolo: YOLOv1):
             # Find the best matching ground truth box for the current detection.
             for idx, gt in enumerate(ground_truth_img):
                 # Calculate IoU between the current detection and one ground truth
-                iou = IoU(
-                    torch.tensor(detection[3:]),  # pred [x1, y1, x2, y2]
-                    torch.tensor(gt[3:]),  # true [x1, y1, x2, y2]
-                    box_format="corners",
-                )
+                # Both 'detection' and 'gt' are tensors, so we slice them directly.
+                pred_box_tensor = detection[3:]  # pred [x1, y1, x2, y2]
+                gt_box_tensor = gt[3:]  # true [x1, y1, x2, y2]
+                iou = IoU(pred_box_tensor, gt_box_tensor, box_format="corners")
                 if iou > best_iou:
                     best_iou = iou
                     best_gt_idx = idx
