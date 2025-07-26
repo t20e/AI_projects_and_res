@@ -15,7 +15,6 @@ from model.loss import YOLOLoss
 
 torch.manual_seed(0)
 
-# TODO use a pretrained model to train a full model.
 
 # Get configurations
 cfg = load_config("config_voc_dataset.yaml", overrides=None)

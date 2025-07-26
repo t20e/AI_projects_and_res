@@ -1,3 +1,4 @@
+# 🚧  Moving To YOLO_v1_orig dont use this project!
 # YOLO V1 TACO
 
 * The TACO (Trash Annotations in Context)

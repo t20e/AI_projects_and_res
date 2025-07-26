@@ -63,6 +63,6 @@ CLASS_NAMES: [ "person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeropla
 
 # The number of samples (images/annotations) to grab from the dataset and create a dataframe.
 #   Note: error will occur if BATCH_SIZE > NUM_TRAIN_SAMPLES.
-NUM_TRAIN_SAMPLES: 10000 # Set to 0 -> to create a dataframe of the entire dataset.
+NUM_TRAIN_SAMPLES: 128 # Set to 0 -> to create a dataframe of the entire dataset.
 NUM_VAL_SAMPLES: 256 # Same applies to NUM_VAL_SAMPLES as NUM_TRAIN_SAMPLES.
 

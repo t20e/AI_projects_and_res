@@ -77,7 +77,7 @@ if [ -f "$ZIP_FILE_PATH" ]; then # check if the zip file exists
     printf "\nUnzipping file: $ZIP_FILE_PATH\n\n"
     unzip_and_monitor "$ZIP_FILE_PATH" "$DATASET_PATH"
     # delete zip file
-    # rm "$ZIP_FILE_PATH"  #TODO add back in
+    rm "$ZIP_FILE_PATH"  
 else
     printf "\nDataset Zip file doesn't exist at: $ZIP_FILE_PATH\n\n"
 fi

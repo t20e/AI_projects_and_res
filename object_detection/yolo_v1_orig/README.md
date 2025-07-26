@@ -1,6 +1,9 @@
 
-# Yolo V1 From Paper
-# 🏋️‍♀️ Still under work
+# Yolo V1 Implementation
+
+🚨 Note: I went a little over the top with this project. My goal was to implement the YOLO v1 paper, but not to train any large models on it. While this project is a `⭐️ perfect implementation`. This project downloads a ~4GB VOC dataset, of which only a fraction would have sufficed. The biggest bummer is that I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com). I will likely move on to implementing the YOLO v11 or v12 architectures, which have pre-trained models available online.
+
+---
 
 Goal:   
 <img src="./showcase_images/prediction.png" width="250">
@@ -13,7 +16,6 @@ Goal:
 
 ⭐️ Ran on **Mac-os** silicon, haven't tested on other OSs.
 
-<!-- TODO When I add taco dataset elaborate on 1. this projects main focus was the VOCDataset but I test other datasets, the run function of this project will only download the VOC dataset, add links to the Taco dataset and how to implement it. -->
 
 ## Prerequisites
 
@@ -22,7 +24,7 @@ Goal:
 - Knowedge
     - [My YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
     - [Firm Understanding of Coordinate formats](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md)
-    - [intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/intersection_over_union.ipynb)
+    - [intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/intersection_over_union.md)
 
 
 
@@ -30,7 +32,6 @@ Goal:
 
 **Setup Project**  -> Create the environment, download the **VOCDataset**, and structure the project.
 
-<!-- TODO Add an option to not download if they dont want to download the large VOC dataset. -->
 - 🚨 Note: VOC Dataset is very large ~4GB.
 - If any errors occur when downloading the dataset when running `python setup.py`; then manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
 
@@ -49,15 +50,11 @@ Goal:
     python setup.py
 ```
 
-<!-- #TODO ADD training a pre-trained model on VOC dataset. -->
 4. Train Model 
 ```shell 
 # Set MODE="train" in configuration file of the dataset used.
     python main.py 
 ```
-
-5. RUN 
-<!-- TODO maybe implement live-cam feed or other -->
 
 ## Vocab
 
@@ -204,7 +201,7 @@ This architecture is a sequence of convolution and max pooling layers used to pr
 
 **Check out:**
 
-- [Loss Function Notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/loss_fn.ipynb).
+- [Loss Function Notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/loss_fn.md).
 
 - [Loss Function implemented](https://github.com/t20e/AI_public_projects/blob/main/object_detection/yolo_v1_orig/model/loss.py).
 

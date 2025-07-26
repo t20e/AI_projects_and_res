@@ -125,6 +125,7 @@ def mAP(cfg: YOLOConfig, val_loader: dataset_loader, yolo: YOLOv1):
             # Check if the best match is above the IoU threshold.
             if best_iou > mAP_IoU_threshold:
                 # Check if this best-matching ground truth has NOT been claimed yet.
+                # TODO: error is occurring when training on large datasets.
                 if amount_bboxes[detection[0]][best_gt_idx] == 0:
                     TP[detection_idx] = 1  # It's a True Positive
                     amount_bboxes[detection[0]][

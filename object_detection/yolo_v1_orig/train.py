@@ -56,9 +56,8 @@ def train(
         if epoch % 10 == 0:
             if cfg.COMPUTE_MEAN_AVERAGE_PRECISION:
                 mean_average_per = mAP(cfg=cfg, val_loader=val_loader, yolo=yolo)
-                # TODO
                 # If the model has a good mAP save it, but not as a checkpoint.
-                #   YOLO v1 achieved mAP score of 63.4 on the VOC 2007+2012 dataset. Paper: 'YOLO 2007+2012 63.4 45'.
+                #   From paper: YOLO v1 achieved mAP score of 63.4 on the VOC 2007+2012 dataset. Paper text @ 'YOLO 2007+2012 63.4 45'.
                 if mean_average_per > 63.4:
                     print(f"Model mAP score: {mean_average_per}")
                     pass
