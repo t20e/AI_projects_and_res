@@ -6,7 +6,7 @@
 
 
 
-### How To Only Download A Sub-Project
+### How To Download A Sub-Project
 
 Unfortunately Github makes cloning a sub-project difficult, the workaround is to use Github's `github.dev` web-based editor.
 
@@ -19,7 +19,7 @@ Steps:
 
 #### Object detection.
 
-- 🔗 [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig)
+- 🔗 [yolo_v1_orig](./object_detection/yolo_v1_orig/)
     - Implements the YOLO v1 paper.
     - [YOLOv1 Resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection/YOLO_v1.res)
 
