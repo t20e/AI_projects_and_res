@@ -1,31 +1,31 @@
 
 # Yolo V1 Implementation
 
-🚨 Note: I went a little over the top with this project. My goal was to implement the YOLO v1 paper, but not to train any large models on it. While this project is a `⭐️ perfect implementation`. This project downloads a ~4GB VOC dataset, of which only a fraction would have sufficed. The biggest bummer is that I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com). I will likely move on to implementing the YOLO v11 or v12 architectures, which have pre-trained models available online.
+🚨 Note: I went a little over-board. My goal was to implement the YOLO v1 paper, but not to train any large models on it. While this project is a perfect implementation. This project downloads a ~4GB VOC dataset, of which only a fraction would have sufficed. The biggest bummer is that I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com). I will likely move on to implementing the YOLO v11 or v12 architectures, which have pre-trained models available online.
 
 ---
 
-Goal:   
+Goal: Identify objects in images.
+
 <img src="./showcase_images/prediction.png" width="250">
 
 🔗 [YOLO v1 Paper](https://arxiv.org/pdf/1506.02640)
 
-⭐️ **Objective**: "Using our system, You-Only-Look-Once (YOLO) at an image to predict what objects are present and where they are."
+⭐️ **Objective From Paper**: "Using our system, You-Only-Look-Once (YOLO) at an image to predict what objects are present and where they are."
 
-⭐️ **Note**: I'm aiming for direct adherence to the paper's approach with slight improvements, so the code's design will favor easy comprehension, even if it means less vectorization and therefore reduced efficiency.
+⭐️ **Note**: I'm aiming for direct adherence to the paper's approach with slight improvements.
 
-⭐️ Ran on **Mac-os** silicon, haven't tested on other OSs.
+⭐️ Ran on *Mac-os silicon*, haven't tested on other OSs.
 
 
 ## Prerequisites
 
-- torch version: 2.7    
-- conda version: 24.11.1
-- Knowedge
-    - [My YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
+- Torch version: 2.7    
+- Conda version: 24.11.1
+- Knowledge:
+    - [YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
     - [Firm Understanding of Coordinate formats](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md)
-    - [intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/intersection_over_union.md)
-
+    - [Intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/intersection_over_union.md)
 
 
 ## How To Run
@@ -52,7 +52,7 @@ Goal:
 
 4. Train Model 
 ```shell 
-# Set MODE="train" in configuration file of the dataset used.
+    # configure configs/config_voc_dataset.yaml.
     python main.py 
 ```
 

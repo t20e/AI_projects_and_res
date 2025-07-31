@@ -35,8 +35,8 @@ class YOLOConfig:
     C: int = 20
     B: int = 2
     S: int = 7
-    IOU_THRESHOLD: float = 0.6
-    MIN_THRESHOLD: float = 0.5
+    NMS_IOU_THRESHOLD: float = 0.6
+    NMS_MIN_THRESHOLD: float = 0.5
     USE_SCHEDULER: bool = True
     CELL_NODES: int = 30
     LABEL_NODES: int = 1470

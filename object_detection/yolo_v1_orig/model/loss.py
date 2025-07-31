@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from configs.config_loader import YOLOConfig
-from utils.IoU import IoU
+from utils.IoU import IoU_one_to_one_mapping
 
 
 class YOLOLoss(nn.Module):
@@ -59,8 +59,8 @@ class YOLOLoss(nn.Module):
         label_xywh = label[..., C + 1 : C + 5]  # (b_s, S, S, 4)
 
         # ==> Calculate IoUs to determine the "responsible" detector either bbox1 or bbox2 from pred (compared to label).
-        iou_b1 = IoU(pred_box1_xywh, label_xywh)  # (b_s, S, S, 1)
-        iou_b2 = IoU(pred_box2_xywh, label_xywh)
+        iou_b1 = IoU_one_to_one_mapping(pred_box1_xywh, label_xywh)  # (b_s, S, S, 1)
+        iou_b2 = IoU_one_to_one_mapping(pred_box2_xywh, label_xywh)
         ious = torch.cat([iou_b1, iou_b2], dim=-1)  # (b_s, S, S, 2)
 
         #   Get the "Responsible" box (predictions box1 or box2) that is responsible for detecting the object.
@@ -104,10 +104,10 @@ class YOLOLoss(nn.Module):
         # This loss penalizes the model for being wrong about whether an object exists in a cell.
         conf_obj_loss = self.mse(obj_mask * best_pc, obj_mask * best_iou)
 
-        best_pred_pcs = torch.cat([pred_box1_pc, pred_box2_pc], dim=-1)  # (64, 7, 7, 2)
-        noobj_loss = self.mse(
-            noobj_mask * best_pred_pcs, torch.zeros_like(best_pred_pcs)
-        )
+        best_pred_pcs = noobj_mask * torch.cat([pred_box1_pc, pred_box2_pc], dim=-1)
+
+        noobj_loss = self.mse(best_pred_pcs, torch.zeros_like(best_pred_pcs))
+
 
         # =============================== #
         #       Classification Loss       #

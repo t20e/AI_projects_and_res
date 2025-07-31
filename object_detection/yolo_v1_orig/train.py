@@ -94,7 +94,7 @@ def train_one_epoch(cfg: YOLOConfig, loader, yolo, loss_fn, optimizer):
 
     # --- Store the loss of the models bbox predictions vs true bboxes that it makes for every image.
     loss_history = []
-
+    
     for batch_idx, (x, y) in enumerate(loop):
         """
         x: represents a batch of input data (images).

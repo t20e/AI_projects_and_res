@@ -10,16 +10,20 @@ from data.voc_dataset import VOCDataset
 from data.utils.setup_transforms import setup_transforms
 
 
-def extract_and_convert_pred_bboxes(cfg: YOLOConfig, pred: torch.Tensor):
+def extract_and_convert_pred_bboxes(
+    cfg: YOLOConfig, pred: torch.Tensor, img_offset: int=0
+):
     """
     Extracts bounding boxes from a batch of predictions and converts them from mid-points with normalized values to corner-points with absolute pixel values.
 
     Args:
         cfg (YOLOConfig): The configuration object.
         pred (torch.Tensor): A (N, S, S, 30) predictions tensor.
+        img_offset (int): An offset to add to the image_idx to ensure unique indices across batches. This is primarily used for mAP.
+            - When we need to extract bounding boxes across many batches primarily for mAP, we need to distinguish an image's index from one batch to the other batches, e.g., we can't let (batch_1 image_1) and (batch_2 image_1) have the same image_idx, this is where we use img_offset.
 
     Returns:
-        torch.Tensor: A tensor of shape (N, 7) with format [image_idx, best_cls_idx, pc, x1, y1, x2, y2], where N is the number of bounding boxes.
+        torch.Tensor: A tensor of shape (N, 7) with format [image_idx, best_cls_idx, pc, x1, y1, x2, y2], where N is the number of predicted bounding boxes.
             - In corner-points with absolute pixel values.
     """
 
@@ -81,7 +85,7 @@ def extract_and_convert_pred_bboxes(cfg: YOLOConfig, pred: torch.Tensor):
 
     # --- 3: Concatenate Tensors ---
     image_indices = (
-        torch.arange(N, device=pred.device).view(N, 1, 1, 1).expand_as(confidence)
+        torch.arange(N, device=pred.device).view(N, 1, 1, 1).expand_as(confidence) + img_offset
     )  # (2, S, S, B)
 
     # Expand best_class_idx to match the other tensors
@@ -98,14 +102,15 @@ def extract_and_convert_pred_bboxes(cfg: YOLOConfig, pred: torch.Tensor):
     return all_pred_boxes
 
 
-def extract_and_convert_label_bboxes(cfg: YOLOConfig, labels: torch.Tensor):
+def extract_and_convert_label_bboxes(cfg: YOLOConfig, labels: torch.Tensor, img_offset:int=0):
     """
     Extracts bounding boxes from a batch of labels and converts them from mid-points with normalized values to corner-points with absolute pixel values.
 
     Args:
         cfg (YOLOConfig): The configuration object.
         boxes_t (torch.Tensor): The (N, S, S, 30) label tensor from the dataset. Where N is the batch size.
-
+        img_offset (int): An offset to add to the image_idx to ensure unique indices across batches. This is primarily used for mAP.
+            - When we need to extract bounding boxes across many batches primarily for mAP, we need to distinguish an image's index from one batch to the other batches, e.g., we can't let (batch_1 image_1) and (batch_2 image_1) have the same image_idx, this is where we use img_offset.
     Returns:
         torch.Tensor: A tensor of shape (N, 7) with format [image_idx, class_idx, score, x1, y1, x2, y2], where N is the number of bounding boxes.
             - In corner-points with absolute pixel values.
@@ -126,7 +131,7 @@ def extract_and_convert_label_bboxes(cfg: YOLOConfig, labels: torch.Tensor):
         return []
 
     #   Use the indices to gather the data for existing boxes
-    image_idxs = indices[:, 0]  # (num_boxes)
+    image_idxs = indices[:, 0] + img_offset # (num_boxes)
     i_idxs = indices[:, 1]
     j_idxs = indices[:, 2]
 

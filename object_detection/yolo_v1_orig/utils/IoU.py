@@ -4,14 +4,15 @@ Intersection Over Union
 
 import torch
 
-
-def IoU(
+def IoU_one_to_one_mapping(
     pred_boxes: torch.Tensor,
     label_boxes: torch.Tensor,
     box_format: str = "midpoint",
 ):
     """
-    Calculates Intersection Over Union on a batch of predicted bounding boxes compared the the target labeled boxes.
+    Calculates Intersection Over Union for CORRESPONDING bounding box PAIRS in a batch, one-to-one mapping.
+
+    When you pass pred_boxes=(batch_size, 4) and label_boxes=(batch_size, 4), it will calculate IoU between pred_box[0] and label_boxes[0] (one-to-one mapping), pred_boxes[1] and label_boxes[1], and so on.
 
     Args:
         pred_boxes: Model bounding box predictions. Shape: (batch_size, 4).
@@ -20,7 +21,8 @@ def IoU(
             - "midpoint": [x, y, w, h]
             - "corners": [x1, y1, x2, y2] or [x_min, y_min, x_max, y_max]
     Returns:
-        tensor: Intersection Over Union for all examples in a batch.
+        tensor: Intersection Over Union for all examples in a batch. Shape (N, 1)
+
     """
     # --- 1: If "midpoint" convert to corner-points, its easier to calculate IoU with corners.
     if box_format == "midpoint":
@@ -67,6 +69,71 @@ def IoU(
     return intersection_area / (union_area + epsilon)
 
 
+def IoU_one_to_many_mapping(
+    single_pred_box: torch.Tensor,
+    multiple_label_boxes: torch.Tensor,
+    box_format: str = "corners",
+):
+    """
+    Calculates Intersection Over Union between one predicted box and multiple ground truth boxes (one-to-many mapping).
+
+    Args:
+        single_pred_box (torch.Tensor): A single predicted box. Shape: (1, 4).
+        multiple_label_boxes (torch.Tensor): Multiple ground truth boxes. Shape: (N, 4).
+        box_format (str): "corners" for [x1, y1, x2, y2] or "midpoint" for [x_center, y_center, width, height]
+    Returns:
+        torch.Tensor: IoU values (1, N). Where N is the number of iou scores.
+    """
+    # Ensure inputs are correctly shaped for broadcasting
+    # single_pred_box should be (1, 4) or (4,) which will be unsqueezed to (1,4) by below
+    # multiple_label_boxes should be (M, 4)
+
+    # Convert to corners for calculation
+    if box_format == "midpoint":
+        box1_x1 = single_pred_box[..., 0:1] - single_pred_box[..., 2:3] / 2
+        box1_y1 = single_pred_box[..., 1:2] - single_pred_box[..., 3:4] / 2
+        box1_x2 = single_pred_box[..., 0:1] + single_pred_box[..., 2:3] / 2
+        box1_y2 = single_pred_box[..., 1:2] + single_pred_box[..., 3:4] / 2
+
+        box2_x1 = multiple_label_boxes[..., 0:1] - multiple_label_boxes[..., 2:3] / 2
+        box2_y1 = multiple_label_boxes[..., 1:2] - multiple_label_boxes[..., 3:4] / 2
+        box2_x2 = multiple_label_boxes[..., 0:1] + multiple_label_boxes[..., 2:3] / 2
+        box2_y2 = multiple_label_boxes[..., 1:2] + multiple_label_boxes[..., 3:4] / 2
+    elif box_format == "corners":
+        box1_x1 = single_pred_box[..., 0:1]
+        box1_y1 = single_pred_box[..., 1:2]
+        box1_x2 = single_pred_box[..., 2:3]
+        box1_y2 = single_pred_box[..., 3:4]
+
+        box2_x1 = multiple_label_boxes[..., 0:1]
+        box2_y1 = multiple_label_boxes[..., 1:2]
+        box2_x2 = multiple_label_boxes[..., 2:3]
+        box2_y2 = multiple_label_boxes[..., 3:4]
+
+    # Key for broadcasting:
+    # box1_x1 will be (1, 1) if single_pred_box is (1, 4)
+    # box2_x1 will be (M, 1)
+    # Transposing box2_x1 to (1, M) allows element-wise max/min with box1_x1
+    x1_intersection = torch.max(box1_x1, box2_x1.transpose(-1, -2))
+    y1_intersection = torch.max(box1_y1, box2_y1.transpose(-1, -2))
+    x2_intersection = torch.min(box1_x2, box2_x2.transpose(-1, -2))
+    y2_intersection = torch.min(box1_y2, box2_y2.transpose(-1, -2))
+
+    intersection_area = (x2_intersection - x1_intersection).clamp(0) * (
+        y2_intersection - y1_intersection
+    ).clamp(0)
+
+    box1_area = abs((box1_x2 - box1_x1) * (box1_y2 - box1_y1))
+    box2_area = abs((box2_x2 - box2_x1) * (box2_y2 - box2_y1))
+
+    # union_area = (1, 1) + (1, M) - (1, M) -> (1, M)
+    union_area = box1_area + box2_area.transpose(-1, -2) - intersection_area + 1e-6
+
+    iou = intersection_area / union_area
+
+    return iou
+
+
 # Test as module:
 # $     python -m utils.IoU
 def test():
@@ -77,7 +144,7 @@ def test():
     pred = torch.Tensor(cfg.BATCH_SIZE, cfg.S, cfg.S, 4).to(cfg.DEVICE)
     label = torch.Tensor(cfg.BATCH_SIZE, cfg.S, cfg.S, 4).to(cfg.DEVICE)
 
-    i = IoU(pred_boxes=pred, label_boxes=label, box_format="midpoint")
+    i = IoU_one_to_one_mapping(pred_boxes=pred, label_boxes=label, box_format="midpoint")
     print(i)
 
 

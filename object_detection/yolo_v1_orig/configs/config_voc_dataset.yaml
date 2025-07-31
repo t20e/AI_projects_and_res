@@ -12,7 +12,7 @@ NUM_WORKERS: 2 # Set to 0 will give you a better error trace when debugging. Def
 PIN_MEMORY: False
 
 # --------------------------------- HYPERPARAMETERS ---------------------------------
-EPOCHS: 15 # Ex: epoch = 1 means the model sees the dataset 1 time.
+EPOCHS: 50 # Ex: epoch = 1 means the model sees the dataset 1 time.
 LEARNING_RATE: 1e-5
 
 BATCH_SIZE: 64 # The number of images per batch. It must be < NUM_TRAIN_SAMPLES if NUM_TRAIN_SAMPLES != 0.
@@ -37,8 +37,8 @@ LAST_EPOCH: 0 # (int) The last epoch the model was trained on DON'T change from 
 C: 20 # How many classes in the dataset
 B: 2 # How many bounding boxes does the model predict per cell
 S: 7 # split_size how to split the image, 7x7=49 grid cells
-IOU_THRESHOLD: 0.6 # The threshold to remove or keep boxes when comparing predicted bounding boxes for NMS.
-MIN_THRESHOLD: 0.5 # The minimal confidence score needed to keep a predicted bounding box.
+NMS_IOU_THRESHOLD: 0.6 # The threshold to remove or keep boxes when comparing predicted bounding boxes for NMS.
+NMS_MIN_THRESHOLD: 0.5 # The minimal confidence score needed to keep a predicted bounding box.
 
 LABEL_NODES: 1470 # config.S * config.S * (config.C + config.B * 5) === The total number of nodes that each label has for one image. If S=7 C=20 B=2 --> 7 * 7 * (C + B * 5) = 1470 | 7x7=49 -> 49*30 = 1470 | the (* 5) adds the second bounding box in the cell -> [pc_2, x, y, w, h].
 CELL_NODES: 30 # The total number of nodes that a single cell has in a label for one image. Which would be the size (C + 5 * B) -> [*classes, pc_1, bbox1_x_y_w_h, pc_2, bbox2_x_y_w_h]. If S=7 C=20 B=2 --> 30 nodes.
@@ -63,6 +63,6 @@ CLASS_NAMES: [ "person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeropla
 
 # The number of samples (images/annotations) to grab from the dataset and create a dataframe.
 #   Note: error will occur if BATCH_SIZE > NUM_TRAIN_SAMPLES.
-NUM_TRAIN_SAMPLES: 128 # Set to 0 -> to create a dataframe of the entire dataset.
-NUM_VAL_SAMPLES: 256 # Same applies to NUM_VAL_SAMPLES as NUM_TRAIN_SAMPLES.
+NUM_TRAIN_SAMPLES: 0 # Set to 0 -> to create a dataframe of the entire dataset.
+NUM_VAL_SAMPLES: 500 # Same applies to NUM_VAL_SAMPLES as NUM_TRAIN_SAMPLES.
 
