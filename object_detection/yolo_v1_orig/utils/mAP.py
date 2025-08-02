@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 
 # My modules
-from data.utils.bbox_utils import (
+from data.utils.bbox_extraction import (
     extract_and_convert_pred_bboxes,
     extract_and_convert_label_bboxes,
 )
@@ -31,9 +31,6 @@ def mAP(cfg: YOLOConfig, val_loader: dataset_loader, yolo: YOLOv1):
 
     S, C, B = cfg.S, cfg.C, cfg.B
     epsilon = 1e-6  # For numerical stability
-
-    # Define a threshold that if a predicted box and a target box over-lap more than this threshold than that predicted box is a good prediction.
-    mAP_IoU_threshold = 0.5  # 0.5 is common
 
     # --- 1: Get all predictions and ground truths from all the batches in the entire validation set ---
     all_pred_boxes_list = []  # List to collect tensors
@@ -84,7 +81,7 @@ def mAP(cfg: YOLOConfig, val_loader: dataset_loader, yolo: YOLOv1):
         return 0.0
 
     all_pred_boxes_tensor = torch.cat(all_pred_boxes_list, dim=0)  # (num_boxes, 7)
-    
+
     # --> Apply NMS to the predictions to remove redundant bboxes.
     NMS_all_pred_boxes_tensor = nms(cfg, all_pred_boxes_tensor)
     # Sort the NMS-filtered predictions by confidence descending, crucial for mAP.
@@ -132,7 +129,7 @@ def mAP(cfg: YOLOConfig, val_loader: dataset_loader, yolo: YOLOv1):
         total_true_bboxes = len(class_ground_truths)
 
         if len(class_detections) == 0:
-            # If no prediction was made for this class append class (AP=0.0), continue.
+            # If no prediction was made for this class append class (AP=0.0), continue. mAP in the paper was averaged across all 20 Pascal VOC classes.
             average_precisions.append(torch.tensor(0.0, device=cfg.DEVICE))
             continue
 
@@ -160,7 +157,7 @@ def mAP(cfg: YOLOConfig, val_loader: dataset_loader, yolo: YOLOv1):
             best_gt_in_img_idx = best_gt_in_img_idx.item()
 
             # Check if the best match is above the IoU threshold.
-            if best_iou > mAP_IoU_threshold:
+            if best_iou > cfg.mAP_IOU_THRESHOLD:
                 # Check if this best-matching ground truth has NOT been claimed yet.
                 if not amount_bboxes_seen[img_idx][best_gt_in_img_idx]:
                     TP[det_idx] = 1  # It's a True Positive

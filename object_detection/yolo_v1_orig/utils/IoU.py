@@ -4,47 +4,60 @@ Intersection Over Union
 
 import torch
 
+
 def IoU_one_to_one_mapping(
     pred_boxes: torch.Tensor,
     label_boxes: torch.Tensor,
-    box_format: str = "midpoint",
+    S: int = 7,
 ):
     """
-    Calculates Intersection Over Union for CORRESPONDING bounding box PAIRS in a batch, one-to-one mapping.
+    Calculates Intersection Over Union for CORRESPONDING bounding box PAIRS in a batch, one-to-one mapping, and converts from normalized midpoints to absolute corner-points.
 
-    When you pass pred_boxes=(batch_size, 4) and label_boxes=(batch_size, 4), it will calculate IoU between pred_box[0] and label_boxes[0] (one-to-one mapping), pred_boxes[1] and label_boxes[1], and so on.
+    When you pass pred_boxes=(batch_size, 4) and label_boxes=(batch_size, 4), it will calculate IoU between pred_box[0] and label_boxes[0] (one-to-one mapping), pred_boxes[1] and label_boxes[1], and so on...
 
     Args:
-        pred_boxes: Model bounding box predictions. Shape: (batch_size, 4).
-        label_boxes: Labeled bounding boxes. Shape: (batch_size, 4).
-        box_format (str): What format are the passed in bounding box tensors in, "midpoint" or "corners".
-            - "midpoint": [x, y, w, h]
-            - "corners": [x1, y1, x2, y2] or [x_min, y_min, x_max, y_max]
+        pred_boxes (torch.Tensor): Model predictions. Shape: (N, S, S, 4).
+        label_boxes (torch.Tensor): Ground truth. Shape: (N, S, S, 4).
+        S (int): The grid split size.
+
     Returns:
-        tensor: Intersection Over Union for all examples in a batch. Shape (N, 1)
+        torch.Tensor: IoU scores for each box pair. Shape: (N, S, S, 1)
 
     """
-    # --- 1: If "midpoint" convert to corner-points, its easier to calculate IoU with corners.
-    if box_format == "midpoint":
-        # [..., 0:1] is the midpoint, [..., 2:3] is the width of that bbox, so if we divide it by 2, then well get the top-left x1 coordinate
-        pred_x1 = pred_boxes[..., 0:1] - pred_boxes[..., 2:3] / 2
-        pred_y1 = pred_boxes[..., 1:2] - pred_boxes[..., 3:4] / 2
-        pred_x2 = pred_boxes[..., 0:1] + pred_boxes[..., 2:3] / 2
-        pred_y2 = pred_boxes[..., 1:2] + pred_boxes[..., 3:4] / 2
-        label_x1 = label_boxes[..., 0:1] - label_boxes[..., 2:3] / 2
-        label_y1 = label_boxes[..., 1:2] - label_boxes[..., 3:4] / 2
-        label_x2 = label_boxes[..., 0:1] + label_boxes[..., 2:3] / 2
-        label_y2 = label_boxes[..., 1:2] + label_boxes[..., 3:4] / 2
-    # --- 2: Grab the corner points
-    elif box_format == "corners":
-        pred_x1 = pred_boxes[..., 0:1]  # the ... slices but keeps the same dimensions.
-        pred_y1 = pred_boxes[..., 1:2]
-        pred_x2 = pred_boxes[..., 2:3]
-        pred_y2 = pred_boxes[..., 3:4]
-        label_x1 = label_boxes[..., 0:1]
-        label_y1 = label_boxes[..., 1:2]
-        label_x2 = label_boxes[..., 2:3]
-        label_y2 = label_boxes[..., 3:4]
+
+    # --- 1. Create a grid of cell indices (i=rows, j=cols) ---
+    j_indices = (
+        torch.arange(S, device=pred_boxes.device)
+        .repeat(pred_boxes.shape[0], S, 1)
+        .unsqueeze(-1)
+    )
+    i_indices = (
+        torch.arange(S, device=pred_boxes.device)
+        .repeat(pred_boxes.shape[0], S, 1)
+        .transpose(1, 2)
+        .unsqueeze(-1)
+    )
+
+    # --- 2. Convert YOLO's hybrid coords to absolute corner-points (relative to image) ---
+    # Convert Predictions
+    x_rel_cell_pred, y_rel_cell_pred, w_pred, h_pred = pred_boxes.unbind(dim=-1)
+    x_mid_abs_pred = (x_rel_cell_pred.unsqueeze(-1) + j_indices) / S
+    y_mid_abs_pred = (y_rel_cell_pred.unsqueeze(-1) + i_indices) / S
+
+    pred_x1 = x_mid_abs_pred - w_pred.unsqueeze(-1) / 2
+    pred_y1 = y_mid_abs_pred - h_pred.unsqueeze(-1) / 2
+    pred_x2 = x_mid_abs_pred + w_pred.unsqueeze(-1) / 2
+    pred_y2 = y_mid_abs_pred + h_pred.unsqueeze(-1) / 2
+
+    # Convert Labels
+    x_rel_cell_label, y_rel_cell_label, w_label, h_label = label_boxes.unbind(dim=-1)
+    x_mid_abs_label = (x_rel_cell_label.unsqueeze(-1) + j_indices) / S
+    y_mid_abs_label = (y_rel_cell_label.unsqueeze(-1) + i_indices) / S
+
+    label_x1 = x_mid_abs_label - w_label.unsqueeze(-1) / 2
+    label_y1 = y_mid_abs_label - h_label.unsqueeze(-1) / 2
+    label_x2 = x_mid_abs_label + w_label.unsqueeze(-1) / 2
+    label_y2 = y_mid_abs_label + h_label.unsqueeze(-1) / 2
 
     # --- 3: Calculate the intersection -> get the coordinates of the overlapping box where pred_bboxes and label_bboxes overlap (the intersection).
     inter_x1 = torch.max(pred_x1, label_x1)
@@ -144,7 +157,9 @@ def test():
     pred = torch.Tensor(cfg.BATCH_SIZE, cfg.S, cfg.S, 4).to(cfg.DEVICE)
     label = torch.Tensor(cfg.BATCH_SIZE, cfg.S, cfg.S, 4).to(cfg.DEVICE)
 
-    i = IoU_one_to_one_mapping(pred_boxes=pred, label_boxes=label, box_format="midpoint")
+    i = IoU_one_to_one_mapping(
+        pred_boxes=pred, label_boxes=label, box_format="midpoint"
+    )
     print(i)
 
 

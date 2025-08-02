@@ -15,8 +15,8 @@ class YOLOLoss(nn.Module):
         """
         super(YOLOLoss, self).__init__()
         self.mse = nn.MSELoss(
-            reduction="sum"
-        )  #  CrossEntropy/Softmax losses normally work better than MSE.
+            reduction="mean"
+        )  #  Note: CrossEntropy/Softmax losses normally work better than MSE Loss.
         self.cfg = cfg
         # The lambdas penalties from paper.
         self.LAMBDA_COORD = 5  # λ_coord
@@ -33,11 +33,14 @@ class YOLOLoss(nn.Module):
             label (tensor): shape (batch_size, S, S, CELL_NODES)
 
         Returns:
-            Loss (float)
+            Tuple(
+                Mean_Loss (float),
+                Dict: {Separate losses (float)}
+                )
         """
         cfg = self.cfg
         S, B, C = cfg.S, cfg.B, cfg.C
-        # Batch size = b_s. Get the incoming batch size.
+        # Batch size = b_s. Hardcode: get the incoming batch size.
         b_s = pred.size(0)
 
         # ==> 1: Slice out the data.
@@ -84,13 +87,27 @@ class YOLOLoss(nn.Module):
         #       Localization Loss         #
         # =============================== #
         # Localization loss or object loss is only for the "responsible" predictor in cells where an object is exists. This loss penalizes the model for inaccurate bounding box predictions.
+        #   obj_mask ensures this loss is only calculated for the predictor 'responsible' for an actual object.
+
         coord_loss = (
             self.mse(  # first formula of the loss function in paper illustration.
                 obj_mask * best_xywh[..., :2],
                 obj_mask * label_xywh[..., :2],
             )
         )
-        #   obj_mask ensures this loss is only calculated for the predictor 'responsible' for an actual object.
+
+        """
+        Note in the paper the coord_loss had square root, however modern approaches removes the square root as bounding box width (w) and height (h) are notoriously difficult to stabilize.
+                The original YOLOv1 paper applies the square root to w and h in the loss to:
+                    * Penalize small deviations in small boxes more than in large boxes.
+                    * Compensate for large variation in scale.
+
+            e.g newer YOLO models:
+                    coord_loss += self.mse(
+                        obj_mask * best_xywh[..., 2:4], # remove square root
+                        obj_mask * label_xywh[..., 2:4],
+                    )
+        """
         coord_loss += (
             self.mse(  # Second formula of the loss function in paper illustration.
                 obj_mask * torch.sqrt(best_xywh[..., 2:4].clamp(min=1e-6)),
@@ -107,7 +124,6 @@ class YOLOLoss(nn.Module):
         best_pred_pcs = noobj_mask * torch.cat([pred_box1_pc, pred_box2_pc], dim=-1)
 
         noobj_loss = self.mse(best_pred_pcs, torch.zeros_like(best_pred_pcs))
-
 
         # =============================== #
         #       Classification Loss       #
@@ -129,14 +145,17 @@ class YOLOLoss(nn.Module):
             + self.LAMBDA_NOOBJ * noobj_loss
             # <== Classification Loss ==>       What is the object? Indices (0-17), compared `to` true label?
             + class_loss
-        ) / b_s  # normalize by batch.
+        )
 
-        # --- Debug print statement to show separate losses values.
-        # print(
-        #     f"\n\ncoord_loss: {coord_loss}, \nconf_obj_loss: {conf_obj_loss}, \nnoobj_loss: {noobj_loss}, \nclass_loss: {class_loss}\n\n"
-        # )
-
-        return loss
+        return (
+            loss,
+            {
+                "coord_loss": coord_loss,
+                "conf_obj_loss": conf_obj_loss,
+                "noobj_loss": noobj_loss,
+                "class_loss": class_loss,
+            },
+        )
 
 
 # Test as module:

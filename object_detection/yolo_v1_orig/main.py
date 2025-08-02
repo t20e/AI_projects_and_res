@@ -12,19 +12,29 @@ from data.voc_dataset import VOCDataset
 from model.model_utils import load_checkpoint
 from train import train
 from model.loss import YOLOLoss
+from utils.load_small_samples_to_GPU import load_few_samples_to_GPU
 
 torch.manual_seed(0)
 
 
-# Get configurations
-cfg = load_config("config_voc_dataset.yaml", overrides=None)
-# Get transformations
-transforms = setup_transforms(cfg.IMAGE_SIZE)
-
 if __name__ == "__main__":
+    # Load configurations
+    cfg = load_config("config_voc_dataset.yaml", overrides=None)
+
+    # Get transformations
+    transforms = setup_transforms(cfg.IMAGE_SIZE)
 
     # ==> Init Model.
-    yolo = YOLOv1(cfg=cfg, in_channels=3).to(cfg.DEVICE)
+    if cfg.USE_PRE_TRAIN_BACKBONE:
+        yolo = YOLOv1(
+            cfg=cfg, in_channels=3, use_pre_trained_backbone=cfg.USE_PRE_TRAIN_BACKBONE
+        ).to(cfg.DEVICE)
+
+        # Freeze the backbone and only train your new fully connect layers layers.
+        for param in yolo.backbone.parameters():
+            param.requires_grad = False
+    else:
+        yolo = YOLOv1(cfg=cfg, in_channels=3).to(cfg.DEVICE)
 
     # ==> Init Loss
     loss_fn = YOLOLoss(cfg=cfg)
@@ -32,13 +42,13 @@ if __name__ == "__main__":
     # ==> Init Optimizer.
     optimizer = optim.Adam(yolo.parameters(), lr=cfg.LEARNING_RATE)
 
-    # ==> Init Learning rate scheduler with a warm-up
-    warm_up = LinearLR(  # warmups help prevent exploding gradients early on.
-        optimizer=optimizer, start_factor=0.1, total_iters=5
-    )  # 10% of LR over first 5 epochs, then back to regular LR.
+    # ==> Init Learning rate scheduler with a warm-up.
+    if cfg.USE_LR_SCHEDULER:
+        warm_up = LinearLR(  # warmups help prevent exploding gradients early on.
+            optimizer=optimizer, start_factor=0.1, total_iters=5
+        )  # 10% of LR over first 5 epochs, then back to regular LR.
 
-    cosine = CosineAnnealingLR(optimizer, T_max=cfg.EPOCHS - 5)
-    if cfg.USE_SCHEDULER:
+        cosine = CosineAnnealingLR(optimizer, T_max=cfg.EPOCHS - 5)
         scheduler = SequentialLR(
             optimizer,
             schedulers=[warm_up, cosine],
@@ -54,27 +64,49 @@ if __name__ == "__main__":
         )
 
     # ==> Init Dataset Loaders.
-    loader = dataset_loader(
-        cfg=cfg,
-        which_dataset=cfg.TRAIN_DIR_NAME,
-        num_samples=cfg.NUM_TRAIN_SAMPLES,
-        transforms=transforms,
-        Dataset=VOCDataset,
-        batch_size=cfg.BATCH_SIZE,
-    )
+    if cfg.OVERFIT:
+        # if overfit load the small number of samples onto GPU once at the start.
+        loader = load_few_samples_to_GPU(
+            cfg,
+            which_dataset=cfg.TRAIN_DIR_NAME,
+            num_samples=cfg.NUM_TRAIN_SAMPLES,
+            transforms=transforms,
+            Dataset=VOCDataset,
+            batch_size=cfg.BATCH_SIZE,
+        )
+    else:
+        loader = dataset_loader(
+            cfg=cfg,
+            which_dataset=cfg.TRAIN_DIR_NAME,
+            num_samples=cfg.NUM_TRAIN_SAMPLES,
+            transforms=transforms,
+            Dataset=VOCDataset,
+            batch_size=cfg.BATCH_SIZE,
+        )
 
     val_loader = None
     if cfg.COMPUTE_MEAN_AVERAGE_PRECISION:
-        # Load the Validation set.
-        val_loader = dataset_loader(
-            cfg=cfg,
-            which_dataset=cfg.VALIDATION_DIR_NAME,
-            num_samples=cfg.NUM_VAL_SAMPLES,
-            transforms=transforms,
-            Dataset=VOCDataset,
-            # For validation we only need one batch.
-            batch_size=cfg.VAL_BATCH_SIZE
-        )
+        if cfg.OVERFIT:
+            # When overfitting we want to run mAP on the same dataset as the one that we are overfitting to, so load the same train dataset for mAP.
+            val_loader = load_few_samples_to_GPU(
+                cfg,
+                which_dataset=cfg.VALIDATION_DIR_NAME,
+                num_samples=cfg.NUM_VAL_SAMPLES,
+                transforms=transforms,
+                Dataset=VOCDataset,
+                batch_size=cfg.VAL_BATCH_SIZE,
+            )
+        else:
+            # Else load the Validation set so we can compute mAP on it.
+            val_loader = dataset_loader(
+                cfg=cfg,
+                which_dataset=cfg.VALIDATION_DIR_NAME,
+                num_samples=cfg.NUM_VAL_SAMPLES,
+                transforms=transforms,
+                Dataset=VOCDataset,
+                # For validation we only need one batch.
+                batch_size=cfg.VAL_BATCH_SIZE,
+            )
 
     # ==> Train the model
     if cfg.MODE == "train":

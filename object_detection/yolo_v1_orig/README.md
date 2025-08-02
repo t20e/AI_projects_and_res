@@ -1,8 +1,26 @@
+## 🚧 Under work
+# YOLO V1 Implementation
 
-# Yolo V1 Implementation
+🚨 Note: This project downloads a ~4GB VOC dataset, of which only a fraction would have sufficed. The biggest bummer is that I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com) (Work-around use VGG16 backbone). I will likely move on to implementing the YOLO v11 or v12 architectures, which have pre-trained models available online.
 
-🚨 Note: I went a little over-board. My goal was to implement the YOLO v1 paper, but not to train any large models on it. While this project is a perfect implementation. This project downloads a ~4GB VOC dataset, of which only a fraction would have sufficed. The biggest bummer is that I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com). I will likely move on to implementing the YOLO v11 or v12 architectures, which have pre-trained models available online.
+- The paper's model was pre-trained on ImageNet: They took the convolutional layers of their network and trained them on the massive ImageNet dataset (1,281,167 training images, 50,000 validation images and 100,000 test images) for a week, so unless you take the same approach as paper you won't get a good model using my setup.
+<!-- TODO make sure it works after downloading from github-->
+- Overfit test: (after running [How To Run](#how-to-run)) 
+    - Note: If no GPU available you can use your CPU to load a small number of samples to memory (runs just as fast) just change these lines -> [3. Stack and move the entire dataset to the GPU](utils/load_small_samples_to_GPU.py) to -> .to("cpu") 
+    - Make configurations edits in [config](configs/config_voc_dataset.yaml).
+        - Set
+            - OVERFIT = True
+            - USE_PRE_TRAIN_BACKBONE -> Set to True or False
+                - Whether to replace YOLOv1 CNN backbone with a pre-trained VGG16 backbone.
+    - Train model:
+    ```shell
+        $ caffeinate -d python main.py
+    ```
+    - Add the trained model's filename to LOAD_MODEL_FILENAME in [config](configs/config_voc_dataset.yaml).
+    - Plot in [notebooks/test-plot-model-predictions.ipynb](notebooks/test-plot-model-predictions.ipynb)
 
+- Parts that could have been coded better:
+    - Make every function that expects bounding boxes in a certain format (mid-point or corner-points), validate the input bboxes.
 ---
 
 Goal: Identify objects in images.

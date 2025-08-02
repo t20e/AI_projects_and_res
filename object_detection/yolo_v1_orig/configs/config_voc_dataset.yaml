@@ -6,15 +6,20 @@ MODE: "train" # 'train' or 'test' -> what are we doing?
 
 # -------------------------------- DEVICE AND SYSTEM --------------------------------
 DEVICE: "mps" # GPU device ->  "mps": Apple silicon M series | "cuda": Nvidia GPU | "cpu": if no GPUs available use CPU
-NUM_WORKERS: 2 # Set to 0 will give you a better error trace when debugging. Default: 2.
+NUM_WORKERS: 8 # Set to 0 will give you a better error trace when debugging. Default: 2.
 
 # To speed up the data transfer to the GPU from CPU when using pytorch's DataLoader, you can set pin_memory:True, however it isn't supported on Mac Silicone yet.
-PIN_MEMORY: False
+PIN_MEMORY: True
 
 # --------------------------------- HYPERPARAMETERS ---------------------------------
-EPOCHS: 50 # Ex: epoch = 1 means the model sees the dataset 1 time.
-LEARNING_RATE: 1e-5
+# FROM PAPER:
+#   We train the network for about 135 epochs on the training and validation data sets from PASCAL VOC 2007 and
+#   2012. When testing on 2012 we also include the VOC 2007 test data for training. Throughout training we use a
+#   batch size of 64, a momentum of 0.9 and a decay of 0.0005.
+EPOCHS: 135 # Ex: epoch = 1 means the model sees the dataset 1 time.
+LEARNING_RATE: 1e-4 # Note: depending on the size of the samples loaded, the LR value could cause exploding gradients.
 
+# Both Batch sizes should be 64 when training.
 BATCH_SIZE: 64 # The number of images per batch. It must be < NUM_TRAIN_SAMPLES if NUM_TRAIN_SAMPLES != 0.
 VAL_BATCH_SIZE: 64 # Batch size for the validation dataset. Must be < NUM_VAL_SAMPLES if NUM_VAL_SAMPLES != 0.
 
@@ -22,34 +27,40 @@ VAL_BATCH_SIZE: 64 # Batch size for the validation dataset. Must be < NUM_VAL_SA
 MOMENTUM: 0.9
 WEIGHT_DECAY: 0.0005
 
-# ------------------------ CONTINUE TRAINING PRE-TRAINED MODELS ------------------------
-CON_TRAINING: False # Boolean | continue to train a model
+# ------------------------  MODEL TRAINING ------------------------
 
-SAVE_MODEL: True # Should the model be saved. Set to False when writing code and we don't want to save the model.
-# Custom file name to add to filename when saving checkpoint or trained models. Ex: "overfit_one_image"
-CUSTOM_FILE_NAME: "Large_model_10k_images"
+OVERFIT: True # Set to True to overfit on a couple of samples, note it will change the configurations in main.py
+
+CON_TRAINING: False # Continue to train a model from a checkpoint.
+SAVE_MODEL: True # Should the model be saved. Set to False when testing/debugging code.
+# When saving model checkpoint or trained models add a custom filename. Ex: "overfit_one_image"
+MODEL_SAVE_TO_FILENAME: "VGG16_backbone" #"Large_model_13k_images"
 
 # File name of model to load it can be either a checkpoint or a trained model.
-LOAD_MODEL_FILE: "ttoverfit_one_image_yolo_v1_dataset_VOCDataset_date_2025-07-19_EPOCH_100_LOSS_1.5732_SIZE_448.pt" #EX: yolo_v1_dataset_VOC2012_train_val_date_2025-07-16_EPOCH_15_LOSS_4.9248_SIZE_448.pt
+#   Note: When running inference or for plotting you need to set the USE_LR_SCHEDULER value to that which the model was trained on.
+LOAD_MODEL_FILENAME: "Overfit_first_6_images_yolo_v1_dataset_VOCDataset_date_2025-08-02_EPOCHS_200_LOSS_0.0135_SIZE_448.pt" #EX: yolo_v1_dataset_VOC2012_train_val_date_2025-07-16_EPOCH_15_LOSS_4.9248_SIZE_448.pt
 LAST_EPOCH: 0 # (int) The last epoch the model was trained on DON'T change from 0.
 
 # ----------------------------------- ARCHITECTURE -----------------------------------
+USE_PRE_TRAIN_BACKBONE: True # whether to use a VGG16's CNN backbone
+
 C: 20 # How many classes in the dataset
 B: 2 # How many bounding boxes does the model predict per cell
 S: 7 # split_size how to split the image, 7x7=49 grid cells
 NMS_IOU_THRESHOLD: 0.6 # The threshold to remove or keep boxes when comparing predicted bounding boxes for NMS.
-NMS_MIN_THRESHOLD: 0.5 # The minimal confidence score needed to keep a predicted bounding box.
+NMS_MIN_THRESHOLD: 0.5 # Default (0.5) -> The minimal confidence score needed to keep a predicted bounding box. Set to 0.1 to see if the model is barely making an good prediction.
+mAP_IOU_THRESHOLD: 0.5 # For Mean Average Precision -> define a threshold that if a predicted box and a target box over-lap more than this threshold than that predicted box is a good prediction.
 
 LABEL_NODES: 1470 # config.S * config.S * (config.C + config.B * 5) === The total number of nodes that each label has for one image. If S=7 C=20 B=2 --> 7 * 7 * (C + B * 5) = 1470 | 7x7=49 -> 49*30 = 1470 | the (* 5) adds the second bounding box in the cell -> [pc_2, x, y, w, h].
 CELL_NODES: 30 # The total number of nodes that a single cell has in a label for one image. Which would be the size (C + 5 * B) -> [*classes, pc_1, bbox1_x_y_w_h, pc_2, bbox2_x_y_w_h]. If S=7 C=20 B=2 --> 30 nodes.
 
 # Whether to use a learning rate scheduler and warm-up.
-USE_SCHEDULER: False
+USE_LR_SCHEDULER: True
 # Whether to compute mean average precision
 COMPUTE_MEAN_AVERAGE_PRECISION: True
 
 # ------------------------------------- DATASET -------------------------------------
-# Dataset names.
+# Dataset names
 DATASET: "VOCDataset" # States what main dataset we used to train. Used when saving model checkpoints.
 TRAIN_DIR_NAME: "VOC_2012_dataset/train" # Name of the directory that contains the train set.
 VALIDATION_DIR_NAME: "VOC_2012_dataset/val"
@@ -63,6 +74,6 @@ CLASS_NAMES: [ "person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeropla
 
 # The number of samples (images/annotations) to grab from the dataset and create a dataframe.
 #   Note: error will occur if BATCH_SIZE > NUM_TRAIN_SAMPLES.
-NUM_TRAIN_SAMPLES: 0 # Set to 0 -> to create a dataframe of the entire dataset.
+NUM_TRAIN_SAMPLES: 0 # Set to 0 to load the entire dataset.
 NUM_VAL_SAMPLES: 500 # Same applies to NUM_VAL_SAMPLES as NUM_TRAIN_SAMPLES.
 

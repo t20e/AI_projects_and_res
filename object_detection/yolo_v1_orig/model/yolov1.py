@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 from configs.config_loader import YOLOConfig, load_config
 from data.utils.df_utils import create_df
+import torchvision.models as models
+from torchvision.models import VGG16_Weights
 
 """
     architecture_config contains the layers of the YOLO v1 architecture, it doesn't include the fully connected layers (fc).
@@ -84,23 +86,47 @@ class CNNBlock(nn.Module):
 
 
 class YOLOv1(nn.Module):
-    def __init__(self, cfg: YOLOConfig, in_channels: int = 3, *args, **kwargs):
+    def __init__(
+        self,
+        cfg: YOLOConfig,
+        in_channels: int = 3,
+        use_pre_trained_backbone: bool = False,
+        *args,
+        **kwargs
+    ):
         """
         YOLO v1 model.
+
+        NOTE: I included the VGG pre-trained model when use_pre_trained_backbone=True, else the model will be identical to the YOLOv1 paper.
 
         Args:
             cfg (YOLOconfig): Project configurations.
             in_channels (int) : Number of channels from the input image -> 448x448x3, 3 is the in_channels.
+            use_pre_trained_backbone (bool): Whether to use the CNN layers of the pretrained VGG16 model.
         """
+
         super(YOLOv1, self).__init__()
         self.cfg = cfg
-        self.in_channels = in_channels
-        self.conv = self._create_conv_layers()
+        self.use_pre_trained_backbone = use_pre_trained_backbone
+
+        if self.use_pre_trained_backbone:
+            # Load the VGG16 model with its pre-trained ImageNet weights
+            # This 'backbone' is now your pre-trained convolutional layers
+            self.backbone = models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1).features
+        else:
+            self.in_channels = in_channels
+            self.conv = self._create_conv_layers()
+
+        # Create the fully connected layers
         self.fc = self._create_fc(**kwargs)
 
     def forward(self, input):  # Call function.
         # --- 1: Pass the image through the convolution layers.
-        out = self.conv(input)
+        if self.use_pre_trained_backbone:
+            out = self.backbone(input)
+        else:
+            out = self.conv(input)
+
         # --- 2: Pass the last convolution layer's output through the fully connected layers.
         return self.fc(torch.flatten(out, start_dim=1))
 
@@ -159,17 +185,30 @@ class YOLOv1(nn.Module):
         cfg = self.cfg
         S, B, C = cfg.S, cfg.B, cfg.C
 
-        return nn.Sequential(
-            nn.Flatten(),  # flatten the output from the last convolution layer.
-            nn.Linear(1024 * S * S, 4096),  # --- First FC layer
-            nn.Dropout(0.5),
-            nn.LeakyReLU(0.1),
-            nn.Linear(  # --- Second FC layer
-                4096,
-                S * S * (B * 5 + C),
-                # From paper last output shape: S * S * ( B * 5 + C)
-            ),
-        )
+        if self.use_pre_trained_backbone:
+            # NOTE: The output of VGG16's features for a 448x448 image is (512, 14, 14)
+            return nn.Sequential(
+                nn.Flatten(),
+                #  VGG16 backbone for a 448×448 input is a tensor of shape 512×14×14. Therefore, the first FCN layer must accept an input of (512 * 14 * 14)
+                nn.Linear(512 * 14 * 14, 4096),
+                nn.Dropout(0.5),
+                nn.LeakyReLU(0.1),
+                nn.Linear(4096, S * S * (B * 5 + C)),
+            )
+        else:
+            # Use the yolov1 paper fully connected layers (1024, 7, 7).
+            return nn.Sequential(
+                nn.Flatten(),  # flatten the output from the last convolution layer.
+                nn.Linear(1024 * S * S, 4096),  # --- First FC layer
+                nn.Dropout(0.5),
+                nn.LeakyReLU(0.1),
+                nn.Linear(  # --- Second FC layer
+                    4096,
+                    S * S * (B * 5 + C),
+                    # From paper last output shape: S * S * ( B * 5 + C)
+                ),
+                # The paper applies a activation 'like' function to the output @ confidence = pc * best_prob -> implemented in extract_and_convert_pred_bboxes()
+            )
 
 
 # Test as module:

@@ -15,6 +15,7 @@ def dataset_loader(
     transforms: CustomCompose,
     Dataset: VOCDataset,
     batch_size: int = 64,
+    print_df: bool = False,
 ):
     """
     Creates a dataset loader.
@@ -26,12 +27,14 @@ def dataset_loader(
         batch_size (int): The number of batches to load.
         transforms (torchvision.transforms): transform object to resize the bboxes and images.  Normalize image tensors.
         Dataset (Dataset): The Dataset class not an instance of it though.
+        print_df (bool): Variable to pass to VOCDataset to print the dataframe.
     """
     dataset = Dataset(
         cfg=cfg,
         which_dataset=which_dataset,
         num_samples=num_samples,
         transforms=transforms,
+        print_df=print_df,
     )
 
     if cfg.MODE == "train":

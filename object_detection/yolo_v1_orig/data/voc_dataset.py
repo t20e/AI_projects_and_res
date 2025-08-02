@@ -24,6 +24,7 @@ class VOCDataset(torch.utils.data.Dataset):
         which_dataset: str,
         num_samples: int = 10,
         transforms: Optional[CustomCompose] = None,
+        print_df: bool = False,
     ):
         """
         Dataset Class: Structures the images and annotations.
@@ -41,7 +42,14 @@ class VOCDataset(torch.utils.data.Dataset):
         self.num_samples = num_samples
         self.dataset_path = os.path.join(os.getcwd(), "datasets", which_dataset)
         # Load a dataframe
-        self.annotations = create_df(cfg=cfg, dataset_path=self.dataset_path, num_to_load=num_samples, save_to_csv=False)
+        self.annotations = create_df(
+            cfg=cfg,
+            dataset_path=self.dataset_path,
+            num_to_load=num_samples,
+            save_to_csv=False,
+        )
+        if print_df:
+            print("\nDataframe:", self.annotations, "\n")
 
         self.voc_extraction = VOCAnnotationsExtraction(cfg=cfg, transforms=transforms)
 
@@ -126,6 +134,7 @@ def test():
         which_dataset=cfg.VALIDATION_DIR_NAME,
         num_samples=cfg.NUM_VAL_SAMPLES,
         transforms=t,
+        print_df=True,
     )
     # print(d.__len__())
     print(len(d))

@@ -28,8 +28,8 @@ def nms(cfg: YOLOConfig, boxes: torch.Tensor):
         cfg.NMS_MIN_THRESHOLD,
     )
 
-    # NOTE: BELOW LINE IS ONLY FOR TESTING OVERFIT MODEL WITH LOW THRESHOLDS
-    NMS_IOU_THRESHOLD, NMS_MIN_THRESHOLD = 0.1, 0.2
+    ## NOTE: BELOW LINE IS ONLY FOR TESTING OVERFIT MODEL WITH LOW THRESHOLDS
+    ## NMS_IOU_THRESHOLD, NMS_MIN_THRESHOLD = 0.6, 0.1
 
     # ==> 1. Filter out low-confidence bounding boxes globally
     keep_mask_conf = boxes[:, 2] > NMS_MIN_THRESHOLD
