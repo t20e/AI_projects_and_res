@@ -2,7 +2,7 @@
 
 💡 *A repo that contains all my public AI projects.*
 
-***Dev Note**: Every sub project must have its own .gitignore*
+*Dev Note:* Every sub project must have its own .gitignore
 
 
 
@@ -11,9 +11,11 @@
 Unfortunately Github makes cloning a sub-project difficult, the workaround is to use Github's `github.dev` web-based editor.
 
 Steps:
-1. Press the `period` key -> which will open this repo in github.dev editor.
+1. Press the `period (.)` key -> which will open this repo in github.dev editor.
+
 2. Right-click on the sub-project you want and hit the download option.
-3. Open that project in your IDE and read its `README.md`
+3. `Note` github.dev won't let you save it to a folder that contains system files like */downloads* instead **save** it to */downloads/project*
+4. Open that project in your IDE and read its `README.md`
 
 ### 📌 Notable projects
 

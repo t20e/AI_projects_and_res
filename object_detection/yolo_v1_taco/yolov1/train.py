@@ -60,7 +60,6 @@ class TrainPipeline:
             print(f"Epoch: {epoch}/{max_epoch} | Lr = {self.optimizer.param_groups[0]['lr'] }")
 
 
-            # TODO Compute mean_average_precision, look into the res folder the todo
             # mean_average_prec = mean_average_precision(loader=train_loader, model=model, config=config)
             # print(f"\nTrain mAP: {mean_average_prec}")
 

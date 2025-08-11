@@ -36,7 +36,7 @@ def plot_losses(loss_history: dict[str, list[int]]):
         ax.plot(
             epochs, np.array(l), marker="o", linestyle="-", color=color, label=loss_type
         )
-        print(f"\n, {loss_type}:, {l}")
+        print(f"\n\n{loss_type}: {l}")
 
     ax.set_title("Loss over Epochs", fontsize=16)
     ax.set_xlabel("Epoch", fontsize=12)

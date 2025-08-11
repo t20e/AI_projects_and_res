@@ -1,1 +1,1 @@
-Images upload to github to overfit so not to have to download the entire (~4GB) dataset
+Stores Images to overfit instead of downloading (~4GB) Dataset.

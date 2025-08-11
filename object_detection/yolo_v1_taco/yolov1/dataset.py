@@ -69,7 +69,7 @@ class Dataset(torch.utils.data.Dataset):
         image = Image.open(os.path.join(self.imgs_dir, self.df.iloc[index, 0]))
 
         # #######
-        # TODO MAKE SURE THAT THE BBOXES ARE IN PERCENTAGE VALUES BEFORE APPLYING TRANSFORMS OR ELSE IT MESS UP EVERYTHING.
+        # MAKE SURE THAT THE BBOXES ARE IN PERCENTAGE VALUES BEFORE APPLYING TRANSFORMS OR ELSE IT MESS UP EVERYTHING.
         # #######
 
         if self.transforms: # apply transform
@@ -89,7 +89,6 @@ class Dataset(torch.utils.data.Dataset):
             #       x, y can not be bigger than 1 that would mean its larger than the cell, however the height and width of the bbox can be bigger than 1.
             x_rel_cell, y_rel_cell = self.S * x - j, self.S * y - i
 
-            # TODO did I add a 1 to class_idx????
             
             if label_matrix[i, j, self.C] == 0: # checking if theres currently no object in i and j, this is also the position of the first probability_score
                 # NOTE: if two bounding boxes are in the same cell then only one will be selected. This is less likely to occur if split_size is large ex:19x19.

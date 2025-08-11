@@ -1,5 +1,23 @@
 # YOLO V1 Implementation
-<!-- TODO make sure it works after downloading from github-->
+
+💡 [How to download this project](https://github.com/t20e/AI_public_projects)
+
+
+---
+
+Goal: Identify objects in images.
+
+<img src="./showcase_images/prediction.png" width="250px">
+<img src="./showcase_images/learning_graph.png" width="350px">
+
+
+🔗 [YOLO v1 Paper](https://arxiv.org/pdf/1506.02640)
+
+⭐️ **Objective:**
+- *From paper:* "Using our system, You-Only-Look-Once (YOLO) at an image to predict what objects are present and where they are."
+
+- I'm aiming for direct adherence to the paper's approach with slight improvements.
+
 
 🚨 I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com)
 
@@ -7,32 +25,14 @@
 
 - Parts that could have been coded better:
 
-    - Make every function that expects bounding boxes in a certain format (mid-point or corner-points) | (normalized or absolute values), validate that the input is the required format.
-
----
-
-Goal: Identify objects in images.
-
-<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; padding: 0.2em; background-color: #f3f4f6; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-<img src="./showcase_images/prediction.png" alt="A taller placeholder image" style="max-width: 35%; height: auto; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
-
-<img src="./showcase_images/learning_graph.png" alt="A wider placeholder image" style="max-width: 65%; height: auto; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
-</div>
-
-
-🔗 [YOLO v1 Paper](https://arxiv.org/pdf/1506.02640)
-
-⭐️ **Objective From Paper**: "Using our system, You-Only-Look-Once (YOLO) at an image to predict what objects are present and where they are."
-
-⭐️ **Note**: I'm aiming for direct adherence to the paper's approach with slight improvements.
-
-⭐️ Ran on *Mac-os silicon*, haven't tested on other OSs.
+    - Make every function that expects bounding boxes in a certain format (mid-point or corner-points) | in (normalized or absolute values), validate that the input is the required format.
 
 
 ## Prerequisites
 
 - Torch version: 2.7
 - Conda version: 24.11.1
+- Ran on *Mac-os silicon*, haven't tested on other OSs.
 - Knowledge:
     - [YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
     - [Firm Understanding of Coordinate formats](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md)
@@ -48,19 +48,19 @@ Goal: Identify objects in images.
     - If any errors occur when downloading the dataset; then manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `data/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
 
 1. Create a conda environment.
-```shell 
-    conda env create -f configs/environment.yaml
-```
+    ```shell 
+        conda env create -f configs/environment.yaml
+    ```
 
 2. Activate the conda environment.
-```shell 
-    conda activate yolov1_env
-```
+    ```shell 
+        conda activate yolov1_env
+    ```
 
 3. Setup project.
-```shell
-    python setup.py # --download_VOC
-```
+    ```shell
+        python setup.py # --download_VOC
+    ```
 
 4. Overfit test: 
     - Note: If youn don't have a GPU available, you can use your CPU for the overfitting (runs just as fast) -> change these lines -> [3. Stack and move the entire dataset to the GPU](utils/load_small_samples_to_GPU.py) to -> .to("cpu") 
@@ -69,13 +69,15 @@ Goal: Identify objects in images.
             - OVERFIT = True
             - USE_PRE_TRAIN_BACKBONE -> Set to True or False
                 - Whether to replace YOLOv1 CNN backbone with a pre-trained VGG16 backbone.
+        - Note: When overfitting [config_loader.py](configs/config_loader.py) will adjusts some configurations.
     2. Train model:
-    ```shell
-        caffeinate -d python main.py
-    ```
+        ```shell
+            caffeinate -d python main.py
+        ```
+        - After add the trained model's filename (which is saved to [checkpoints](model/checkpoints)) to LOAD_MODEL_FILENAME in [config](configs/config_voc_dataset.yaml).
+
     3. Plot on those same images.
-        - Add the trained model's filename to LOAD_MODEL_FILENAME in [config](configs/config_voc_dataset.yaml).
-    - Plot in [notebooks/test-plot-model-predictions.ipynb](notebooks/test-plot-model-predictions.ipynb)
+        - Plot in [test-plot-model-predictions.ipynb](notebooks/test-plot-model-predictions.ipynb)
 
 ## Vocab
 

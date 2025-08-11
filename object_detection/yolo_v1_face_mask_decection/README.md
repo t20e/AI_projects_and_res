@@ -1,5 +1,4 @@
-# Don't use as reference, Implemented wrong
-# ⚠️ Got bored of this dataset, Instead use the yolo_v1_orig in the same repo. 
+# ‼️ Don't use as reference, Implemented wrong Instead use the [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig) 
 
 From yolov1 paper: "The (x,y) coordinates represent the center
 of the box relative to the bounds of the grid cell. The width
@@ -9,7 +8,7 @@ and height are predicted relative to the whole image. "
 This project's training is all implemented but the code is not dry, and not efficient, also model did poorly.
 
 
-# Face Mask detection With YOLO V1 Paper Model
+## Face Mask detection With YOLO V1 Paper Model
 
 
 * More notes and examples in the YOLO_v1_tutorial and in my res repo -> /coding.res/AI.res/object_detection/YOLO_v1.res

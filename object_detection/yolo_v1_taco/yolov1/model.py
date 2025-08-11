@@ -122,7 +122,6 @@ class YOLOv1(nn.Module):
         # # pass thru fully connected layers/dense neural network
         out = self.fc(torch.flatten(out, 1))
 
-        # TODO below is new, see if below was implemented in the og paper
         out = out.view(input.size(0), self.S, self.S, 28)
         C = self.C
         act = torch.sigmoid

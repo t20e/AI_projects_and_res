@@ -1,5 +1,6 @@
-# 🚧  Moving To YOLO_v1_orig dont use this project!
-# YOLO V1 TACO
+# ‼️ Don't use as reference, Implemented wrong Instead use the [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig) 
+
+## YOLO V1 TACO
 
 * The TACO (Trash Annotations in Context)
 
@@ -378,6 +379,3 @@ This image's labeled class object and its bounding boxes:
     * train: contains 4200 images.
     * val: contains 1704 images.
     * test: contains 100 images.
-
-<!-- TODO Add link to yolov1 repo for the Archieture and setup dataset portion.
- -->
