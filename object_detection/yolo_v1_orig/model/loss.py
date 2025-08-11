@@ -14,9 +14,7 @@ class YOLOLoss(nn.Module):
 
         """
         super(YOLOLoss, self).__init__()
-        self.mse = nn.MSELoss(
-            reduction="mean"
-        )  #  Note: CrossEntropy/Softmax losses normally work better than MSE Loss.
+        self.mse = nn.MSELoss(reduction="sum")  # Summed mean squared error.
         self.cfg = cfg
         # The lambdas penalties from paper.
         self.LAMBDA_COORD = 5  # λ_coord
@@ -43,45 +41,51 @@ class YOLOLoss(nn.Module):
         # Batch size = b_s. Hardcode: get the incoming batch size.
         b_s = pred.size(0)
 
-        # ==> 1: Slice out the data.
+        #  --- 1: Slice out the data. ---
         #      Layout if C=20, B=2 ↓:
-        #               [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, pc1, x1,y1,w1,h1, pc2, x2,y2,w2,h2]
+        #               [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, pc1, x1, y1, w1, h1, pc2, x2, y2, w2, h2]
 
         #   Get class predictions for the label and predictions (index 0-C).
         pred_cls = pred[..., :C]  # (b_s, S, S, C)
         label_cls = label[..., :C]
-        #   Get probability scores and boxes from the predictions.
-        pred_box1_pc = pred[..., C : C + 1]  # (b_s, S, S, 1)
-        pred_box1_xywh = pred[..., C + 1 : C + 5]  # (b_s, S, S, 4)
 
-        pred_box2_pc = pred[..., C + 5 : C + 6]  # (b_s, S, S, 1)
-        pred_box2_xywh = pred[..., C + 6 : C + 10]  # (b_s, S, S, 4)
+        pred_box1 = pred[..., C : C + 5]  # [pc₁, x₁, y₁, w₁, h₁] -> (b_s, S, S, 5)
+        pred_box2 = pred[..., C + 5 : C + 10]  # [pc₂, x2, y₂, w₂, h₂] -> (b_s, S, S, 5)
 
-        #   Get probability scores and boxes from the label (only box-1).
-        label_pc = label[..., C : C + 1]  # (b_s, S, S, 1)
-        label_xywh = label[..., C + 1 : C + 5]  # (b_s, S, S, 4)
+        label_box = label[..., C : C + 5] # Get probability scores and boxes from the label (only box-1). # fmt: skip
 
-        # ==> Calculate IoUs to determine the "responsible" detector either bbox1 or bbox2 from pred (compared to label).
-        iou_b1 = IoU_one_to_one_mapping(pred_box1_xywh, label_xywh)  # (b_s, S, S, 1)
+        # Extract components for IoU calculation
+        pred_box1_xywh = pred_box1[..., 1:]  # [x₁, y₁, w₁, h₁] -> (b_s, S, S, 4)
+        pred_box2_xywh = pred_box2[..., 1:]  # [x2, y₂, w₂, h₂]
+        label_xywh = label_box[..., 1:]  # [x₁, y₁, w₁, h₁]
+
+        # --- 2: Calculate IoUs ---
+        #  Result determines the "responsible" detector either bbox1 or bbox2 from prediction (compared to label).
+        iou_b1 = IoU_one_to_one_mapping(pred_box1_xywh, label_xywh)  #  (b_s, S, S, 1)
         iou_b2 = IoU_one_to_one_mapping(pred_box2_xywh, label_xywh)
         ious = torch.cat([iou_b1, iou_b2], dim=-1)  # (b_s, S, S, 2)
 
+        # --- 3: Find the "responsible" box ---
         #   Get the "Responsible" box (predictions box1 or box2) that is responsible for detecting the object.
         best_box_idx = ious.argmax(-1, keepdim=True)
 
-        #   Create a Mask
-        obj_mask = label_pc  # The mask will have a value of 1 where an object exists.
-        #   flip the mask, now a 0 is where an object exists.
-        noobj_mask = 1.0 - obj_mask
+        # --- 4: Masks ---
+        # In the label, the confidence score (pc) is 1 for cells with objects, 0 otherwise.
+        obj_mask = label_box[..., 0:1]  # (b_s, S, S, 1)
+        noobj_mask = 1.0 - obj_mask #   flip the mask, now a 0 is where an object exists. # fmt:skip
 
-        # ==> 4: Gather the "responsible" detector with its pc and xywh.
-        best_xywh = torch.where(
+        # --- 5: Gather the responsible predictor's data.
+        # We need to gather the responsible bounding box predictions (x, y, w, h and confidence)
+        best_pred_xywh = torch.where(
             best_box_idx == 0, pred_box1_xywh, pred_box2_xywh
         )  # (b_s, S, S, 4)
-        best_pc = torch.where(
-            best_box_idx == 0, pred_box1_pc, pred_box2_pc
+        best_pred_pc = torch.where(
+            best_box_idx == 0, pred_box1[..., 0:1], pred_box2[..., 0:1]
         )  # (b_s, S, S, 1)
-        best_iou = torch.gather(ious, -1, best_box_idx)  # (b_s, S, S, 1)
+
+        # The paper uses the predicted confidence pc_i for this term.
+        # The true confidence (C_i) is the IoU of the predicted box with the ground truth box.
+        best_pred_iou = torch.gather(ious, -1, best_box_idx)  # (b_s, S, S, 1)
 
         # =============================== #
         #       Localization Loss         #
@@ -89,47 +93,53 @@ class YOLOLoss(nn.Module):
         # Localization loss or object loss is only for the "responsible" predictor in cells where an object is exists. This loss penalizes the model for inaccurate bounding box predictions.
         #   obj_mask ensures this loss is only calculated for the predictor 'responsible' for an actual object.
 
-        coord_loss = (
-            self.mse(  # first formula of the loss function in paper illustration.
-                obj_mask * best_xywh[..., :2],
-                obj_mask * label_xywh[..., :2],
-            )
-        )
-
         """
-        Note in the paper the coord_loss had square root, however modern approaches removes the square root as bounding box width (w) and height (h) are notoriously difficult to stabilize.
+        Note in the paper the localization loss is square rooted, however modern approaches removes the square root as bounding box width (w) and height (h) are notoriously difficult to stabilize.
                 The original YOLOv1 paper applies the square root to w and h in the loss to:
                     * Penalize small deviations in small boxes more than in large boxes.
                     * Compensate for large variation in scale.
-
-            e.g newer YOLO models:
-                    coord_loss += self.mse(
-                        obj_mask * best_xywh[..., 2:4], # remove square root
-                        obj_mask * label_xywh[..., 2:4],
-                    )
         """
-        coord_loss += (
-            self.mse(  # Second formula of the loss function in paper illustration.
-                obj_mask * torch.sqrt(best_xywh[..., 2:4].clamp(min=1e-6)),
-                obj_mask * torch.sqrt(label_xywh[..., 2:4]),
-            )
+        coord_loss_xy = self.mse(
+            obj_mask * best_pred_xywh[..., :2],
+            obj_mask * label_xywh[..., :2],
         )
+        coord_loss_wh = self.mse(
+            obj_mask * torch.sqrt(best_pred_xywh[..., 2:].clamp(min=1e-6)),
+            obj_mask * torch.sqrt(label_xywh[..., 2:]),
+        )
+        localization_loss = coord_loss_xy + coord_loss_wh
 
         # =============================== #
         #       Confidence Loss           #
         # =============================== #
         # This loss penalizes the model for being wrong about whether an object exists in a cell.
-        conf_obj_loss = self.mse(obj_mask * best_pc, obj_mask * best_iou)
 
-        best_pred_pcs = noobj_mask * torch.cat([pred_box1_pc, pred_box2_pc], dim=-1)
+        # Confidence loss for cells with objects
+        conf_obj_loss = self.mse(
+            obj_mask * best_pred_pc,  # prediction
+            obj_mask
+            * best_pred_iou,  # truth is IoU of responsible box with the ground truth
+        )
 
-        noobj_loss = self.mse(best_pred_pcs, torch.zeros_like(best_pred_pcs))
+        # Confidence loss for cells without objects
+        # The paper penalizes ALL confidence predictions in non-object cells.
+        pred_box_pcs = torch.cat([pred_box1[..., 0:1], pred_box2[..., 0:1]], dim=-1)
+        noobj_loss = self.mse(
+            noobj_mask.expand_as(pred_box_pcs)
+            * pred_box_pcs,  
+            torch.zeros_like(pred_box_pcs),
+        )
 
         # =============================== #
         #       Classification Loss       #
         # =============================== #
+        # Classification loss is only for cells with objects.
         # This loss penalizes the model for misclassifying an object (e.g., calling a dog a cat).
-        class_loss = self.mse(obj_mask * pred_cls, obj_mask * label_cls)
+
+        class_loss = self.mse(
+            obj_mask.expand_as(pred_cls) * pred_cls,
+            obj_mask.expand_as(label_cls) * label_cls,
+        )
 
         # =============================== #
         #       Final compute             #
@@ -137,7 +147,7 @@ class YOLOLoss(nn.Module):
 
         loss = (
             # <== Localization Loss ==>         For the 'responsible' box either box1 or box2.
-            self.LAMBDA_COORD * coord_loss
+            self.LAMBDA_COORD * localization_loss
             #   we multiply by LAMBDA_COORD to give localization loss more weight.
             # <== Confidence Loss ==>           Where an object *is* present.
             + conf_obj_loss
@@ -145,12 +155,12 @@ class YOLOLoss(nn.Module):
             + self.LAMBDA_NOOBJ * noobj_loss
             # <== Classification Loss ==>       What is the object? Indices (0-17), compared `to` true label?
             + class_loss
-        )
+        ) / b_s  # normalize by batch size
 
         return (
             loss,
             {
-                "coord_loss": coord_loss,
+                "coord_loss": localization_loss,
                 "conf_obj_loss": conf_obj_loss,
                 "noobj_loss": noobj_loss,
                 "class_loss": class_loss,
@@ -159,13 +169,29 @@ class YOLOLoss(nn.Module):
 
 
 # Test as module:
-# $ python -m model.loss
-def test(label):
-    loss_fn = YOLOLoss(cfg)
-    # Create a RANDOM test tensors.
-    pred = torch.Tensor(1, cfg.S, cfg.S, cfg.CELL_NODES).to(cfg.DEVICE)
-    # add one batch dimension to label
+# $     python -m model.loss
+def test():
+    cfg = load_config(
+        "config_voc_dataset.yaml", verify_ask_user=False, print_configs=False
+    )
+    t = setup_transforms(cfg.IMAGE_SIZE)
+    d = VOCDataset(cfg=cfg, which_dataset=cfg.TRAIN_DIR_NAME, transforms=t)
+
+    img, label = d.__getitem__(0)
+    label.to(cfg.DEVICE)
     label = label.unsqueeze(0)
+
+    loss_fn = YOLOLoss(cfg)
+    # pred = torch.Tensor(1, cfg.S, cfg.S, cfg.CELL_NODES).to(cfg.DEVICE)
+
+    # Mimic the predication as same as label
+    pred = label.clone()
+
+    # Since pred is the same as the label add some deviations to alter the x,y, wtc..
+    # pred[..., cfg.C + 1] += 0.1  # Slightly shift x-coordinate of bounding box
+    # pred[..., 0] = 1  # Set class 0 confidence instead of correct one
+    # pred[..., 0:17] = 2  # set all classes predictions to 2
+
     loss = loss_fn(pred, label)
     print("\nFINAL LOSS:", loss)
 
@@ -179,9 +205,4 @@ if __name__ == "__main__":
     )  # shows all the values when printing tensors
     from data.utils.setup_transforms import setup_transforms
 
-    cfg = load_config("config_voc_dataset.yaml")
-
-    t = setup_transforms(cfg.IMAGE_SIZE)
-    d = VOCDataset(cfg=cfg, which_dataset=cfg.TRAIN_DIR_NAME, transforms=t)
-    img, label = d.__getitem__(0)
-    test(label.to(cfg.DEVICE))
+    test()

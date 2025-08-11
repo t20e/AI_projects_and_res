@@ -69,3 +69,4 @@ def plot_bbox(cfg: YOLOConfig, bboxes: Tensor, image: Image):
 
     # image.show()
     display(image)  # for jupyter notebooks
+

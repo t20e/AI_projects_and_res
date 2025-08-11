@@ -51,6 +51,7 @@ class YOLOConfig:
 
     TRAIN_DIR_NAME: str = ""
     VALIDATION_DIR_NAME: str = ""
+    OVERFIT_DIR_NAME: str = ""
     TEST_DIR_NAME: str = ""
     ANNOTATIONS_DIR_NAME: str = ""
     IMAGES_DIR_NAME: str = ""
@@ -58,19 +59,27 @@ class YOLOConfig:
     CLASS_NAMES: list[str] = None
     NUM_TRAIN_SAMPLES: int = 0
     NUM_VAL_SAMPLES: int = 0
+    NUM_OVERFIT_SAMPLE: int = 0
 
 
 # A global flag to track if the load_config "MAJOR CONFIGURATIONS TO NOTE:" prints have already been printed.
 _config_printed = False
 
 
-def load_config(file_name: str = None, overrides: dict = None) -> YOLOConfig:
+def load_config(
+    file_name: str = None,
+    overrides: dict = None,
+    verify_ask_user: bool = True,
+    print_configs: bool = True,
+) -> YOLOConfig:
     """
     Load configurations from a yaml file.
 
     args:
         file_name (str): The config file name. i.e. (config_voc_dataset.yaml)
         overrides (dict): Dictionary containing values to override.
+        verify_ask_user (bool): Ask the user to verify configurations before loading them.
+        print_configs (bool): Whether to print the configurations.
     Returns:
         YOLOConfig (dataclass) object
     """
@@ -108,28 +117,27 @@ def load_config(file_name: str = None, overrides: dict = None) -> YOLOConfig:
 
     # If overfitting: change the configurations to perform overfitting on a couple of images.
     if cfg_dict["OVERFIT"]:
-        num_samples_to_overfit = 6
         cfg_dict["NUM_WORKERS"] = 0
         # We set NUM_WORKERS=0 because the small number of samples are already on the GPU; no need for multiprocessing.
-        cfg_dict["LEARNING_RATE"] = 0.0001
+        cfg_dict["LEARNING_RATE"] = 0.00001
         cfg_dict["EPOCHS"] = 200
-        cfg_dict["NUM_TRAIN_SAMPLES"] = num_samples_to_overfit
-        cfg_dict["BATCH_SIZE"] = round(num_samples_to_overfit / 2)
+        cfg_dict["BATCH_SIZE"] = round(cfg_dict["NUM_OVERFIT_SAMPLE"] / 2)
 
-        cfg_dict["NUM_VAL_SAMPLES"] = num_samples_to_overfit
-        cfg_dict["VAL_BATCH_SIZE"] = round(num_samples_to_overfit / 2)
+        cfg_dict["VAL_BATCH_SIZE"] = round(cfg_dict["NUM_OVERFIT_SAMPLE"] / 2)
 
         cfg_dict["MODEL_SAVE_TO_FILENAME"] = (
-            f"Overfit_first_{num_samples_to_overfit}_images"
+            f"Overfit_first_{cfg_dict['NUM_OVERFIT_SAMPLE']}_images"
         )
         cfg_dict["SAVE_MODEL"] = True
         cfg_dict["NMS_MIN_THRESHOLD"] = 0.3
         cfg_dict["NMS_IOU_THRESHOLD"] = 0.6
-        cfg_dict["mAP_IOU_THRESHOLD"] = 0.0 
-        cfg_dict["USE_LR_SCHEDULER"] = False # When overfitting its common better to use a set learning rate.
+        # cfg_dict["mAP_IOU_THRESHOLD"] = 0.5
+        cfg_dict["USE_LR_SCHEDULER"] = (
+            False  # When overfitting its common practice to not use a Learning rate scheduler.
+        )
 
     # Only print if the config hasn't been printed before
-    if not _config_printed:
+    if not _config_printed and print_configs:
         print("\n")
         print("#" * 64)
         print("MAJOR CONFIGURATIONS TO NOTE:")
@@ -146,7 +154,7 @@ def load_config(file_name: str = None, overrides: dict = None) -> YOLOConfig:
             "\t\tNUM_TRAIN_SAMPLES:",
             cfg_dict["NUM_TRAIN_SAMPLES"],
             (
-                "-> Loading all training samples."
+                "-> If called (0) Loads all training samples."
                 if cfg_dict["NUM_TRAIN_SAMPLES"] == 0
                 else ""
             ),
@@ -154,6 +162,8 @@ def load_config(file_name: str = None, overrides: dict = None) -> YOLOConfig:
         print("\t\tBATCH_SIZE:", cfg_dict["BATCH_SIZE"])
         print("\t\tNUM_VAL_SAMPLES:", cfg_dict["NUM_VAL_SAMPLES"])
         print("\t\tVAL_BATCH_SIZE:", cfg_dict["VAL_BATCH_SIZE"])
+        print("\t\tNUM_OVERFIT_SAMPLE:", cfg_dict["NUM_OVERFIT_SAMPLE"])
+        
 
         print("\nModel Training:")
         print("\tOVERFIT:", cfg_dict["OVERFIT"])
@@ -173,24 +183,24 @@ def load_config(file_name: str = None, overrides: dict = None) -> YOLOConfig:
             "\tCOMPUTE_MEAN_AVERAGE_PRECISION:",
             cfg_dict["COMPUTE_MEAN_AVERAGE_PRECISION"],
         )
-
-        while True:  # User input
-            if cfg_dict["USE_PRE_TRAIN_BACKBONE"]:
-                print(
-                    "\nNOTE: (USE_PRE_TRAIN_BACKBONE) is set to True, configurations have been updated for that task."
-                )
-            if cfg_dict["OVERFIT"]:
-                print(
-                    "\nNOTE: (OVERFIT) is set to true, configurations have been updated to configure it to overfit on a couple of samples!"
-                )
-            valid = input("\nIs the configurations correct? Type 'Y' or 'N':")
-            if valid.lower() == "y":
-                print("Configurations confirmed.")
-                break
-            elif valid.lower() == "n":
-                print("Your answer was no.")
-                sys.exit(1)  # Exit the script
-            else:
-                print("Invalid input. Please type 'Y' or 'N'.")
+        if verify_ask_user:
+            while True:  # User input
+                if cfg_dict["USE_PRE_TRAIN_BACKBONE"]:
+                    print(
+                        "\nNOTE: (USE_PRE_TRAIN_BACKBONE) is set to True, configurations have been updated for that task."
+                    )
+                if cfg_dict["OVERFIT"]:
+                    print(
+                        "\nNOTE: (OVERFIT) is set to true, configurations have been updated to configure it to overfit on a couple of samples!"
+                    )
+                valid = input("\nIs the configurations correct? Type 'Y' or 'N':")
+                if valid.lower() == "y":
+                    print("Configurations confirmed.")
+                    break
+                elif valid.lower() == "n":
+                    print("Your answer was no.")
+                    sys.exit(1)  # Exit the script
+                else:
+                    print("Invalid input. Please type 'Y' or 'N'.")
 
     return YOLOConfig(**cfg_dict)

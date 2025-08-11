@@ -14,7 +14,7 @@ from data.utils.setup_transforms import setup_transforms
 from data.utils.df_utils import create_df
 
 from data.utils.setup_transforms import CustomCompose
-from data.utils.VOC_extraction_pipeline import VOCAnnotationsExtraction
+from data.utils.VOC_xml_extraction_pipeline import VOCAnnotationsExtraction
 
 
 class VOCDataset(torch.utils.data.Dataset):
@@ -40,7 +40,7 @@ class VOCDataset(torch.utils.data.Dataset):
         self.cfg = cfg
         self.transforms = transforms
         self.num_samples = num_samples
-        self.dataset_path = os.path.join(os.getcwd(), "datasets", which_dataset)
+        self.dataset_path = os.path.join(os.getcwd(), "data/datasets", which_dataset)
         # Load a dataframe
         self.annotations = create_df(
             cfg=cfg,

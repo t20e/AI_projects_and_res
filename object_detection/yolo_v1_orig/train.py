@@ -2,7 +2,6 @@ import torch
 import torch.optim as optim
 from tqdm import tqdm
 from typing import Optional
-from utils.plot.plot_loss import plot_losses
 
 # My Modules
 from configs.config_loader import YOLOConfig
@@ -10,7 +9,8 @@ from data.dataset_loader import dataset_loader
 from model.model_utils import save_checkpoint
 from model.loss import YOLOLoss
 from model.yolov1 import YOLOv1
-from utils.mAP import mAP  # Mean Average Precision
+from utils.mAP import mAP
+from utils.plot.plot_loss import plot_losses
 
 
 def train(
@@ -65,7 +65,7 @@ def train(
         for loss_type, loss_value in separate_losses.items():
             history[loss_type].append(loss_value.item())
 
-        # === compute mean average precision every 10th epoch
+        # === Compute mean average precision every 10th epoch
         if epoch % 10 == 0:
             if cfg.COMPUTE_MEAN_AVERAGE_PRECISION:
                 mean_average_per = mAP(cfg=cfg, val_loader=val_loader, yolo=yolo)
@@ -84,9 +84,10 @@ def train(
             scheduler.step()
 
         # When training with a pre-trained model we want to unfreeze the backbone after a certain number of epochs to allow the pre-trained VGG16 CNN layers to make small adjustments to better fit the VOC dataset.
-        if cfg.USE_PRE_TRAIN_BACKBONE:
-            # unfreeze when we are halfway through the number of epochs.
-            if epoch == round(cfg.EPOCHS / 2):
+        if epoch == round(
+            cfg.EPOCHS / 2
+        ):  # unfreeze when we are halfway through the number of epochs.
+            if cfg.USE_PRE_TRAIN_BACKBONE:
                 print("\nUnfreezing backbone CNN layers")
                 for param in yolo.backbone.parameters():
                     param.requires_grad = True  # unfreeze

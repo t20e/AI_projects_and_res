@@ -53,7 +53,7 @@ class VOCAnnotationsExtraction:
 
         # --- 5: Convert the label and image lists to tensor and
         annos_t = self.create_tensor(mp_annos)  # (N, 5)
-        # --- 6: Apply transforms.
+        # --- 6: Apply transformations.
         if self.transforms:
             img, annos_t = self.transforms(img=img, bboxes=annos_t)
         return img, annos_t
@@ -71,7 +71,7 @@ class VOCAnnotationsExtraction:
                     obj["h"],
                 ]
             )
-        return torch.tensor(a)
+        return torch.tensor(a, dtype=torch.float32)
 
     def convert_to_percentage(self, anno: Dict):
         """
@@ -93,7 +93,7 @@ class VOCAnnotationsExtraction:
 
         return anno
 
-    def extract_annotations(self, xml_path: str) -> list[dict]:
+    def extract_annotations(self, xml_path: str) -> dict:
         """
         Extract labeled bounding box annotations from a single .xml file.
 
@@ -184,8 +184,8 @@ def test():
 
     cfg = load_config("config_voc_dataset.yaml")
     cwd = os.getcwd()
-    xml_path = f"{cwd}/datasets/VOC_2012_dataset/train/Annotations/2007_000027.xml"
-    img_path = f"{cwd}/datasets/VOC_2012_dataset/train/JPEGImages/2007_000027.jpg"
+    xml_path = f"{cwd}/data/datasets/VOC_2012_dataset/train/Annotations/2007_000027.xml"
+    img_path = f"{cwd}/data/datasets/VOC_2012_dataset/train/JPEGImages/2007_000027.jpg"
 
 
     t = setup_transforms(cfg.IMAGE_SIZE)

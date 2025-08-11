@@ -47,3 +47,5 @@ def setup_transforms(img_size):
             ToTensor(),  # Convert image to tensor
         ]
     )
+
+

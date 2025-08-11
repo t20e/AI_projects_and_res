@@ -1,31 +1,24 @@
-## 🚧 Under work
 # YOLO V1 Implementation
-
-🚨 Note: This project downloads a ~4GB VOC dataset, of which only a fraction would have sufficed. The biggest bummer is that I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com) (Work-around use VGG16 backbone). I will likely move on to implementing the YOLO v11 or v12 architectures, which have pre-trained models available online.
-
-- The paper's model was pre-trained on ImageNet: They took the convolutional layers of their network and trained them on the massive ImageNet dataset (1,281,167 training images, 50,000 validation images and 100,000 test images) for a week, so unless you take the same approach as paper you won't get a good model using my setup.
 <!-- TODO make sure it works after downloading from github-->
-- Overfit test: (after running [How To Run](#how-to-run)) 
-    - Note: If no GPU available you can use your CPU to load a small number of samples to memory (runs just as fast) just change these lines -> [3. Stack and move the entire dataset to the GPU](utils/load_small_samples_to_GPU.py) to -> .to("cpu") 
-    - Make configurations edits in [config](configs/config_voc_dataset.yaml).
-        - Set
-            - OVERFIT = True
-            - USE_PRE_TRAIN_BACKBONE -> Set to True or False
-                - Whether to replace YOLOv1 CNN backbone with a pre-trained VGG16 backbone.
-    - Train model:
-    ```shell
-        $ caffeinate -d python main.py
-    ```
-    - Add the trained model's filename to LOAD_MODEL_FILENAME in [config](configs/config_voc_dataset.yaml).
-    - Plot in [notebooks/test-plot-model-predictions.ipynb](notebooks/test-plot-model-predictions.ipynb)
+
+🚨 I could not find any YOLOv1 pre-trained models, even from [Joseph Chet Redmon's site](https://pjreddie.com)
+
+- The paper's model was pre-trained on ImageNet: They took the convolutional layers of their network and trained them on the massive ImageNet dataset (1,281,167 training images, 50,000 validation images and 100,000 test images) for a **week**  (Work-around use VGG16 backbone).
 
 - Parts that could have been coded better:
-    - Make every function that expects bounding boxes in a certain format (mid-point or corner-points), validate the input bboxes.
+
+    - Make every function that expects bounding boxes in a certain format (mid-point or corner-points) | (normalized or absolute values), validate that the input is the required format.
+
 ---
 
 Goal: Identify objects in images.
 
-<img src="./showcase_images/prediction.png" width="250">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; padding: 0.2em; background-color: #f3f4f6; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+<img src="./showcase_images/prediction.png" alt="A taller placeholder image" style="max-width: 35%; height: auto; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+
+<img src="./showcase_images/learning_graph.png" alt="A wider placeholder image" style="max-width: 65%; height: auto; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+</div>
+
 
 🔗 [YOLO v1 Paper](https://arxiv.org/pdf/1506.02640)
 
@@ -38,7 +31,7 @@ Goal: Identify objects in images.
 
 ## Prerequisites
 
-- Torch version: 2.7    
+- Torch version: 2.7
 - Conda version: 24.11.1
 - Knowledge:
     - [YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
@@ -48,10 +41,11 @@ Goal: Identify objects in images.
 
 ## How To Run
 
-**Setup Project**  -> Create the environment, download the **VOCDataset**, and structure the project.
+**Setup Project**  -> Create the environment, optionally download the **VOCDataset**, and structure the project.
 
-- 🚨 Note: VOC Dataset is very large ~4GB.
-- If any errors occur when downloading the dataset when running `python setup.py`; then manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
+- 🚨 Note: The VOC Dataset is very large (~4GB). The main goal with this repo is to overfit to a number of images which is included, however, if you want to download and train on the entire dataset then add `--download_VOC` flag to `python setup.py`
+
+    - If any errors occur when downloading the dataset; then manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `data/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
 
 1. Create a conda environment.
 ```shell 
@@ -63,16 +57,25 @@ Goal: Identify objects in images.
     conda activate yolov1_env
 ```
 
-3. Download VOCDataset and structure directories.
+3. Setup project.
 ```shell
-    python setup.py
+    python setup.py # --download_VOC
 ```
 
-4. Train Model 
-```shell 
-    # configure configs/config_voc_dataset.yaml.
-    python main.py 
-```
+4. Overfit test: 
+    - Note: If youn don't have a GPU available, you can use your CPU for the overfitting (runs just as fast) -> change these lines -> [3. Stack and move the entire dataset to the GPU](utils/load_small_samples_to_GPU.py) to -> .to("cpu") 
+    1. Make configurations edits in [config](configs/config_voc_dataset.yaml).
+        - Set
+            - OVERFIT = True
+            - USE_PRE_TRAIN_BACKBONE -> Set to True or False
+                - Whether to replace YOLOv1 CNN backbone with a pre-trained VGG16 backbone.
+    2. Train model:
+    ```shell
+        caffeinate -d python main.py
+    ```
+    3. Plot on those same images.
+        - Add the trained model's filename to LOAD_MODEL_FILENAME in [config](configs/config_voc_dataset.yaml).
+    - Plot in [notebooks/test-plot-model-predictions.ipynb](notebooks/test-plot-model-predictions.ipynb)
 
 ## Vocab
 
@@ -113,17 +116,15 @@ Classes: (num=20)
 
 **Bounding Box Coordinate Format Nodes For Yolov1:**
 
-- When **training** and **predicting** we use **mid-points** with normalized values. This allows for more stable numerical computations because the values are between [0-1].
+- When **training** and **predicting** we use hybrid **mid-points** with normalized values [0-1]:
+    - The (x, y) which represent the bounding boxes midpoint/center-point in a grid-cell are relative to that grid-cell.
+    - The (w, h) which represent the width and height of a bounding box are relative to the image.
+    - This allows for more stable numerical computations because the values are between [0-1].
 
 - When computing **IoU** and **NMS** we use **corner-points** with Absolute or normalized values.
 - When **Plotting** we use **corner-points** with Absolute values.
 
-- The **VOC dataset** for this project is labeled in **corner-points** coordinates, we will convert it to **mid-points** when needed to train the model.*
-
-* For certain architectures like *YOLOv1* the `x` and `y` coords will need to be **relative to the grid cell** that contains the object.
-    - That means `x`, `y` are in the range `[0, 1]`, where `(0,0)` is the top-left of the cell and `(1,1)` is the bottom-right of the same cell. *The values of x, y can't be bigger than 1.*
-
-* `w` and `h` represent the width and height of the bounding box, **relative to the entire image**. *Unlike the x and y, the values of w and h can be bigger than 1.*
+- The **VOC dataset** for this project is labeled in **corner-points** coordinates, we will convert it to **mid-points** when neededb.*
 
 
 
@@ -132,7 +133,7 @@ Classes: (num=20)
 
 From paper: "Each bounding box consists of 5 predictions: x, y, w, h, and confidence. The (x,y) coordinates represent the center of the box relative to the bounds of the grid cell. The width and height are predicted relative to the whole image".
 
-* So when we format the dataset we need to make sure the (x, y) labels be relative to the size of a grid cell instead of being relative to the image. Normally datasets have the (x,y,w,h)  coordinates of labeled bounding boxes as percentages of the image, this allows you to resize the images without messing up the the bounding box coordinates.
+* So when we format the dataset we need to make sure the (x, y) labels be relative to the size of a grid cell instead of being relative to the image. 
 * **Why do only the (x, y) coordinates have to be relative to a grid cell but (w, h) don't?** The x and y is the center-point of the bounding box located in a cell. This means that the (x, y) values can't be bigger than one, if they were than the bboxes mid-point is located outside the cell that should have predicted it, however the (w, h) represent the size of the bounding box which can be bigger than a single grid cell.  
         <div class="ref_i">
             Example: 
@@ -254,7 +255,6 @@ This architecture is a sequence of convolution and max pooling layers used to pr
         └── val
             ├── Annotations (~3425 items)
             └── JPEGImages
-
 
 
 -----------------------

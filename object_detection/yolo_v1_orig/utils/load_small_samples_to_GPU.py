@@ -22,7 +22,7 @@ def load_few_samples_to_GPU(
     Load a small number of samples (images, labels) directly onto the GPU once at the start of training when overfitting. This will decrease training time since dataloader wont have to call VOCDataset.__getitem__() method, which is called for every image, every epoch, every time it's needed for a batch.
     Args:
         cfg (argparse.Namespace): Namespace object, contains all configurations.
-        which_dataset (str): Name of dataset to grab "VOC2012_train", "VOC2012_val" or "VOC2012_test"
+        which_dataset (str): "voc_overfit_images/train"
         num_samples (int): The number of samples (images/labels) to load from the dataset.
         batch_size (int): The number of batches to load.
         transforms (torchvision.transforms): transform object to resize the bboxes and images.  Normalize image tensors.
@@ -67,9 +67,10 @@ def test():
     load_few_samples_to_GPU(
         cfg=cfg,
         transforms=t,
-        num_samples=cfg.NUM_TRAIN_SAMPLES,
+        num_samples=cfg.NUM_OVERFIT_SAMPLE,
+        which_dataset=cfg.OVERFIT_DIR_NAME,
+
         Dataset=VOCDataset,
-        which_dataset=cfg.TRAIN_DIR_NAME,
         print_df=True,
         batch_size=2,
     )

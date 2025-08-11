@@ -29,10 +29,6 @@ if __name__ == "__main__":
         yolo = YOLOv1(
             cfg=cfg, in_channels=3, use_pre_trained_backbone=cfg.USE_PRE_TRAIN_BACKBONE
         ).to(cfg.DEVICE)
-
-        # Freeze the backbone and only train your new fully connect layers layers.
-        for param in yolo.backbone.parameters():
-            param.requires_grad = False
     else:
         yolo = YOLOv1(cfg=cfg, in_channels=3).to(cfg.DEVICE)
 
@@ -66,10 +62,11 @@ if __name__ == "__main__":
     # ==> Init Dataset Loaders.
     if cfg.OVERFIT:
         # if overfit load the small number of samples onto GPU once at the start.
+        print("\nImages for training")
         loader = load_few_samples_to_GPU(
             cfg,
-            which_dataset=cfg.TRAIN_DIR_NAME,
-            num_samples=cfg.NUM_TRAIN_SAMPLES,
+            which_dataset=cfg.OVERFIT_DIR_NAME,
+            num_samples=cfg.NUM_OVERFIT_SAMPLE,
             transforms=transforms,
             Dataset=VOCDataset,
             batch_size=cfg.BATCH_SIZE,
@@ -87,17 +84,18 @@ if __name__ == "__main__":
     val_loader = None
     if cfg.COMPUTE_MEAN_AVERAGE_PRECISION:
         if cfg.OVERFIT:
+            print("Images for validation, should be the same as train when overfitting!")
             # When overfitting we want to run mAP on the same dataset as the one that we are overfitting to, so load the same train dataset for mAP.
             val_loader = load_few_samples_to_GPU(
                 cfg,
-                which_dataset=cfg.VALIDATION_DIR_NAME,
-                num_samples=cfg.NUM_VAL_SAMPLES,
+                which_dataset=cfg.OVERFIT_DIR_NAME,
+                num_samples=cfg.NUM_OVERFIT_SAMPLE,
                 transforms=transforms,
                 Dataset=VOCDataset,
-                batch_size=cfg.VAL_BATCH_SIZE,
+                batch_size=cfg.BATCH_SIZE,
             )
         else:
-            # Else load the Validation set so we can compute mAP on it.
+            # Else load the Validation.
             val_loader = dataset_loader(
                 cfg=cfg,
                 which_dataset=cfg.VALIDATION_DIR_NAME,

@@ -17,6 +17,8 @@ def plot_losses(loss_history: dict[str, list[int]]):
                 "conf_obj_loss": [],
                 "noobj_loss": [],
                 "class_loss": [],
+                "mAP": [],
+                "lr": [],
             }
     """
 
@@ -34,6 +36,7 @@ def plot_losses(loss_history: dict[str, list[int]]):
         ax.plot(
             epochs, np.array(l), marker="o", linestyle="-", color=color, label=loss_type
         )
+        print(f"\n, {loss_type}:, {l}")
 
     ax.set_title("Loss over Epochs", fontsize=16)
     ax.set_xlabel("Epoch", fontsize=12)
@@ -61,6 +64,7 @@ def test():
         "conf_obj_loss": np.random.rand(50) * 0.8,
         "noobj_loss": np.random.rand(50) * 0.07,
         "class_loss": np.random.rand(50) * 00.1,
+        "mAP": np.random.rand(50) * 00.1,
     }
     plot_losses(loss_history)
 

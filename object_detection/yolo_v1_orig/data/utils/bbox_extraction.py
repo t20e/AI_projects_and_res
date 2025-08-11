@@ -8,6 +8,12 @@ import torch
 from configs.config_loader import load_config, YOLOConfig
 from data.voc_dataset import VOCDataset
 from data.utils.setup_transforms import setup_transforms
+from data.utils.bbox_conversion import (
+    convert_mid_to_corner,
+    convert_norms_to_abs,
+    convert_x_y_rel_cell_to_rel_image,
+)
+from model.yolov1 import calculate_class_confidence, apply_yolo_activation
 
 
 def extract_and_convert_pred_bboxes(
@@ -31,23 +37,14 @@ def extract_and_convert_pred_bboxes(
 
     # --- 1. Separate box components and apply sigmoid to get probabilities and valid coordinates ---
     # 1.1: The raw prediction tensor needs activations applied.
-
-    # Class scores -> probabilities
-    pred[..., :C] = torch.sigmoid(pred[..., :C])
-
-    # Bounding bbox_1: confidence (pc) and x, y coordinates
-    pred[..., C : C + 2] = torch.sigmoid(pred[..., C : C + 2])
-
-    # Bounding bbox_2: confidence (pc) and x, y coordinates
-    pred[..., C + 5 : C + 7] = torch.sigmoid(pred[..., C + 5 : C + 7])
-    # Note: w, h (indices C+2:C+4 and C+7:C+9) are left as-is
+    pred_activated = apply_yolo_activation(pred, C=C, B=B)
 
     # 1.2: Separate tensor data
-    class_probs = pred[..., :C]
+    class_probs = pred_activated[..., :C]
     best_prob, best_class_idx = torch.max(class_probs, dim=-1)  # Shape: (N, S, S)
 
     #   Get the part of the tensor with box data -> [pc_1, x, y, w, h, pc_2, x, y, w, h]
-    box_pred = pred[..., C:]
+    box_pred = pred_activated[..., C:]
     #   Reshape the box data to separate the B boxes. (N, S, S, B*5) -> (N, S, S, B, 5)
     box_pred = box_pred.reshape(N, S, S, B, 5)
 
@@ -55,22 +52,16 @@ def extract_and_convert_pred_bboxes(
     pc = box_pred[..., 0]  # Shape: (N, S, S, B) probability score
     box_coords = box_pred[..., 1:5]  # Shape: (N, S, S, B, 4) [x, y, w, h]
 
-    #   Calculate final confidence scores
-    confidence = pc * best_prob.unsqueeze(-1)  # Shape: (N, S, S, B)
-    """Note: this line:
-                confidence = pc * best_prob.unsqueeze(-1)
-                    ↓
-                Is described in the paper at 2. Unified Detection section:
-                    "At test time we multiply the conditional class probabilities and the individual box confidence
-                    predictions [Formula can't be displayed in python look into paper] which gives us class-specific
-                    confidence scores for each box. These scores encode both the  probability of that class appearing
-                    in the box and how well the predicted box fits the object."
-    """
+    #   Calculate final confidence scores.
+    confidence = calculate_class_confidence(best_prob, pc)
+
     # --- 2: Convert from midpoints with normalized values to corner-points with absolute values ---
     # Create a grid of cell indices -> j_indices=row, i_indices=col
-    j_indices = torch.arange(S, device=pred.device).repeat(N, S, 1).unsqueeze(-1)
+    j_indices = (
+        torch.arange(S, device=pred_activated.device).repeat(N, S, 1).unsqueeze(-1)
+    )
     i_indices = (
-        torch.arange(S, device=pred.device)
+        torch.arange(S, device=pred_activated.device)
         .repeat(N, S, 1)
         .transpose(1, 2)
         .unsqueeze(-1)
@@ -93,7 +84,9 @@ def extract_and_convert_pred_bboxes(
 
     # --- 3: Concatenate Tensors ---
     image_indices = (
-        torch.arange(N, device=pred.device).view(N, 1, 1, 1).expand_as(confidence)
+        torch.arange(N, device=pred_activated.device)
+        .view(N, 1, 1, 1)
+        .expand_as(confidence)
         + img_offset
     )  # (2, S, S, B)
 
@@ -141,41 +134,51 @@ def extract_and_convert_label_bboxes(
     if indices.numel() == 0:
         return torch.empty((0, 7), device=labels.device)
 
-    #   Use the indices to gather the data for existing boxes
+    #   Use the indices to gather the data for existing boxes.
     image_idxs = indices[:, 0] + img_offset  # (num_boxes)
     i_idxs = indices[:, 1]
     j_idxs = indices[:, 2]
 
-    #   Gather data  from the labels tensor using the mask
+    #   Gather data from the labels tensor using the mask
     box_data = labels[exists_mask]  # (num_boxes, CELL_NODES)
 
     # --- 2: Extract Components ---
-    class_idx = box_data[:, :C].argmax(
-        dim=-1
-    )  # (num_boxes) e.g. ([0, 7, 7, 0, 0]) -> 0='person' 7='aeroplane'
+    class_idx = box_data[:, :C].argmax(dim=-1)  # (num_boxes) e.g. ([0, 7, 7, 0, 0]) -> 0='person' 7='aeroplane' # fmt: skip
+
     #   For labels, confidence (pc) is always 1
     confidence = box_data[:, C]  # (num_boxes)
     coords = box_data[:, C + 1 : C + 5]  # (num_boxes, 4) [x, y, w, h]
     #   Separate the coords
-    x_rel_cell, y_rel_cell, w, h = coords.unbind(
-        dim=-1
-    )  # x_rel_cell shape (num_boxes) contains all the x values from all the existing bounding boxes.
+    x_rel_cell, y_rel_cell, w, h = coords.unbind(dim=-1)  # x_rel_cell shape (num_boxes) contains all the x values from all the existing bounding boxes. # fmt: skip
 
-    # --- 3: Convert to corners points with absolute pixel values ---
-    #   Convert (x, y) box midpoints from being relative to a cell, to be relative to the entire image.
-    x_mid_abs = (x_rel_cell + j_idxs) / S  # (num_boxes)
-    y_mid_abs = (y_rel_cell + i_idxs) / S
+    # --- 3: Convert to corner-points with absolute pixel values ---
+    # 3.1. Convert the (x, y) from relative to cell to relative to image
+    x_mid_norm, y_mid_norm = convert_x_y_rel_cell_to_rel_image(
+        x_rel_cell, y_rel_cell, i_idxs, j_idxs, S
+    )
+    # 2.3. Convert from mid-point to corner-points (still normalized).
+    x1_norm, y1_norm, x2_norm, y2_norm = convert_mid_to_corner(
+        x_mid_norm, y_mid_norm, w, h
+    )
 
-    #   Convert to corner points and scale to absolute pixel values
-    x1 = (x_mid_abs - w / 2) * IMAGE_SIZE  # (num_boxes)
-    y1 = (y_mid_abs - h / 2) * IMAGE_SIZE
-    x2 = (x_mid_abs + w / 2) * IMAGE_SIZE
-    y2 = (y_mid_abs + h / 2) * IMAGE_SIZE
+    # 3.3. Convert from normalized corner-points to absolute pixel values.
+    x1_abs = convert_norms_to_abs(x1_norm, IMAGE_SIZE)  # (num_boxes)
+    y1_abs = convert_norms_to_abs(y1_norm, IMAGE_SIZE)
+    x2_abs = convert_norms_to_abs(x2_norm, IMAGE_SIZE)
+    y2_abs = convert_norms_to_abs(y2_norm, IMAGE_SIZE)
 
-    # --- 4: Concatenate all ---
     all_label_boxes = torch.stack(
-        [image_idxs.float(), class_idx.float(), confidence, x1, y1, x2, y2], dim=-1
-    )  # .tolist()
+        [
+            image_idxs.float(),
+            class_idx.float(),
+            confidence,
+            x1_abs,
+            y1_abs,
+            x2_abs,
+            y2_abs,
+        ],
+        dim=-1,
+    )
 
     return all_label_boxes
 
@@ -183,7 +186,9 @@ def extract_and_convert_label_bboxes(
 # Test as module
 #    python -m data.utils.bbox_extraction
 def test():
-    cfg = load_config("config_voc_dataset.yaml")
+    cfg = load_config(
+        "config_voc_dataset.yaml", verify_ask_user=False, print_configs=False
+    )
     t = setup_transforms(cfg.IMAGE_SIZE)
     d = VOCDataset(
         cfg=cfg,
@@ -194,27 +199,30 @@ def test():
 
     # --- Create a mini-batch with two samples for testing ---
     img1, label1 = d[0]
-    img2, label2 = d[1]
+    # img2, label2 = d[1]
     # Stack labels to create a batch of size 2
-    label_batch = torch.stack([label1, label2])
+    # label_batch = torch.stack([label1, label2])
+    label_batch = torch.stack([label1])
 
     # --- Test batch-processed functions ---
     # print("--- Ground Truth Boxes (Batch) ---")
-    ground_truths = extract_and_convert_label_bboxes(cfg, label_batch)
+    # ground_truths = extract_and_convert_label_bboxes(cfg, label_batch)
     # for box in ground_truths:
     #     # Each box is [img_idx, class, score, x1, y1, x2, y2]
-    #     print(f"Image {int(box[0])}: Class {int(box[1])}, Coords [{box[2]:.2f}, {box[3]:.2f}, {box[4]:.2f}, {box[5]:.2f}]")
-
-    # --- Simulate a prediction batch (can be random for testing shape)
-    # pred_batch = torch.rand(2, cfg.S, cfg.S, cfg.C + cfg.B * 5)
-    # print("\n--- Predicted Boxes (Batch) ---")
-    # predictions = extract_and_convert_pred_bboxes(cfg, pred_batch)
-    # print(f"Total boxes predicted in batch: {len(predictions)}")
-    # print("First 5 predicted boxes:")
-    # for box in predictions[:5]:
     #     print(
-    #         f"Image {int(box[0])}: Class {int(box[1])}, Conf {box[2]:.2f}, Coords [{box[3]:.2f}, {box[4]:.2f}, {box[5]:.2f}, {box[6]:.2f}]"
+    #         f"Image {int(box[0])}: (Class, x1, y1, x2, y2) ->  [{box[1]:.2f}, {box[2]:.2f}, {box[3]:.2f}, {box[4]:.2f}, {box[5]:.2f}, {box[6]:.2f}]"
     #     )
+
+    # --- Simulate a prediction batch
+    # use the label as the prediction
+    predictions = extract_and_convert_pred_bboxes(cfg, label_batch)
+    print(f"Total boxes predicted in batch: {len(predictions)}")
+    print("First 5 predicted boxes:")
+    for box in predictions:
+        # Each box is [img_idx, class, score, x1, y1, x2, y2]
+        print(
+            f"Image {int(box[0])}: (Class, x1, y1, x2, y2) ->  [{box[1]:.2f}, {box[2]:.2f}, {box[3]:.2f}, {box[4]:.2f}, {box[5]:.2f}, {box[6]:.2f}]"
+        )
 
 
 if __name__ == "__main__":

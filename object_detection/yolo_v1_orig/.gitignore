@@ -1,6 +1,8 @@
-datasets
 pre-trained
 
+data/datasets/VOC_2012_dataset
+
+data/datasets/VOC_dataset.zip
 
 model/checkpoints/
 model/saved_models/

@@ -38,7 +38,7 @@ MODEL_SAVE_TO_FILENAME: "VGG16_backbone" #"Large_model_13k_images"
 
 # File name of model to load it can be either a checkpoint or a trained model.
 #   Note: When running inference or for plotting you need to set the USE_LR_SCHEDULER value to that which the model was trained on.
-LOAD_MODEL_FILENAME: "Overfit_first_6_images_yolo_v1_dataset_VOCDataset_date_2025-08-02_EPOCHS_200_LOSS_0.0135_SIZE_448.pt" #EX: yolo_v1_dataset_VOC2012_train_val_date_2025-07-16_EPOCH_15_LOSS_4.9248_SIZE_448.pt
+LOAD_MODEL_FILENAME: "" #EX: yolo_v1_dataset_VOC2012_train_val_date_2025-07-16_EPOCH_15_LOSS_4.9248_SIZE_448.pt
 LAST_EPOCH: 0 # (int) The last epoch the model was trained on DON'T change from 0.
 
 # ----------------------------------- ARCHITECTURE -----------------------------------
@@ -64,6 +64,8 @@ COMPUTE_MEAN_AVERAGE_PRECISION: True
 DATASET: "VOCDataset" # States what main dataset we used to train. Used when saving model checkpoints.
 TRAIN_DIR_NAME: "VOC_2012_dataset/train" # Name of the directory that contains the train set.
 VALIDATION_DIR_NAME: "VOC_2012_dataset/val"
+OVERFIT_DIR_NAME: "voc_overfit_images/train" # Where the overfit images are located
+
 TEST_DIR_NAME: "VOC2012_test"
 IMAGES_DIR_NAME: "JPEGImages" # Name of the directory that contains the images
 ANNOTATIONS_DIR_NAME: "Annotations"
@@ -76,4 +78,5 @@ CLASS_NAMES: [ "person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeropla
 #   Note: error will occur if BATCH_SIZE > NUM_TRAIN_SAMPLES.
 NUM_TRAIN_SAMPLES: 0 # Set to 0 to load the entire dataset.
 NUM_VAL_SAMPLES: 500 # Same applies to NUM_VAL_SAMPLES as NUM_TRAIN_SAMPLES.
+NUM_OVERFIT_SAMPLE: 5
 

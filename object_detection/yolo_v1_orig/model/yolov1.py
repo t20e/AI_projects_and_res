@@ -47,6 +47,84 @@ architecture_config = [
 ]
 
 
+def calculate_class_confidence(
+    class_probs: torch.Tensor, confidence_scores: torch.Tensor
+) -> torch.Tensor:
+    """
+    Calculates the final class-specific confidence score for each bounding box by multiplying the conditional class probability and the predicted confidence score.
+
+    This is based on the formula from the YOLOv1 paper:
+        Pr(Class_i | object) * Pr(Object) * IoU = Pr(Class_i) * IoU
+
+        It is described in the paper at 2. Unified Detection section:
+            "At test time we multiply the conditional class probabilities and the individual box confidence
+            predictions [Formula] which gives us class-specific confidence scores for each box. These scores encode
+            both the  probability of that class appearing in the box and how well the predicted box fits the object."
+
+        - Pr(Class_i | object): The model's classification output for a specific class i, given that an object is present in the grid cell.
+        - Pr(Object): The model's prediction of whether an object exists in a grid cell. This is the pc (confidence score) you get from the bounding box prediction head.
+        - IoU: The Intersection over Union of the predicted bounding box and the ground-truth box. The paper notes that at test time, the model's confidence prediction C is supposed to be equal to this IoU.
+
+    Args:
+        class_probs (torch.Tensor): The conditional class probabilities,
+                                    shape (N, S, S).
+        confidence_scores (torch.Tensor): The individual box confidence scores (pc),
+                                          shape (N, S, S, B).
+
+    Returns:
+        torch.Tensor: The final class-specific confidence scores,
+                      shape (N, S, S, B).
+    """
+
+    # Unsqueeze class_probs to match the dimensionality of confidence_scores
+    expanded_class_probs = class_probs.unsqueeze(-1)  # shape (N, S, S, 1)
+
+    # Multiply to get the final score for each box
+    final_scores = confidence_scores * expanded_class_probs
+
+    return final_scores
+
+
+def apply_yolo_activation(pred: torch.Tensor, C: int, B: int) -> torch.Tensor:
+    """
+    Applies the necessary activation functions to the raw YOLO predictions (pc, x, y), used when post-processing but not for computing loss.
+
+    Confidence Scores: A probability must be in the range [0,1]. Using a sigmoid function on the raw output forces the model's prediction into this valid probability range. The loss function can then train the model to output a value that, after passing through sigmoid, is close to 1 for an object and 0 for no object.
+    Bounding Box Center Coordinates (x,y): The YOLOv1 paper parameterize the x and y coordinates of the bounding box to be an offset relative to the top-left corner of the grid cell. This means that x and y must also be within the range [0,1]. Similar to the confidence score, applying a sigmoid function to the raw x and y predictions naturally constrains them to this range, which is critical for correctly calculating the bounding box's position relative to the grid cell. Without this constraint, the model's predictions could be outside the grid cell, leading to incorrect localization.
+
+    Args:
+        pred (torch.Tensor): The raw model output tensor.
+        C (int): The number of classes.
+        B (int): The number of bounding boxes per grid cell.
+
+    Returns:
+        torch.Tensor: The activated prediction tensor.
+    """
+    # Create a copy to avoid modifying the original tensor.
+    pred_activated = pred.clone()
+
+    # Apply sigmoid to class scores to get probabilities in the [0, 1] range.
+    pred_activated[..., :C] = torch.sigmoid(pred_activated[..., :C])
+
+    # Apply sigmoid to confidence and x, y coordinates for each of the B bounding boxes. Works well for any B value.
+    for b in range(B):  # Dynamically for each box in a cell.
+        start_idx = C + b * 5
+        # Index 0 is confidence (pc), and indices 1-2 are x, y coordinates.
+        # Note: w, h are left as-is.
+        pred_activated[..., start_idx : start_idx + 3] = torch.sigmoid(
+            pred_activated[..., start_idx : start_idx + 3]
+        )
+        # # Bounding bbox_1: confidence (pc) and x, y coordinates
+        # pred_activated[..., C : C + 2] = torch.sigmoid(pred_activated[..., C : C + 2])
+
+        # # Bounding bbox_2: confidence (pc) and x, y coordinates
+        # pred_activated[..., C + 5 : C + 7] = torch.sigmoid(
+        #     pred_activated[..., C + 5 : C + 7]
+        # )
+
+    return pred_activated
+
+
 class CNNBlock(nn.Module):
     def __init__(
         self,
@@ -111,8 +189,12 @@ class YOLOv1(nn.Module):
 
         if self.use_pre_trained_backbone:
             # Load the VGG16 model with its pre-trained ImageNet weights
-            # This 'backbone' is now your pre-trained convolutional layers
-            self.backbone = models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1).features
+            self.vgg16_backbone = models.vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+            self.backbone = self.vgg16_backbone.features
+
+            # Freeze the backbone and only train your new fully connect layers layers.
+            for param in self.backbone.parameters():
+                param.requires_grad = False
         else:
             self.in_channels = in_channels
             self.conv = self._create_conv_layers()
