@@ -140,7 +140,7 @@ def load_config(
     if not _config_printed and print_configs:
         print("\n")
         print("#" * 64)
-        print("MAJOR CONFIGURATIONS TO NOTE:")
+        print("PLEASE CONFIRM CONFIGURATIONS:")
 
         print("\nSystem:")
         print("\tNumber of workers:", cfg_dict["NUM_WORKERS"])

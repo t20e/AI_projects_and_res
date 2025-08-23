@@ -1,6 +1,6 @@
 # YOLO V1 Implementation
 
-💡 [How to download this project](https://github.com/t20e/AI_public_projects)
+💡 [How to download this project](https://github.com/t20e/AI_public_projects?tab=readme-ov-file#how-to-download-a-sub-project)
 
 
 ---
@@ -28,11 +28,12 @@ Goal: Identify objects in images.
     - Make every function that expects bounding boxes in a certain format (mid-point or corner-points) | in (normalized or absolute values), validate that the input is the required format.
 
 
+
 ## Prerequisites
 
 - Torch version: 2.7
 - Conda version: 24.11.1
-- Ran on *Mac-os silicon*, haven't tested on other OSs.
+- Ran on *Mac-os M1 silicon*, haven't tested on other OSs.
 - Knowledge:
     - [YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
     - [Firm Understanding of Coordinate formats](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md)
@@ -63,7 +64,7 @@ Goal: Identify objects in images.
     ```
 
 4. Overfit test: 
-    - Note: If youn don't have a GPU available, you can use your CPU for the overfitting (runs just as fast) -> change these lines -> [3. Stack and move the entire dataset to the GPU](utils/load_small_samples_to_GPU.py) to -> .to("cpu") 
+    - Note: If youn don't have a GPU available, you can use your CPU for the overfitting (runs just as fast, took ~2 min to train on my machine) -> change these lines -> [3. Stack and move the entire dataset to the GPU](utils/load_small_samples_to_GPU.py) to -> .to("cpu") 
     1. Make configurations edits in [config](configs/config_voc_dataset.yaml).
         - Set
             - OVERFIT = True

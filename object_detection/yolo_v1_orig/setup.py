@@ -50,5 +50,7 @@ if __name__ == "__main__":
         structure_VOC(dataset_path=DATASET_PATH)
 
         split_train_val(f"{DATASET_PATH}/VOC_2012_dataset")
-
+    else:
+        print("\nNot downloading VOC dataset.")
+        
     print_header("Project setup Complete!")
