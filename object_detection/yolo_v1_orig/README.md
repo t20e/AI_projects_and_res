@@ -64,7 +64,7 @@ Goal: Identify objects in images.
     ```
 
 4. Overfit test:
-    - Note: If you don't have a GPU available, you can use your CPU for the overfitting (took ~10mins to train on my *on M1 max CPU*).
+    - Note: If you don't have a GPU available, you can use your CPU for the overfitting (took ~10mins to train on my *M1 max CPU*).
     1. Make configurations edits in [config](configs/config_voc_dataset.yaml).
         - Set:
             - If you don't have a GPU, its currently configured to use Mac M1 GPU:
