@@ -195,7 +195,7 @@ def test():
     from data.utils.setup_transforms import setup_transforms
     from data.dataset_loader import dataset_loader
     from data.voc_dataset import VOCDataset
-    from utils.load_small_samples_to_GPU import load_few_samples_to_GPU
+    from utils.load_few_samples_to_memory import load_few_samples_to_memory
 
     cfg = load_config(
         "config_voc_dataset.yaml", print_configs=False, verify_ask_user=False
@@ -204,7 +204,7 @@ def test():
     yolo = YOLOv1(cfg=cfg, in_channels=3).to(cfg.DEVICE)
 
     # Load the Validation set.
-    val_loader = load_few_samples_to_GPU(
+    val_loader = load_few_samples_to_memory(
         cfg,
         which_dataset=cfg.OVERFIT_DIR_NAME,
         num_samples=cfg.NUM_OVERFIT_SAMPLE,

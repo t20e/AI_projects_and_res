@@ -9,7 +9,7 @@ from data.voc_dataset import VOCDataset
 from data.utils.setup_transforms import setup_transforms, CustomCompose
 
 
-def load_few_samples_to_GPU(
+def load_few_samples_to_memory(
     cfg: YOLOConfig,
     which_dataset: str,
     num_samples: int,
@@ -19,7 +19,7 @@ def load_few_samples_to_GPU(
     batch_size: bool = 2,
 ):
     """
-    Load a small number of samples (images, labels) directly onto the GPU once at the start of training when overfitting. This will decrease training time since dataloader wont have to call VOCDataset.__getitem__() method, which is called for every image, every epoch, every time it's needed for a batch.
+    Load a small number of samples (images, labels) directly onto the GPU or CPU once at the start of training when overfitting. This will decrease training time since dataloader wont have to call VOCDataset.__getitem__() method, which is called for every image, every epoch, every time it's needed for a batch.
     Args:
         cfg (argparse.Namespace): Namespace object, contains all configurations.
         which_dataset (str): "voc_overfit_images/train"
@@ -48,8 +48,9 @@ def load_few_samples_to_GPU(
         all_labels.append(label)
 
     # 3. Stack and move the entire dataset to the GPU
-    all_images_gpu = torch.stack(all_images).to(cfg.DEVICE)  # .to("cpu")
-    all_labels_gpu = torch.stack(all_labels).to(cfg.DEVICE)  # .to("cpu")
+    # If cfg.DEVICE is "cpu", it stays on the CPU.
+    all_images_gpu = torch.stack(all_images).to(cfg.DEVICE)
+    all_labels_gpu = torch.stack(all_labels).to(cfg.DEVICE)
 
     # 4. Create a new TensorDataset and DataLoader using the GPU tensors
     gpu_dataset = TensorDataset(all_images_gpu, all_labels_gpu)
@@ -64,7 +65,7 @@ def test():
     print("\n\n🚧 TESTING: load_small_batches_to_GPU module \n\n")
     cfg = load_config("config_voc_dataset.yaml")
     t = setup_transforms(cfg.IMAGE_SIZE)
-    load_few_samples_to_GPU(
+    load_few_samples_to_memory(
         cfg=cfg,
         transforms=t,
         num_samples=cfg.NUM_OVERFIT_SAMPLE,

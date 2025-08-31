@@ -63,10 +63,12 @@ Goal: Identify objects in images.
         python setup.py # --download_VOC
     ```
 
-4. Overfit test: 
-    - Note: If youn don't have a GPU available, you can use your CPU for the overfitting (runs just as fast, took ~2 min to train on my machine) -> change these lines -> [3. Stack and move the entire dataset to the GPU](utils/load_small_samples_to_GPU.py) to -> .to("cpu") 
+4. Overfit test:
+    - Note: If you don't have a GPU available, you can use your CPU for the overfitting (took ~10mins to train on my *on M1 max CPU*).
     1. Make configurations edits in [config](configs/config_voc_dataset.yaml).
-        - Set
+        - Set:
+            - If you don't have a GPU, its currently configured to use Mac M1 GPU:
+                - DEVICE: "cpu"
             - OVERFIT = True
             - USE_PRE_TRAIN_BACKBONE -> Set to True or False
                 - Whether to replace YOLOv1 CNN backbone with a pre-trained VGG16 backbone.

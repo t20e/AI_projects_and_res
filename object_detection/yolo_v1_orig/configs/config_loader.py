@@ -145,6 +145,7 @@ def load_config(
         print("\nSystem:")
         print("\tNumber of workers:", cfg_dict["NUM_WORKERS"])
         print("\tPIN_MEMORY:", cfg_dict["PIN_MEMORY"])
+        print("\tDEVICE:", cfg_dict["DEVICE"])
 
         print("\nHyperparameters:")
         print("\tEPOCHS:", cfg_dict["EPOCHS"])

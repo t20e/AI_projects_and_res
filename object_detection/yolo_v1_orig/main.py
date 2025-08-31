@@ -12,7 +12,7 @@ from data.voc_dataset import VOCDataset
 from model.model_utils import load_checkpoint
 from train import train
 from model.loss import YOLOLoss
-from utils.load_small_samples_to_GPU import load_few_samples_to_GPU
+from utils.load_few_samples_to_memory import load_few_samples_to_memory
 
 torch.manual_seed(0)
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     if cfg.OVERFIT:
         # if overfit load the small number of samples onto GPU once at the start.
         print("\nImages for training")
-        loader = load_few_samples_to_GPU(
+        loader = load_few_samples_to_memory(
             cfg,
             which_dataset=cfg.OVERFIT_DIR_NAME,
             num_samples=cfg.NUM_OVERFIT_SAMPLE,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         if cfg.OVERFIT:
             print("Images for validation, should be the same as train when overfitting!")
             # When overfitting we want to run mAP on the same dataset as the one that we are overfitting to, so load the same train dataset for mAP.
-            val_loader = load_few_samples_to_GPU(
+            val_loader = load_few_samples_to_memory(
                 cfg,
                 which_dataset=cfg.OVERFIT_DIR_NAME,
                 num_samples=cfg.NUM_OVERFIT_SAMPLE,
