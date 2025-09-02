@@ -77,7 +77,7 @@ Goal: Identify objects in images.
         ```shell
             caffeinate -d python main.py
         ```
-        - After add the trained model's filename (which is saved to [checkpoints](model/checkpoints)) to LOAD_MODEL_FILENAME in [config](configs/config_voc_dataset.yaml).
+        - After add the trained model's filename (which is saved to [checkpoints](model/checkpoints)) to LOAD_MODEL_FILENAME="" in [config](configs/config_voc_dataset.yaml).
 
     3. Plot on those same images.
         - Plot in [test-plot-model-predictions.ipynb](notebooks/test-plot-model-predictions.ipynb)

@@ -6,15 +6,21 @@
 name: yolov1_env
 
 channels:
-  - pytorch # Prioritize the pytorch channel for torch packages
+  - pytorch      # Highest priority for PyTorch packages
+  - conda-forge  # High priority for most other packages
   - defaults
 
 dependencies:
   # Python and Core Libraries
   - python=3.11
   - pip>=25.0
-  - jupyter
+  - jupyterlab   # Explicitly install JupyterLab
   - ipykernel
+
+  # Pytorch
+  - pytorch
+  - torchvision
+  - torchaudio
 
   # Data Science & Utility Libraries
   - matplotlib
@@ -25,9 +31,8 @@ dependencies:
   - requests
   - scipy
   - tqdm
-  # - libjpeg-turbo
+  - libjpeg-turbo # significantly accelerates JPEG compression and decompression on various platforms (x86, x86-64, ARM, PowerPC, MIPS) by utilizing SIMD instructions.
 
-  # Install pytorch with pip. Recommended approach by the PyTorch team.
+  # Use pip only for packages not available on conda channels
   - pip: 
-    - torch>= 2.6
-    - torchvision
+    # - example_package
