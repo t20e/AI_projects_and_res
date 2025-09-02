@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_activations(input_values, activated_values, yLabel:str, legend_label:str):
+def plot_activations(input_values, activated_values, title:str, yLabel:str, legend_label:str):
     """
     Plots activation functions
 
     Args:
         input_values (tensor): The values before the activation has been applied.
         activated_values (tensor): The values after the activation has been applied.
+        title (str): The title of the graph.
         yLabel (str): The label to give the y label.
         legend_label (str): The function formula in latex format.
             - Example: r'$\sigma(x) = \frac{1}{1 + e^{-x}}$'
@@ -27,7 +28,7 @@ def plot_activations(input_values, activated_values, yLabel:str, legend_label:st
     ax.spines['right'].set_color('none')
 
     # Add labels, title, and legend
-    ax.set_title('Sigmoid Activation Function')
+    ax.set_title(title)
     ax.set_xlabel('x')
     ax.set_ylabel(yLabel)
     ax.legend()
