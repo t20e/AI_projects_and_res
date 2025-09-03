@@ -1,6 +1,6 @@
-# AI_public_projects
+# AI_projects_and_res
 
-💡 *A repo that contains all my public AI projects.*
+💡 *A repo that contains all my public AI projects and resources.*
 
 *Dev Note:* Every sub project must have its own .gitignore
 
