@@ -27,12 +27,13 @@ Prerequisite: [Understand Coordinate Formats](../understand_corner_and_mid_point
     <img src="./ref_imgs/IOU_02.png" alt="Description" width="400"/>
 
     - Intersection box's top-left corner $(x_1, y_1)$:
-        - $x_1 = \max(\text{pred\_box\_x1}, \text{true\_box\_x1})$
-        - $y_1 = \max(\text{pred\_box\_y1}, \text{true\_box\_y1})$
+        - $x_1 = \max(\text{pred box}_{x1}, \text{true box }_{x1})$
+        - $y_1 = \max(\text{pred box}_{y1}, \text{true box}_{y1})$
+
 
     - Intersection box's bottom-right corner $(x_2, y_2)$:
-        - $x_2 = \min(\text{pred\_box\_x2}, \text{true\_box\_x2})$
-        - $y_2 = \min(\text{pred\_box\_y2}, \text{true\_box\_y2})$
+        - $x_2 = \min(\text{pred box}_{x2}, \text{true box}_{x2})$
+        - $y_2 = \min(\text{pred box}_{y2}, \text{true box}_{y2})$
 
     - The area is then calculated from these new coordinates.
         - If $x_1 >= x_2 \quad or \quad y_1 >= y_2$ the boxes don't overlap, and the intersection area is 0.
@@ -49,7 +50,7 @@ Prerequisite: [Understand Coordinate Formats](../understand_corner_and_mid_point
 
 3. Calculate the IoU by plugging in the area values.
 
-$$ IOU = \frac{\text{intersection}}{\text{union}}$$
+$$ IOU = \frac{\text{Intersection}}{\text{Union}}$$
 
 
 
