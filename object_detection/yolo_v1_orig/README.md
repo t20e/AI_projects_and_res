@@ -1,7 +1,6 @@
 # YOLO V1 Implementation
 
-💡 [How to download this project](https://github.com/t20e/AI_public_projects?tab=readme-ov-file#how-to-download-a-sub-project)
-
+💡 [How to download this project](../../README.md#how-to-download-a-sub-project)
 
 ---
 
@@ -35,9 +34,11 @@ Goal: Identify objects in images.
 - Conda version: 24.11.1
 - Ran on *Mac-os M1 silicon*, haven't tested on other OSs.
 - Knowledge:
-    - [YOLO v1 resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection)
-    - [Firm Understanding of Coordinate formats](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md)
-    - [Intersection Over Union](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/intersection_over_union.md)
+    - [YOLO v1 resources](../../Resouces/object_detection/YOLO_v1.res/)
+
+    - [Firm Understanding of Coordinate formats](../../Resouces/object_detection/understand_corner_and_mid_points.md)
+
+    - [Intersection Over Union](../../Resouces/object_detection/YOLO_v1.res/intersection_over_union.md)
 
 
 ## How To Run
@@ -117,7 +118,7 @@ Classes: (num=20)
 ### Understanding Bounding Box Coordi**corner-points** with Absolute nate Formats
 
 
-⭐️ If you don't know the difference between corner-points and mid-points [Please read](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/understand_corner_and_mid_points.md).
+⭐️ If you don't know the difference between corner-points and mid-points [Please read](../../Resouces/object_detection/understand_corner_and_mid_points.md).
 
 **Bounding Box Coordinate Format Nodes For Yolov1:**
 
@@ -218,18 +219,18 @@ This architecture is a sequence of convolution and max pooling layers used to pr
         - Note: "× 5" here is for the nodes of a  single bbox, we multiply it by the B to get the total number of bounding box per cell.
         - Final output size S × S × (B × 5 + C) = S × S × CELL_NODES = 1470
         - Reshape output -> S x S x CELL_NODES to extract predictions.
-20. Once we have output, we need to apply [Non Max Suppression](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/non-max-suppression.md) to remove redundant bounding boxes.
+20. Once we have output, we need to apply [Non Max Suppression](../../Resouces/object_detection/YOLO_v1.res/non-max-suppression.md) to remove redundant bounding boxes.
 21. Plot
 
 ### Loss Function
 
 **Check out:**
 
-- [Loss Function Notes](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/loss_fn.md).
+- [Loss Function Notes](../../Resouces/object_detection/YOLO_v1.res/loss_fn.md).
 
-- [Loss Function implemented](https://github.com/t20e/AI_public_projects/blob/main/object_detection/yolo_v1_orig/model/loss.py).
+- [Loss Function implemented](./model/loss.py).
 
-- Note we use [Mean Average Precision](https://github.com/t20e/res/blob/main/coding.res/AI.res/object_detection/YOLO_v1.res/mean_average_percision.md) during training to test how well the model performs on Validation dataset.
+- Note we use [Mean Average Precision](../../Resouces/object_detection/YOLO_v1.res/mean_average_percision.md) during training to test how well the model performs on Validation dataset.
 
 -----------------------
 

@@ -19,7 +19,6 @@ if __name__ == "__main__":
     # --- Global Variables & Configurations ---
     # Dataset download link
     VOC_URL = "https://www.kaggle.com/api/v1/datasets/download/gopalbhattrai/pascal-voc-2012-dataset"
-    # Test url -> VOC_URL = "https://github.com/t20e/res/raw/refs/heads/main/test-can-del/test.zip"
 
     # Dataset Paths
     CWD = os.getcwd()

@@ -24,10 +24,10 @@ Steps:
 
 - 🔗 [yolo_v1_orig](./object_detection/yolo_v1_orig/)
     - Implements the YOLO v1 paper.
-    - [YOLOv1 Resources](https://github.com/t20e/res/tree/main/coding.res/AI.res/object_detection/YOLO_v1.res)
+    - [YOLOv1 Resources](Resouces/object_detection/YOLO_v1.res)
 
 
 #### Misc projects
-- [Basic ML Projects](./basic_ML/)
+- [Basic Components](./basic_components)
     - Implemented basic Neural networks, CNN, etc...
 

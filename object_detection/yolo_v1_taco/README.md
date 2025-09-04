@@ -1,4 +1,5 @@
-# ‼️ Don't use as reference, Implemented wrong Instead use the [yolo_v1_orig](https://github.com/t20e/AI_public_projects/tree/main/object_detection/yolo_v1_orig) 
+
+# ‼️ Don't use as reference, Implemented wrong Instead use the [yolo_v1_orig](../yolo_v1_orig/) 
 
 ## YOLO V1 TACO
 
