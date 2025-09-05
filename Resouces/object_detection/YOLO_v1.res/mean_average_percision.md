@@ -12,7 +12,7 @@
 - It is **typically computed** at training time on the **validation** dataset.
     - For every $n^{th}$ epoch that we train the model on the train dataset, we test it on the validation dataset by computing mAP.
 
-- **NMS** is applied before mAP, as noted from the paper section 2.3. Inference: "While note critical to performance as it is for R-CNN or DPM, non-maximal suppression adds $2-3\% $ in mAP". NMS reduces redundant, overlapping bounding boxes to ensure that each ground truth object is detected only once.
+- **NMS** is applied before mAP, as noted from the paper section 2.3. Inference: "While note critical to performance as it is for R-CNN or DPM, non-maximal suppression adds 2-3% in mAP". NMS reduces redundant, overlapping bounding boxes to ensure that each ground truth object is detected only once.
 
 
 
@@ -49,11 +49,11 @@
 3. <span class="precision-text">Precision</span>: Take the True Positives and divide by the (True Positives + False **Positives**).
     - Interpretation: Of all bounding box predictions made by the model, what fraction was actually correct?
 
-    - $$ Precision = \frac{TP}{TP + FP}$$
+    - $$Precision = \frac{TP}{TP + FP}$$
 
 4. <span class="recall-text">Recall</span> Take the True Positives and divide it by the (True Positives + False **Negatives**).
     - Interpretation: Of all actual target bounding boxes present, what fraction did the model correctly detect?
-    - $$ Recall = \frac{TP}{TP + FN}$$
+    - $$Recall = \frac{TP}{TP + FN}$$
 
 5. There's a battle between Precision and Recall! Different applications may prioritize Recall and others Precision. For example, self-driving cars prioritize not missing any pedestrians, so they would value having a high Recall more than Precision (though both are crucial).
 
