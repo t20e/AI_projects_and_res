@@ -10,13 +10,13 @@
 
 ```shell
 # create the env
-conda create -n env_name python=3.12 -y
+conda create -n env_name python=3.12 -y;
 
 # Activate it
-conda activate env_name
+conda activate env_name;
 
 # Install a full suite of packages commonly used in pytorch ML.
-conda install -c conda-forge pytorch torchvision torchaudio
+conda install -c conda-forge pytorch torchvision torchaudio;
 
 ```
 
@@ -24,15 +24,15 @@ conda install -c conda-forge pytorch torchvision torchaudio
 
 ```shell
 # Install jupyter lab
-conda install -c conda-forge jupyterlab
+conda install -c conda-forge jupyterlab;
 
 # Install pandas & matplotlib packages
-conda install -c conda-forge pandas matplotlib
+conda install -c conda-forge pandas matplotlib;
 
 # Install scikit-learn 
-conda install -c conda-forge scikit-learn
+conda install -c conda-forge scikit-learn;
 
 # HDF5 lets you store huge amounts of numerical data, and easily manipulate that data from NumPy.
-conda install -c conda-forge h5py
+conda install -c conda-forge h5py;
 
 ```
