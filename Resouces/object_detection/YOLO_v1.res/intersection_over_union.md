@@ -27,18 +27,17 @@ Prerequisite: [Understand Coordinate Formats](../understand_corner_and_mid_point
     <img src="./ref_imgs/IOU_02.png" alt="Description" width="400"/>
 
     - Intersection box's top-left corner $(x_1, y_1)$:
-        - $$x_1 = \max(\text{predBox}_{x1}, \text{trueBox }_{x1})$$
-
-        - $$y_1 = \max(\text{predBox}_{y1}, \text{trueBox}_{y1})$$
-
+        - $x_1 = max(predBox_{x1}, trueBox_{x1})$
+        - $y_1 = max(predBox_{y1}, trueBox_{y1})$
 
     - Intersection box's bottom-right corner $(x_2, y_2)$:
-        - $$x_2 = \min(\text{predBox}_{x2}, \text{trueBox}_{x2})$$
-        - $$y_2 = \min(\text{predBox}_{y2}, \text{trueBox}_{y2})$$
+        - $x_2 = max(predBox_{x2}, trueBox_{x2})$
+        - $y_2 = max(predBox_{y2}, trueBox_{y2})$
 
     - Compute the intersection area:
-        - $$ \text{Intersection} = \max(0, \; x_2 - x_1) \times \max(0, \; y_2 - y_1)$$
-        - If $$x_1 \geq x_2 \;\;\text{or}\;\; y_1 \geq y_2$$, then the boxes don’t overlap and $$\text{Intersection} = 0$$.
+        - $Intersection = max(0, x_2 - x_1) * max(0, y_2 - y_1)$
+
+        - If $x_1 \geq x_2$ or $y_1 \geq y_2$, then the boxes don’t overlap and $Intersection = 0$.
 
 2. Calculate the Area of **Union**
     - The union is the total area covered by both boxes, highlighted here in pink.
