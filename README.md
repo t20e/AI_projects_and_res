@@ -27,7 +27,7 @@ Steps:
     - [YOLOv1 Resources](Resouces/object_detection/YOLO_v1.res)
 
 
-#### Misc projects
+#### Basic Components
 - [Basic Components](./basic_components)
     - Implemented basic Neural networks, CNN, etc...
 
