@@ -30,4 +30,5 @@ Steps:
 #### Basic Components
 - [Basic Components](./basic_components)
     - Implemented basic Neural networks, CNN, etc...
+- [Resources](Resouces)
 
