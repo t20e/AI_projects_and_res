@@ -31,5 +31,6 @@ Steps:
 - [Basic Components](./basic_components)
     - Implemented basic Neural networks, CNN, etc...
     - [Basic neural network from scratch](basic_components/basic_NN_from_scratch.ipynb)
+    - [Basic NN Binary Classification](basic_components/basic_NN_binary_classification.ipynb)
 - [Resources](Resouces)
 

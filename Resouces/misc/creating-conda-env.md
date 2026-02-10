@@ -10,7 +10,7 @@
 
 ```shell
 # create the env
-conda create -n env_name python=3.12 -y;
+conda create -n env_name python=3.14 -y;
 
 # Activate it
 conda activate env_name;
