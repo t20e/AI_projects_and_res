@@ -1,3 +1,5 @@
+# ‼️ Don't use as reference, Implemented wrong Instead use the [yolo_v1_orig](../yolo_v1_orig/) 
+
 import torch
 from tqdm import tqdm
 from argparse import Namespace

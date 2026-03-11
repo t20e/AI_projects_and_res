@@ -20,17 +20,21 @@ Steps:
 
 ### 📌 Notable projects
 
-#### Object detection.
+#### NLP
 
-- 🔗 [yolo_v1_orig](./object_detection/yolo_v1_orig/)
-    - Implements the YOLO v1 paper.
-    - [YOLOv1 Resources](Resouces/object_detection/YOLO_v1.res)
+- [Transformer model](./Transformer)
 
+#### Object detection
+
+- [yolo_v1_orig](./object_detection/yolo_v1_orig/)
+  - Implements the YOLO v1 paper.
+  - [YOLOv1 Resources](Resouces/object_detection/YOLO_v1.res)
 
 #### Basic Components
-- [Basic Components](./basic_components)
-    - Implemented basic Neural networks, CNN, etc...
-    - [Basic neural network from scratch](basic_components/basic_NN_from_scratch.ipynb)
-    - [Basic NN Binary Classification](basic_components/basic_NN_binary_classification.ipynb)
-- [Resources](Resouces)
 
+- [Basic Components](./basic_components)
+  - Implemented basic Neural networks, CNN, etc...
+  - [Basic neural network from scratch](basic_components/basic_NN_from_scratch.ipynb)
+  - [Basic NN Binary Classification](basic_components/basic_NN_binary_classification.ipynb)
+
+- [Resources](Resouces)
