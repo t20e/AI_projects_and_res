@@ -11,19 +11,18 @@ Useful Resources:
 
 **TODO:**
 
-- Embeddings
-
-- Training:
+- Training
   - Regularization:
     - Label Smoothing: "During training, we employed label smoothing of value $\in_{ls} = 0.1$. This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score" to the loss function during training loop.
+- Inference
 
 ---
 
-- 💡 The transformer architecture is used in many SOTA models that need to process sequential data. It can be reconfigured to perform a lot of different tasks other than just Naturel Language Processing.
+💡 The transformer architecture is used in many SOTA models that need to process sequential data. It can be reconfigured to perform a lot of different tasks other than just Naturel Language Processing.
 
 ![Figure one from paper](./showcase_images/from_paper/main.png)
 
-- 💡 All the components are implemented in there own notebooks in [./model](./model/).
+- ✨ All the components are implemented in there own notebooks in [./model](./model/).
 
 - **Terminology**:
   - The **Encoder** contains a **Nx** stack of **EncoderLayers**
@@ -31,3 +30,6 @@ Useful Resources:
       - The first is the **Multi-Head Attention** and its (Add & norm).
       - The second is the **Feed Forward** (FFN) and its (Add & norm).
     - This goes for the decoder as well, except it has an additional **sublayer**, the **Masked Multi-Head Attention**.
+    - **Source (X)** the Encoder's input, if we were training the model to translate english to german, the source would be the english tokens.
+    - **Target (Y)** the Decoder's input. Note, the connection between the Encoder and Decoder the Source is being passed! Target is being feed to the Decoder where the Outputs are (shifted right). This would be the german tokens.
+      - You can think of the Decoder as: It consumes its own previous output (target) while simultaneously cross-referencing the source.

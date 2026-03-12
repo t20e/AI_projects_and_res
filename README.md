@@ -22,7 +22,7 @@ Steps:
 
 #### NLP
 
-- [Transformer model](./Transformer)
+- 🌟 [Transformer model](./Transformer)
 
 #### Object detection
 

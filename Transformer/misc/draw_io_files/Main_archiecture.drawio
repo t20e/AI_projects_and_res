@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" version="29.6.1">
   <diagram name="Page-1" id="C2Sogr7T0XVvLuTM-yJP">
-    <mxGraphModel dx="508" dy="399" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1445" dy="1137" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -8,10 +8,10 @@
           <mxGeometry height="1200" width="791" x="370" y="330" as="geometry" />
         </mxCell>
         <mxCell id="-SUKE1KRZJ5u4927tx3k-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=light-dark(#FF9933,#FF8000);strokeWidth=3;glass=0;shadow=0;" value="" vertex="1">
-          <mxGeometry height="530" width="350" x="400" y="610" as="geometry" />
+          <mxGeometry height="450" width="350" x="400" y="690" as="geometry" />
         </mxCell>
         <mxCell id="-SUKE1KRZJ5u4927tx3k-3" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 31px; color: light-dark(rgb(255, 153, 51), rgb(255, 128, 0));&quot;&gt;Encoder&lt;/font&gt;" vertex="1">
-          <mxGeometry height="30" width="155" x="410" y="640" as="geometry" />
+          <mxGeometry height="30" width="155" x="400" y="700" as="geometry" />
         </mxCell>
         <mxCell id="-SUKE1KRZJ5u4927tx3k-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=light-dark(#006EAF,#00FFFF);strokeWidth=3;glass=0;shadow=0;fontColor=#ffffff;perimeterSpacing=0;" value="" vertex="1">
           <mxGeometry height="587" width="440" x="775" y="560" as="geometry" />
@@ -199,6 +199,12 @@
             <mxPoint x="828" y="881" as="sourcePoint" />
             <mxPoint x="896" y="852" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="WdqYyzr79tuP_9WtbprT-21" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 26px;&quot;&gt;= &lt;b&gt;Target (Y)&lt;/b&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="190" x="940" y="1363" as="geometry" />
+        </mxCell>
+        <mxCell id="WdqYyzr79tuP_9WtbprT-22" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 26px;&quot;&gt;&lt;b&gt;Source (X)&lt;/b&gt; =&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="190" x="413" y="1363" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

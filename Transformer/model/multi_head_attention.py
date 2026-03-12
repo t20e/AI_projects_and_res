@@ -22,7 +22,7 @@
 
 # %% [markdown]
 # Notes:
-# 1. **Projection**: The MHA layer first creates 3 different representation of each token in the sequence: $V$ (Values), $K$ (Keys), $Q$ (Queries).
+# 1. **Projection**: The MHA layer first creates 3 different representations of each token in the sequence: $V$ (Values), $K$ (Keys), $Q$ (Queries).
 #    - The $V$ answers "If I am relevant, what information should I actually pass forward?".
 #    - The $K$ answers "What information do I contain?".
 #    - The $Q$ asks "What am I looking for?".
@@ -64,7 +64,7 @@
 #   - $W^Q_i \in \mathbb{R}^{d_{model} * d_k}$ means:
 #     - Take an input vector of size $d_{model}$ (e.g., $512$)
 #     - Multiply it by a matrix to shrink it down to $d_k$ (e.g., $64$)
-#     - Because you use $h$ heads(e.g., $8$), you do this 8 times in parallel $(8 * 64 = 512)$
+#     - Because you use $h$ heads (e.g., $8$), you do this 8 times in parallel $(8 * 64 = 512)$
 #   - $W^O$ is the final weight output projection.
 
 # %%
@@ -134,7 +134,7 @@ def test():
     MHA = Multi_Head_Attention(d_model, h, dropout)
     # print(MHA.dropout)
 
-    # Inputs as they would come from teh Embedding layer
+    # Inputs as they would come from the Embedding layer
     q = torch.randn(batch_size, seq_len, d_model)
     k = torch.randn(batch_size, seq_len, d_model)
     v = torch.randn(batch_size, seq_len, d_model)
