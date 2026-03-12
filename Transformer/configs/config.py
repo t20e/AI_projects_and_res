@@ -5,5 +5,6 @@ class TransformerConfig:
     dropout = 0.1
 
     # Encoder & Decoder
-    enc_dec_N = 6 # num of stacks of encoders and decoders
+    enc_dec_N = 6 # Num of stacks of encoders and decoders
 
+    seq_max_len = 10 # Example if set to 4 "The brown rabbit" sentence is tuned into [21, 33, 15, 0, 0], the 0 is for the <padding>
