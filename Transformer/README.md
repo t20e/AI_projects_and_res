@@ -11,10 +11,13 @@ Useful Resources:
 
 **TODO:**
 
+
 - Training
-  - Regularization:
-    - Label Smoothing: "During training, we employed label smoothing of value $\in_{ls} = 0.1$. This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score" to the loss function during training loop.
+  - Make sure all tensors are on GPU
 - Inference
+  - Make sure all tensors are on GPU
+
+- If I create the jupyter library implement it here.
 
 ---
 

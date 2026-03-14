@@ -21,12 +21,12 @@
 # **Performs:**
 # 1. The tokenizer maps every unique word or sub-word to a unique integer ID.
 # 2. Adds special tokens.
-#    - &lt;SOS&gt; (Stat of sentence): Tells the Decoder to start generating.
+#    - &lt;SOS&gt; (Start of sentence): Tells the Decoder to start generating.
 #    - &lt;EOS&gt; (End of sentence): Tells the Decoder to stop generating.
-#    - &lt;unk&gt; (Unknown)
-#    - &lt;Pad&gt; (Padding): Fills the remaining space in a batch so all sequences have the same length.
-#        - Example: seq_len = 4 "John ate &lt;Pad&gt; &lt;Pad&gt;" or "I am leaving &lt;Pad&gt;"
-# 3. Converts texts to to numerical representation.
+#    - &lt;UNK&gt; (Unknown)
+#    - &lt;PAD&gt; (Padding): Fills the remaining space in a batch so all sequences have the same length.
+#        - Example: seq_len = 4 "John ate &lt;PAD&gt; &lt;PAD&gt;" or "I am leaving &lt;PAD&gt;"
+# 3. Converts texts to numerical representation.
 #    1. Example: "The rabbit" → [23, 14]
 #
 # - "We trained on the **standard WMT 2014 English-German dataset** consisting of about 4.5 million sentence pairs. Sentences were encoded using **byte-pair encoding** [3], which has a shared source target vocabulary of about 37000 tokens. For **English-French**, we used the significantly **larger WMT 2014 English-French dataset** consisting of 36M sentences and split tokens into a 32000 **word-piece** vocabulary [38]. Sentence pairs were batched together by approximate **sequence length**. Each training batch contained a set of sentence pairs containing approximately 25000 source tokens and 25000 target tokens."
@@ -41,35 +41,53 @@
 # Instead of building the tokenizer my self I use a `tokenizers` library.
 
 # %%
-from tokenizers import Tokenizer
+from tokenizers import Tokenizer, decoders, pre_tokenizers, processors
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import Whitespace
 import os
 
-
 # %%
-def build_and_train_BPE_tokenizer(dataset_iterator, vocab_size=37_000):
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from datasets import DatasetDict
+    from ..configs import english_german_config
+
+
+def build_and_train_BPE_tokenizer(
+    cfg: english_german_config,
+    dataset_iterator: DatasetDict,
+    perc_to_download:int
+):
     """
     Build and train the BPE tokenizer that the paper used for the standard WMT 2014 English-German dataset.
 
     Args:
-        file_path:
-        vocab_size: Vocabulary token size.
+        cfg: Adds the correct vocab_size_dim to it.
+        perc_to_download: Percentage of the database to append to BPE tokenizer filename.
     """
     print("Initializing BPE tokenizer...")
 
     # Init BPE model
-    print("Initializing BPE tokenizer...")
-    tokenizer = Tokenizer(BPE(unk_token="<unk>"))
+    tokenizer = Tokenizer(BPE(unk_token="<UNK>"))
 
-    # Set the Pre-Tokenizer. Note: there are better modern tokenizers but we're sticking with the paper.
-    tokenizer.pre_tokenizer = Whitespace()
+    # Set the Pre-Tokenizer. Turns "The rabbit" → ["_The", "_rabbit"]
+    tokenizer.pre_tokenizer = (
+        pre_tokenizers.Metaspace()
+    )  # Paper used -> pre_tokenizers.Whitespace()
+
+    # TODO fix issue with tokenizer being trained everytime, and if its trained on 1% of database, and I then use a larger database.
+
+    # Tell the tokenizer how to merge sub-words back into words, e.g., ["rab", "bit"] → "rabbit"
+    #   and ["_The", "_rabbit"] → "The rabbit"
+    tokenizer.decoder = decoders.Metaspace()  # Paper used -> decoders.BPEDecoder()
 
     # Configure the Trainer
     trainer = BpeTrainer(
-        vocab_size=vocab_size,
-        special_tokens=["<pad>", "<unk>", "sos", "eos"],
+        vocab_size=cfg.vocab_size_constraint,
+        special_tokens=["<PAD>", "<UNK>", "<SOS>", "<EOS>"],
+        # Integer representations: <PAD> = 0, "<UNK>" = 1, "<SOS>" = 2,  "<EOS>" = 3
         show_progress=True,
     )
 
@@ -77,8 +95,56 @@ def build_and_train_BPE_tokenizer(dataset_iterator, vocab_size=37_000):
     tokenizer.train_from_iterator(dataset_iterator, trainer=trainer)
 
     # Save the tokenizer
-    os.makedirs("./model/saved_models", exist_ok=True)
-    tokenizer.save("./model/saved_models/wmt_14_shared_bpe.json")
-    print(f"Tokenizer saved to wmt_14_shared_bpe.json")
+    save_path = os.path.join(cfg.MODEL_DIR, "saved_models")
+    file_name = f"wmt_14_shared_bpe_tokenizer_{perc_to_download}_ds_percent_.json"
+
+    os.makedirs(save_path, exist_ok=True)
+    tokenizer.save(f"{save_path}/{file_name}")
+    print(f"Tokenizer saved to {save_path}/{file_name}")
+
+    # Add the correct vocab_size_dim to config
+    cfg.vocab_size_dim = tokenizer.get_vocab_size()
+
+    # Add <SOS> and <EOS> tokens.
+    tokenizer.post_processor = processors.TemplateProcessing(
+        single="<SOS> $A <EOS>", # Is the sentence sequence tokens.
+        special_tokens=[
+            ("<SOS>", tokenizer.token_to_id("<SOS>")),
+            ("<EOS>", tokenizer.token_to_id("<EOS>")),
+        ],
+    )
+
+    return tokenizer
+
 
 # %%
+def test():
+    import sys
+    import os
+
+    if "model" in os.getcwd():
+        sys.path.append(os.path.abspath(".."))  # We need to grab load_wmt14_en_de
+    from configs import english_german_config
+    from utils.load_wmt14_en_de_dataset import load_wmt14_en_de, get_training_corpus
+
+    cfg = english_german_config()
+
+    raw_ds = load_wmt14_en_de(save_path=cfg.DATA_DIR, perc_to_download=cfg.perc_to_download)
+    tokenizer = build_and_train_BPE_tokenizer(
+        cfg=cfg, dataset_iterator=get_training_corpus(raw_ds), perc_to_download=cfg.perc_to_download
+    )
+
+    test_sentence = "The brown rabbit ate the apple."
+    print(f"\n\n\nTest sentence: {test_sentence}")
+    
+    # Tokenize
+    tokenized = tokenizer.encode(test_sentence)
+    print(f"Tokens: {tokenized.tokens}")
+    print(f"IDs: {tokenized.ids}")
+
+    # DeTokenize
+    detokenize = tokenizer.decode(tokenized.ids)
+    print(f"Detokenized: {detokenize}")
+
+
+test()

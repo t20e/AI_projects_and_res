@@ -22,7 +22,7 @@ Steps:
 
 #### NLP
 
-- 🌟 [Transformer model](./Transformer)
+- 🌟 [Transformer model (Attention Is All You Need)](./Transformer)
 
 #### Object detection
 

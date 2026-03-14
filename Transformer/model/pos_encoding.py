@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: AI_env
 #     language: python
 #     name: python3
 # ---
@@ -43,17 +43,23 @@ import math
 
 # %%
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len = 500,dropout=0.1):
+    def __init__(self, d_model, max_seq_len = 5000, dropout=0.1):
+        # TODO what is the purpose of max_seq_len? could it be named something else?
+        """
         # TODO add docstring
-
+        Args:
+            d_model: Dimensionality of the vectors.
+            max_seq_len:
+            dropout: Dropout regularization
+        """
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
 
         # === Compute the positional encodings once in log space.
-        pos_enc = torch.zeros(max_len, d_model)
+        pos_enc = torch.zeros(max_seq_len, d_model)
 
-        # Create a vector of positions [0, 1, ..., max_len-1]
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(-1)
+        # Create a vector of positions [0, 1, ..., max_seq_len-1]
+        position = torch.arange(0, max_seq_len, dtype=torch.float).unsqueeze(-1)
 
         # Calculate division denominator, 2 correlates to 2i in formula
         div_term = torch.exp(
@@ -65,7 +71,7 @@ class PositionalEncoding(nn.Module):
         pos_enc[:, 1::2] = torch.cos(position * div_term) # Odd indices get cosine
 
 
-        pos_enc = pos_enc.unsqueeze(0) # Add a batch -> (1, max_len, d_model)
+        pos_enc = pos_enc.unsqueeze(0) # Add a batch -> (1, max_seq_len, d_model)
 
         # Register as buffer so it is saved with the model, but is not a learned parameter.
         self.register_buffer("pos_enc", pos_enc)
@@ -80,12 +86,12 @@ class PositionalEncoding(nn.Module):
 # %%
 def test():
     print(f"\n\nTesting Positional Encoding...")
-    pos_enc_layer = PositionalEncoding(d_model=512, max_len=100)
+    pos_enc_layer = PositionalEncoding(d_model=512, max_seq_len=100)
     sample_input = torch.zeros(1, 100, 512)
     output = pos_enc_layer(sample_input)
 
     print(output.shape)
 
-# test()
+test()
 
 # %%

@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: AI_env
 #     language: python
 #     name: python3
 # ---
@@ -20,9 +20,13 @@
 #
 # * From Figure 2 in the paper.
 
+# %%
+#TODO ADD MORE INFO TO THE IMAGE ABOVE
+
 # %% [markdown]
 # Notes:
-# 1. **Projection**: The MHA layer first creates 3 different representations of each token in the sequence: $V$ (Values), $K$ (Keys), $Q$ (Queries).
+# 1. The **Masked Multi-Head Attention** also uses this, its just that it does it with a different set of Keys, Values, Queries!
+# 2.  **Projection**: The MHA layer first creates 3 different representations of each token in the sequence: $V$ (Values), $K$ (Keys), $Q$ (Queries).
 #    - The $V$ answers "If I am relevant, what information should I actually pass forward?".
 #    - The $K$ answers "What information do I contain?".
 #    - The $Q$ asks "What am I looking for?".
@@ -34,12 +38,12 @@
 #    1. Input: A single token matrix representing the sequence, shape (batch_size, seq_len, $d_{model}$), this matrix contains the word embeddings plus positional encodings. Every row is a vector for one token. 
 #    2. Operation: matrix multiplication $(X * W)$.
 #    3.  Result: Three new matrices of the same shape: $Q$, $K$, and $V$.
-# 2. [**Scaled Dot-Product Attention**](./scaled_dot_product_attention.ipynb) part.
+# 3. [**Scaled Dot-Product Attention**](./scaled_dot_product_attention.ipynb) part.
 #    1. We take the three ($Q$, $K$, $V$) matrices and split them along the $d_{model}$ dimension into $h$ "heads".
 #       1. If $d_{model} = 512$ and $h$ = $8$, it splits each $512$-length vector into eight $64$-length vectors ($8 * 64 = 512$).
 #       2. Each head will look for different things. One head might focus on grammar, another on punctuation, etc...
-# 3. **ConCat**: Concatenate the heads back together.
-# 4. Perform the final Linear.
+# 4. **ConCat**: Concatenate the heads back together.
+# 5. Perform the final Linear.
 #
 
 # %% [markdown]
@@ -72,8 +76,12 @@ import torch.nn as nn
 import math
 
 # %%
-print("\n\n#TODO comment out cell when not testing!")
-from scaled_dot_product_attention import scaled_dot_product_attention
+try: # works when ran via main.py (package mode)
+    from .scaled_dot_product_attention import scaled_dot_product_attention
+except ImportError:
+    # Works when running from inside Jupyter Notebook
+    from scaled_dot_product_attention import scaled_dot_product_attention
+
 import torch
 
 
@@ -103,19 +111,20 @@ class Multi_Head_Attention(nn.Module):
 
     def forward(self, q, k, v, mask=None):
         batch_size = q.size(0)
+        seq_len = q.size(1)
 
         # 1. Projections and Reshape
         # (batch, seq, d_model) -> (batch, seq, h, d_k) -> (batch, h, seq, d_k)
-        q = self.w_q(q).view(batch_size, -1, self.h, self.d_k).transpose(1, 2)
-        k = self.w_k(k).view(batch_size, -1, self.h, self.d_k).transpose(1, 2)
-        v = self.w_v(v).view(batch_size, -1, self.h, self.d_k).transpose(1, 2)
+        q = self.w_q(q).view(batch_size, seq_len, self.h, self.d_k).transpose(1, 2)
+        k = self.w_k(k).view(batch_size, seq_len, self.h, self.d_k).transpose(1, 2)
+        v = self.w_v(v).view(batch_size, seq_len, self.h, self.d_k).transpose(1, 2)
 
         # 2. Scaled Dot-Product Attention
         # x shape: (batch, h, seq, d_k)
         out, self.attn_weights = scaled_dot_product_attention(q, k, v, mask, self.dropout)
 
         # 3. Concat back to (batch, seq, h, d_k)
-        out = out.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
+        out = out.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
 
         # 4. Final Linear
         return self.w_o(out)
