@@ -36,3 +36,4 @@ Useful Resources:
     - **Source (X)** the Encoder's input, if we were training the model to translate english to german, the source would be the english tokens.
     - **Target (Y)** the Decoder's input. Note, the connection between the Encoder and Decoder the Source is being passed! Target is being feed to the Decoder where the Outputs are (shifted right). This would be the german tokens.
       - You can think of the Decoder as: It consumes its own previous output (target) while simultaneously cross-referencing the source.
+    - **Model size** = d_model = $d_{model}$

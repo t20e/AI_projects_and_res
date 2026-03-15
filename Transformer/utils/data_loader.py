@@ -16,12 +16,12 @@ def create_data_loaders(dataset, tokenizer: Tokenizer, batch_size, pad_token):
         pad_token: <PAD> integer ID representation.
     """
 
-    def collate_fn(batch: Batch):
+    def collate_fn(batch):
         """
         Sequence length batching: Ensure that for every batch, all sequences are padded to the length of the longest sequence in that specific batch, rather than a fixed global maximum.
 
         Args:
-            batch: The Batch class.
+            batch: A List of samples, note its not the Batch() class
         """
         src_list, tgt_list = [], []
 

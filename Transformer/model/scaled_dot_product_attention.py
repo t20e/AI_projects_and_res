@@ -90,6 +90,6 @@ def test():
     print(f"Output shape: {output.shape}")
     print(f"Weights shape: {weights.shape}")
 
-test()
+# test()
 
 # %%

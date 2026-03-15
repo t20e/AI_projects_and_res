@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: AI_env
 #     language: python
 #     name: python3
 # ---
@@ -22,7 +22,7 @@
 # **Encoder Stack**:
 # - Composed of a stack of $Nx=6$ identical encoding layers.
 # - The stacked encoding layers are identical in structure but do not share weights.
-# - The Encoder's **input** would look, e.g., "The brown rabbit ate the apple. &lt;padding&gt; &lt;padding&gt; &lt;padding&gt;". We want to ensure that the &lt;padding&gt; tokens have zero influence on the other tokens, to that order we use a **src_padding_mask** filter to hide the padding.
+# - The Encoder's **input** would look, e.g., "The brown rabbit ate the apple. &lt;PAD&gt; &lt;PAD&gt; &lt;PAD&gt;". We want to ensure that the &lt;PAD&gt; tokens have zero influence on the other tokens, to that order we use a **src_padding_mask** filter to hide the padding.
 #
 # 1. The Encoder starts at the top of the Nx stack of EncoderLayers. 
 #    1. It passes its input into its [Multi-Head Attention](./multi_head_attention.ipynb) sublayer. 
@@ -45,10 +45,10 @@ try: # works when ran via main.py (package mode)
     from .residual_con_layer_norm import ResidualConnection, LayerNorm
     from .multi_head_attention import Multi_Head_Attention
     from .FeedForwardNetwork import FeedForwardNetwork
-    from .model_utils import clones
+    from .utils import clones
 except ImportError:
     # Works when running from inside Jupyter Notebook
-    from model_utils import clones
+    from utils import clones
     from residual_con_layer_norm import ResidualConnection, LayerNorm
     from multi_head_attention import Multi_Head_Attention
     from FeedForwardNetwork import FeedForwardNetwork
@@ -138,6 +138,6 @@ def test():
     
     print("Test Passed!")
 
-test()
+# test()
 
 # %%

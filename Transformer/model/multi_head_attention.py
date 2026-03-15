@@ -157,6 +157,6 @@ def test():
     output_mask = MHA(q,k,v, mask=mask.unsqueeze(0).unsqueeze(0))
     print(f"Output shape (with mask): {output_mask.shape}")
     
-test()
+# test()
 
 # %%

@@ -10,7 +10,8 @@ from model.Transformer import Transformer
 from model.generator import Generator
 from model.embedding import Embeddings
 from model.pos_encoding import PositionalEncoding
-from model.model_utils import initialize_weight
+from model.utils import initialize_weight
+from model.training import TrainModel
 
 from utils.data_loader import create_data_loaders
 
@@ -28,28 +29,40 @@ if __name__ == "__main__":
 
     cfg = english_german_config()
 
-    device = torch.device("mps")
+    device = torch.device(
+        "mps"
+    )  # Make it so that it runs on any OS with different GPUs
 
     # ====== Dataset ======
     raw_ds = load_wmt14_en_de(
         save_path=cfg.DATA_DIR, perc_to_download=cfg.perc_to_download
     )
+
+    cfg.total_sentence_pairs = len(raw_ds)
+
     tokenizer = build_and_train_BPE_tokenizer(
         cfg=cfg,
         dataset_iterator=get_training_corpus(raw_ds),
         perc_to_download=cfg.perc_to_download,
     )
 
-    train_dataloader = create_data_loaders(
-        raw_ds,
-        tokenizer,
-        batch_size=cfg.batch_size,
-        pad_token=cfg.special_tokens["pad_token"]
-    )
+    cfg.vocab_size_dim = tokenizer.get_vocab_size()
+    print("HERE",cfg.vocab_size_dim)
 
-    for batch in train_dataloader:
-        print(batch.src.shape, batch.tgt.shape)
-        break
+    # train_dataloader = create_data_loaders(
+    #     raw_ds,
+    #     tokenizer,
+    #     batch_size=cfg.batch_size,
+    #     pad_token=cfg.special_tokens["pad_token"],
+    # )
+
+    # cfg.total_sentence_pairs = len(raw_ds)
+
+    # # Set warmup to end after the first epoch
+    # cfg.warmup_steps = cfg.total_sentence_pairs // cfg.batch_size
+
+    # print("Total sentence", cfg.total_sentence_pairs)
+    # print("WARMUP", cfg.warmup_steps)
 
     # # ====== Init model ======
     # model = Transformer(cfg=cfg)
@@ -65,4 +78,5 @@ if __name__ == "__main__":
     # model.tgt_embed[0].look_up_table.weight = shared_weights
     # model.generator.proj.weight = shared_weights
 
-
+    # trainer = TrainModel(cfg, model, device=device)
+    # trainer.train(train_dataloader)

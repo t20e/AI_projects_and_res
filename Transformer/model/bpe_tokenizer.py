@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: AI_env
 #     language: python
 #     name: python3
 # ---
@@ -36,9 +36,9 @@
 # %% [markdown]
 # **Byte-Pair Encoding Sub-Word Tokenizer**
 #
-# Sub-word tokenizer breaks down words, e.g., "transformer" → [""trans", "former"]
+# Sub-word tokenizer breaks down words, e.g., "transformer" → ["trans", "former"]
 #
-# Instead of building the tokenizer my self I use a `tokenizers` library.
+# Instead of building the tokenizer myself, I used the `huggingface tokenizers` library.
 
 # %%
 from tokenizers import Tokenizer, decoders, pre_tokenizers, processors
@@ -60,6 +60,7 @@ def build_and_train_BPE_tokenizer(
     dataset_iterator: DatasetDict,
     perc_to_download:int
 ):
+    # TODO Tokenizer is being trained every run, it should get the past tokenized used if thats the one needed, i.e., if using different size dataset.
     """
     Build and train the BPE tokenizer that the paper used for the standard WMT 2014 English-German dataset.
 
@@ -74,14 +75,16 @@ def build_and_train_BPE_tokenizer(
 
     # Set the Pre-Tokenizer. Turns "The rabbit" → ["_The", "_rabbit"]
     tokenizer.pre_tokenizer = (
-        pre_tokenizers.Metaspace()
-    )  # Paper used -> pre_tokenizers.Whitespace()
+        pre_tokenizers.Metaspace() # Paper used used whitespace -> pre_tokenizers.Whitespace()
+    )  
 
-    # TODO fix issue with tokenizer being trained everytime, and if its trained on 1% of database, and I then use a larger database.
+    # TODO fix issue with tokenizer being trained every time, and if its trained on 1% of database, and I then use a larger database.
 
     # Tell the tokenizer how to merge sub-words back into words, e.g., ["rab", "bit"] → "rabbit"
     #   and ["_The", "_rabbit"] → "The rabbit"
     tokenizer.decoder = decoders.Metaspace()  # Paper used -> decoders.BPEDecoder()
+
+    # Note: If you don't have enough memory to store large parts of the dataset, for example a massive paragraph than use a truncation -> tokenizer.enable_truncation(max_length=...)
 
     # Configure the Trainer
     trainer = BpeTrainer(
@@ -101,9 +104,6 @@ def build_and_train_BPE_tokenizer(
     os.makedirs(save_path, exist_ok=True)
     tokenizer.save(f"{save_path}/{file_name}")
     print(f"Tokenizer saved to {save_path}/{file_name}")
-
-    # Add the correct vocab_size_dim to config
-    cfg.vocab_size_dim = tokenizer.get_vocab_size()
 
     # Add <SOS> and <EOS> tokens.
     tokenizer.post_processor = processors.TemplateProcessing(
@@ -147,4 +147,4 @@ def test():
     print(f"Detokenized: {detokenize}")
 
 
-test()
+# test()

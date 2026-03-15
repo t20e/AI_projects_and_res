@@ -27,7 +27,7 @@
 #   - The Decoder also uses the **padding_mask** similar to how the [Encoder](./encoder.ipynb) uses it. 
 #     - Except for its **Masked Multi-Head Attention**:
 #       - It receives the Decoder's output (shift right), i.e., the **Target** as input.
-#         - **tgt_no_peek_mask**: This mask hides both the &lt;padding&gt; tokens like the src_padding_mask, but it also hides the future generated tokens as well, so that model can't cheat.
+#         - **tgt_no_peek_mask**: This mask hides both the &lt;PAD&gt; tokens like the src_padding_mask, but it also hides the future generated tokens as well, so that model can't cheat.
 
 # %%
 import torch.nn as nn
@@ -39,13 +39,13 @@ try: # works when ran via main.py (package mode)
     from .residual_con_layer_norm import ResidualConnection, LayerNorm
     from .multi_head_attention import Multi_Head_Attention
     from .FeedForwardNetwork import FeedForwardNetwork
-    from .model_utils import clones, make_target_mask
+    from .utils import clones, make_target_mask
 except ImportError:
     # Works when running from inside Jupyter Notebook
     from residual_con_layer_norm import ResidualConnection, LayerNorm
     from multi_head_attention import Multi_Head_Attention
     from FeedForwardNetwork import FeedForwardNetwork
-    from model_utils import clones, make_target_mask
+    from utils import clones, make_target_mask
 
 
 # %%
@@ -158,7 +158,7 @@ def test():
     print("Test Passed!")
 
 
-test()
+# test()
 
 # %%
 

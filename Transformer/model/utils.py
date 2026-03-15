@@ -11,7 +11,7 @@ def initialize_weight(model):
     """Initialize parameters with Xavier uniform"""
     for p in model.parameters():
         if p.dim() > 1:
-            nn.init.xavier_uniform(p)
+            nn.init.xavier_uniform_(p)
 
     print(f"\n\nModel initialized with {sum(p.numel() for p in model.parameters()):,} parameters!\n\n")
 

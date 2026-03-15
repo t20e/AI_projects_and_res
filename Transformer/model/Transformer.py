@@ -8,13 +8,18 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: AI_env
 #     language: python
 #     name: python3
 # ---
 
 # %% [markdown]
 # # Implement The Full Transformer Model
+#
+# ![Transformer model](../showcase_images/from_paper/main.png)
+
+# %%
+#TODO make sure this renders correctly on github repo
 
 # %%
 import torch.nn as nn
@@ -63,7 +68,7 @@ class Transformer(nn.Module):
         self.src_embed = nn.Sequential(
             Embeddings(d_model=cfg.d_model, vocab_size_dim=cfg.vocab_size_dim),
             PositionalEncoding(
-                d_model=cfg.d_model, max_seq_len=cfg.max_seq_len, dropout=cfg.dropout
+                d_model=cfg.d_model, pos_seq_len=cfg.pos_seq_len, dropout=cfg.dropout
             ),
         )
 
@@ -71,7 +76,7 @@ class Transformer(nn.Module):
         self.tgt_embed = nn.Sequential(
             Embeddings(d_model=cfg.d_model, vocab_size_dim=cfg.vocab_size_dim),
             PositionalEncoding(
-                d_model=cfg.d_model, max_seq_len=cfg.max_seq_len, dropout=cfg.dropout
+                d_model=cfg.d_model, pos_seq_len=cfg.pos_seq_len, dropout=cfg.dropout
             ),
         )
         self.generator = Generator(self.cfg.d_model, self.cfg.vocab_size_dim)
@@ -103,5 +108,7 @@ class Transformer(nn.Module):
 
         # Project to vocabulary probabilities
         return self.generator(decoder_out)
+
+# %%
 
 # %%

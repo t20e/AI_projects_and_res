@@ -1,6 +1,6 @@
 import os
 
-
+# TODO add  default english_german_config the one that was used to train the base model, I will only train on a small percentage of te dataset
 class english_german_config:
     # TODO Add Docstring
     d_model = 512  # All sub-layers in the model, as well as the embedding layers, produce outputs of dimension d_model = 512
@@ -20,22 +20,21 @@ class english_german_config:
     enc_dec_N = 6  # Num of stacks of encoders and decoders
 
     # ====== Dataset ======
-    max_seq_len = 5000 #TODO what is this for again?
-    seq_max_len = 10  #TODO same here not sure this is needed! # Example if set to 4 "The brown rabbit" sentence is tuned into [21, 33, 15, 0, 0], the 0 is for the <padding>
-
+    pos_seq_len = 5000 # Positional Encoding sequence length
     batch_size = 64
-
-    vocab_size_constraint = (
-        37_000  # Limit to let tokenizer trainer know when to stop merging sub-words.
+    vocab_size = ( # TODO since were training on smaller ds, what is the best value here?
+        16_000  # Paper: 37000. Limit to let tokenizer trainer know when to stop merging sub-words.
     )
     vocab_size_dim = None  # The dimension of the embedding matrix. It Depends on size of loaded database, it is set later in code.
     tokenizer = "BPE"
     dataset_name = "WMT 2014 English-German"
     perc_to_download: int = 1  # percentage of database to download
+    total_sentence_pairs = None # The total number of English-German sentence pairs, will be set later in code.
 
     # ====== Training ======
-    warmup_steps = 4_000
-    step_num = 100_000
+    warmup_steps = None # It Depends on size of loaded database, it is set later in code.  Paper: 4_000
+    step_num_limit = 100_000 # Total number of steps to train the model.
+    num_epochs = 10
 
     # ====== Folder Structure ======
     CFG_PATH = os.path.dirname(os.path.abspath(__file__))
