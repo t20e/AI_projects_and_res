@@ -127,10 +127,12 @@ def test():
     import sys
     import os
 
-    if "model" in os.getcwd():
-        sys.path.append(os.path.abspath(".."))  # We need to grab load_wmt14_en_de
+    os.chdir('..') # We need to grab load_wmt14_en_de
+    print(os.getcwd())
+    
     from configs import English_german_config
     from utils.load_wmt14_en_de_dataset import load_wmt14_en_de, get_training_corpus
+
 
     cfg = English_german_config()
 
@@ -147,9 +149,11 @@ def test():
     print(f"Tokens: {tokenized.tokens}")
     print(f"IDs: {tokenized.ids}")
 
-    # DeTokenize
+    # De-Tokenize
     detokenize = tokenizer.decode(tokenized.ids)
     print(f"Detokenized: {detokenize}")
 
 
 # test()
+
+# %%

@@ -5,6 +5,8 @@ class English_german_config:
     """
     🚨 Smaller config than the paper to train a decent model, that will not take days to train on GPU. Check Paper_english_german_config() class for the default paper config for its base model.
     """
+    is_paper_config = False
+
 
     # TODO set config to get the device depending automatically
     device = (
@@ -25,6 +27,7 @@ class English_german_config:
 
 
     # ================== Dataset ==================
+    max_seq_len = 100 # When training smaller model, not one from paper, to train faster we limit the size of each sequence.
     pos_seq_len = 5000  # Positional Encoding sequence length
     batch_size = 64
     vocab_size = (
@@ -50,6 +53,8 @@ class English_german_config:
     warmup_steps = None  # It Depends on size of loaded database, it is set later in code.  Paper: 4_000
     step_num_limit = 100_000  # Total number of steps to train the model.
     num_epochs = 15
+    continue_from_chpt:bool = False # Continue training the model from a check point
+    checkpoint_name:str = "" # Checkpoint filename
 
 
 
@@ -58,3 +63,8 @@ class English_german_config:
     PROJECT_ROOT = os.path.abspath(os.path.join(CFG_PATH, ".."))
     DATA_DIR = os.path.join(PROJECT_ROOT, "data")
     MODEL_DIR = os.path.join(PROJECT_ROOT, "model")
+    folders_to_make = [
+        "./data",
+        "./model/saved_models",
+        "./model/checkpoints",
+    ]

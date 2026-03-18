@@ -19,9 +19,6 @@
 # ![Transformer model](../showcase_images/from_paper/main.png)
 
 # %%
-#TODO make sure this renders correctly on github repo
-
-# %%
 import torch.nn as nn
 
 try: # works when ran via main.py (package mode)
@@ -109,6 +106,13 @@ class Transformer(nn.Module):
         # Run last Linear + Softmax layers
         return self.generator(decoder_out)
 
-# %%
+    def initialize_weight(self):
+        """Initialize parameters with Xavier uniform"""
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+
+        print(f"\n\nModel initialized with {sum(p.numel() for p in self.parameters()):,} parameters!\n\n")
+
 
 # %%

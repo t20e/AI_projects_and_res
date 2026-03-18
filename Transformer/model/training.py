@@ -77,13 +77,14 @@
 import torch.nn as nn
 import torch
 from torch.optim.lr_scheduler import LambdaLR
+from datetime import datetime
 
 
 try:  # works when ran via main.py (package mode)
     from .utils import make_target_mask
 except ImportError:
     # Works when running from inside Jupyter Notebook
-    from model.utils import make_target_mask
+    from utils import make_target_mask
 
 # %%
 from typing import TYPE_CHECKING
@@ -241,7 +242,6 @@ class SimpleLossCompute:
         self.opt = opt
 
     def __call__(self, x, y, norm):
-        # x = self.generator(x) # TODO: Delete this line its already called in Transformer()
         loss = (
             self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1))
             / norm
@@ -250,12 +250,9 @@ class SimpleLossCompute:
         loss.backward()
         if self.opt is not None:
             self.opt.step()
-            self.opt.zero_grad() # Clear gradients before the next batch.
-        return loss.data * norm
+            self.opt.zero_grad()  # Clear gradients before the next batch.
+        return loss.item() * norm # TODO was return loss.data * norm is it fixed now?
 
-
-# %% [markdown]
-# ## Beam Search
 
 # %% [markdown]
 # ## Train Model
@@ -266,6 +263,7 @@ import os
 
 class TrainModel(nn.Module):
     def __init__(self, cfg: English_german_config, model: Transformer, device):
+
         super().__init__()
         self.cfg = cfg
         self.model = model
@@ -290,7 +288,9 @@ class TrainModel(nn.Module):
         self.step_counter = 0
 
     def save_checkpoint(self, epoch, avg_loss):
-        checkpoint_name = f"transformer_epoch_{epoch+1}.pt"
+        checkpoint_name = (
+            f"transformer_epoch_{epoch+1}_{self.cfg.perc_to_download}_percent_ds.pt"
+        )
         checkpoint_path = os.path.join(
             self.cfg.MODEL_DIR, "checkpoints", checkpoint_name
         )
@@ -299,21 +299,27 @@ class TrainModel(nn.Module):
                 "epoch": epoch,
                 "model_state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
+                "scheduler_state_dict": self.scheduler.state_dict(),
+                "step_counter": self.step_counter,
                 "loss": avg_loss,
             },
             checkpoint_path,
         )
         print(f"Saved Checkpoint to -> {checkpoint_path}")
 
-    def train(self, train_dataloader):
-        """Train a model"""
+    def train(self, train_dataloader, start_epoch):
+        """
+        Train a model
+        Args:
+            start_epoch: Will depend on if we are training from a checkpoint or training a new model.
+        """
         num_epochs = self.cfg.num_epochs
         print("\n" + "#" * 64)
         print(f"\nTraining Model")
         print(f"Num epochs: {num_epochs} | device: {self.device}")
         print("\n" + "#" * 64)
 
-        for epoch in range(num_epochs):
+        for epoch in range(start_epoch, num_epochs):
             avg_loss = self.run_epoch(train_dataloader)
             print(
                 f"Epoch [{epoch+1}/{num_epochs}] completed. Average Loss: {avg_loss:.4f}"
@@ -355,7 +361,7 @@ class TrainModel(nn.Module):
             # Loss compute, performs backward prop
             loss = self.compute_loss(output, tgt_y, batch.non_tokens)
 
-            total_loss += loss
+            total_loss += loss.item()
             total_tokens += batch.non_tokens
 
             # Update Learning Rate per step
@@ -364,7 +370,7 @@ class TrainModel(nn.Module):
 
             if i % 50 == 0:
                 print(
-                    f"Step: {i} | Loss: {loss/batch.non_tokens:.4f} | Tokens: {total_tokens}"
+                    f"{datetime.now().strftime('%m-%d %H:%M:%S')} | Step: {i} | Loss: {loss/batch.non_tokens:.4f} | Tokens: {total_tokens}"
                 )
 
         return total_loss / total_tokens

@@ -45,9 +45,23 @@ import math
 
 # %%
 def scaled_dot_product_attention(
-    q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: torch.Tensor = None, dropout=None
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    mask: torch.Tensor = None,
+    dropout=None,
 ):
-    # TODO add Docstring
+    """
+    Apply Scaled Dot-Product Attention.
+
+    Args:
+        q: Queries
+        k: Keys
+        v: Values
+        mask: Optional mask that is used specifically for the Mask Multi-Head Attention.
+        dropout: Dropout rate
+    """
+
     d_k = q.size(-1)  # dim of the Keys vectors
 
     # 1. MatMul
@@ -62,11 +76,11 @@ def scaled_dot_product_attention(
 
     # 4. Softmax
     attention_weights = F.softmax(scores, dim=-1)
-    
+
     # Apply Dropout from paper: "We apply dropout [33] to the output of each sub-layer, before it is added to the sub-layer input and normalized (softmax)."
     if dropout is not None:
         attention_weights = dropout(attention_weights)
-    
+
     # 5. Weighted sum/Matmul
     output = torch.matmul(attention_weights, v)
 

@@ -7,6 +7,9 @@ class Paper_english_german_config:
     ‼️ Note: I did not train on this config, so I can't verify if it will work or break!
     """
 
+    is_paper_config = True
+
+
     device = (
         "mps"  # if using NVIDIA GPU set to "cuda" or if no GPU available set to "cpu".
     )
@@ -51,7 +54,8 @@ class Paper_english_german_config:
     warmup_steps = 4_000
     step_num_limit = 100_000  # Total number of steps to train the model.
     num_epochs = 16
-
+    continue_from_chpt = False # Continue training the model from a check point
+    checkpoint_name = "" # Checkpoint filename
 
 
     # ================== Folder Structure ==================
@@ -59,3 +63,9 @@ class Paper_english_german_config:
     PROJECT_ROOT = os.path.abspath(os.path.join(CFG_PATH, ".."))
     DATA_DIR = os.path.join(PROJECT_ROOT, "data")
     MODEL_DIR = os.path.join(PROJECT_ROOT, "model")
+
+    folders_to_make = [
+        "./data",
+        "./model/saved_models",
+        "./model/checkpoints",
+    ]

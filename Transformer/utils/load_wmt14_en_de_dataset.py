@@ -2,8 +2,7 @@ from datasets import load_dataset
 import os
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING: 
-    from datasets import DatasetDict
+from datasets import DatasetDict
 
 
 def load_wmt14_en_de(save_path: str, perc_to_download: int = 1)-> DatasetDict:
@@ -19,7 +18,6 @@ def load_wmt14_en_de(save_path: str, perc_to_download: int = 1)-> DatasetDict:
     ds_name = "wmt14"
     ds_config = "de-en"
 
-    # dataset_path = os.path.join(save_path, ds_name, ds_config)
 
     dataset = load_dataset(
         ds_name, ds_config, split=f"train[:{perc_to_download}%]", cache_dir=save_path

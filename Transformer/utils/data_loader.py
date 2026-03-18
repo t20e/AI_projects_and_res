@@ -5,7 +5,33 @@ from torch.nn.utils.rnn import pad_sequence
 from model.training import Batch
 
 
-def create_data_loaders(dataset, tokenizer: Tokenizer, batch_size, pad_token):
+def pre_tokenize(ds, tokenizer):
+    """
+    Pre-Tokenize the dataset before training starts, and not during each batching.
+    """
+
+    def _process_example(e):
+        en_encoded = tokenizer.encode(e["translation"]["en"]).ids
+        de_encoded = tokenizer.encode(e["translation"]["de"]).ids
+        return {"src_ids": en_encoded, "tgt_ids": de_encoded}
+
+    return ds.map(_process_example, batched=False)
+
+
+def filter_ds(tokenized_ds, max_seq_len: int):
+    """
+    Apply a sequence limit if needed.
+
+    Args:
+        tokenized_ds: A dataset that has called pre-tokenized().
+        max_seq_len: Max length each sequence should be.
+    """
+    return tokenized_ds.filter(
+        lambda x: len(x["src_ids"]) <= max_seq_len and len(x["tgt_ids"]) <= max_seq_len
+    )
+
+
+def create_data_loaders(dataset, batch_size, pad_token):
     """
     Args:
         pad_token: <PAD> integer ID representation.
@@ -21,18 +47,9 @@ def create_data_loaders(dataset, tokenizer: Tokenizer, batch_size, pad_token):
         src_list, tgt_list = [], []
 
         for item in batch:
-            # WMT14 format is { 'translation': {'en': '...', 'de': '...'}}
-            en_text = item["translation"]["en"]  # english
-            de_text = item["translation"]["de"]  # german
-
-            src_list.append(torch.tensor(tokenizer.encode(en_text).ids))
-            tgt_list.append(torch.tensor(tokenizer.encode(de_text).ids))
-
-            # src_tokenized = tokenizer.encode(item["translation"]["en"]).ids
-            # tgt_tokenized = tokenizer.encode(item["translation"]["de"]).ids
-
-            # src_list.append(torch.tensor(src_tokenized))
-            # tgt_list.append(torch.tensor(tgt_tokenized))
+            # Grab the pre-tokenized ids
+            src_list.append(torch.tensor(item["src_ids"]))
+            tgt_list.append(torch.tensor(item["tgt_ids"]))
 
         # Pad sequences to the max length in this batch
         src_batch = pad_sequence(src_list, batch_first=True, padding_value=pad_token)

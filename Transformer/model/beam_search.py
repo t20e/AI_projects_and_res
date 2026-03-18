@@ -20,9 +20,6 @@
 # [Beam Search explained](https://d2l.ai/chapter_recurrent-modern/beam-search.html#id1)
 #
 
-# %%
-# TODO make sure markdown renders on repo!
-
 # %% [markdown]
 # **During Inference:**
 #
