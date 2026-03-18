@@ -251,7 +251,7 @@ class SimpleLossCompute:
         if self.opt is not None:
             self.opt.step()
             self.opt.zero_grad()  # Clear gradients before the next batch.
-        return loss.item() * norm # TODO was return loss.data * norm is it fixed now?
+        return loss.item() * norm 
 
 
 # %% [markdown]
@@ -370,7 +370,7 @@ class TrainModel(nn.Module):
 
             if i % 50 == 0:
                 print(
-                    f"{datetime.now().strftime('%m-%d %H:%M:%S')} | Step: {i} | Loss: {loss/batch.non_tokens:.4f} | Tokens: {total_tokens}"
+                    f"{datetime.now().strftime('%m-%d %H:%M:%S')} | Step: {self.step_counter} | Loss: {loss/batch.non_tokens:.4f} | Tokens: {total_tokens}"
                 )
 
         return total_loss / total_tokens

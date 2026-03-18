@@ -11,13 +11,10 @@ Useful Resources:
 
 **TODO:**
 
-- Training
-  - Make sure all tensors are on GPU
-- Inference
-  - Make sure all tensors are on GPU
 - Calculate **BLEU** scores
+- Once I have a good model store it on huggingface, and let user know to download it.
 
-- If I create the jupyter library implement it here.
+- If I create the EasyJupyter library implement it here.
 
 ---
 
@@ -37,3 +34,15 @@ Useful Resources:
     - **Target (Y)** the Decoder's input. Note, the connection between the Encoder and Decoder the Source is being passed! Target is being feed to the Decoder where the Outputs are (shifted right). This would be the german tokens.
       - You can think of the Decoder as: It consumes its own previous output (target) while simultaneously cross-referencing the source.
     - **Model size** = d_model = $d_{model}$
+
+## How To Train Model
+
+```bash
+python 
+```
+
+## How To Run Inference
+
+```bash
+python 
+```

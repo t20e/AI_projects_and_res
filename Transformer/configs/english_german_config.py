@@ -1,17 +1,12 @@
 import os
 
+# TODO use a parent config for both configs, and make sure to set it so both configs need to implement all of the parents attributes
 
 class English_german_config:
     """
     🚨 Smaller config than the paper to train a decent model, that will not take days to train on GPU. Check Paper_english_german_config() class for the default paper config for its base model.
     """
     is_paper_config = False
-
-
-    # TODO set config to get the device depending automatically
-    device = (
-        "mps"  # if using NVIDIA GPU set to "cuda" or if no GPU available set to "cpu".
-    )
 
     d_model = 256  # All sub-layers in the model, as well as the embedding layers, produce outputs of dimension d_model = 512
 
@@ -53,8 +48,8 @@ class English_german_config:
     warmup_steps = None  # It Depends on size of loaded database, it is set later in code.  Paper: 4_000
     step_num_limit = 100_000  # Total number of steps to train the model.
     num_epochs = 15
-    continue_from_chpt:bool = False # Continue training the model from a check point
-    checkpoint_name:str = "" # Checkpoint filename
+    continue_from_chpt:bool = True # Continue training the model from a check point
+    checkpoint_name:str = "transformer_epoch_2_10_percent_ds.pt" # Checkpoint filename
 
 
 

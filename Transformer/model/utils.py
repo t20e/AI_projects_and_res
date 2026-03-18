@@ -39,7 +39,6 @@ def make_target_mask(tgt_tokens, pad_token: int):
     return tgt_padding_mask & no_peek_triangle
 
 
-# TODO TEST
 def load_checkpoint(trainer: TrainModel, cfg: English_german_config, device) -> int:
     """
     Load a checkpoint.
@@ -58,6 +57,12 @@ def load_checkpoint(trainer: TrainModel, cfg: English_german_config, device) -> 
         trainer.model.load_state_dict(chpt["model_state_dict"])
         trainer.optimizer.load_state_dict(chpt["optimizer_state_dict"])
 
+        # MPS device bug issue, fix by moving optimizer state tensors to mps device
+        for state in trainer.optimizer.state.values():
+            for k,v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(device)
+
         if "scheduler_state_dict" in chpt:
             trainer.scheduler.load_state_dict(chpt["scheduler_state_dict"])
         if "step_counter" in chpt:
@@ -65,7 +70,7 @@ def load_checkpoint(trainer: TrainModel, cfg: English_german_config, device) -> 
 
         last_epoch = chpt["epoch"] + 1
         print(
-            f"Resuming training from Epoch {last_epoch} at Step {trainer.step_counter}..."
+            f"\nResuming training from Epoch {last_epoch} at Step {trainer.step_counter}..."
         )
         return last_epoch
 

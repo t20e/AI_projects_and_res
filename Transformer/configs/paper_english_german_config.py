@@ -9,11 +9,6 @@ class Paper_english_german_config:
 
     is_paper_config = True
 
-
-    device = (
-        "mps"  # if using NVIDIA GPU set to "cuda" or if no GPU available set to "cpu".
-    )
-
     d_model = 512  # All sub-layers in the model, as well as the embedding layers, produce outputs of dimension d_model = 512
 
     special_tokens = {  # The integer representations
@@ -54,8 +49,8 @@ class Paper_english_german_config:
     warmup_steps = 4_000
     step_num_limit = 100_000  # Total number of steps to train the model.
     num_epochs = 16
-    continue_from_chpt = False # Continue training the model from a check point
-    checkpoint_name = "" # Checkpoint filename
+    continue_from_chpt:bool = False # Continue training the model from a check point
+    checkpoint_name:str = "" # Checkpoint filename
 
 
     # ================== Folder Structure ==================
