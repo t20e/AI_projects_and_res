@@ -52,62 +52,67 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from datasets import DatasetDict
-    from ..configs import english_german_config
+    from ..configs import English_german_config
 
 
 def build_and_train_BPE_tokenizer(
-    cfg: english_german_config,
+    cfg: English_german_config,
     dataset_iterator: DatasetDict,
     perc_to_download:int
 ):
-    # TODO Tokenizer is being trained every run, it should get the past tokenized used if thats the one needed, i.e., if using different size dataset.
     """
     Build and train the BPE tokenizer that the paper used for the standard WMT 2014 English-German dataset.
 
     Args:
-        cfg: Adds the correct vocab_size_dim to it.
+        cfg: Adds the correct vocab_size to it.
         perc_to_download: Percentage of the database to append to BPE tokenizer filename.
     """
-    print("Initializing BPE tokenizer...")
 
-    # Init BPE model
-    tokenizer = Tokenizer(BPE(unk_token="<UNK>"))
+    save_path = os.path.join(cfg.MODEL_DIR, "saved_models", "tokenizer")
+    file_name = f"wmt_14_shared_bpe_tokenizer_{perc_to_download}_ds_percent.json"
+    full_file_path = os.path.join(save_path, file_name)
 
-    # Set the Pre-Tokenizer. Turns "The rabbit" → ["_The", "_rabbit"]
-    tokenizer.pre_tokenizer = (
-        pre_tokenizers.Metaspace() # Paper used used whitespace -> pre_tokenizers.Whitespace()
-    )  
+    # Check if a tokenizer has already been trained for this dataset size
+    if os.path.exists(full_file_path):
+        print(f"\nLoading existing BPE tokenizer from: {full_file_path}...")
+        tokenizer = Tokenizer.from_file(full_file_path)
+    else:
+        print(f"\nNo existing tokenizer found. Training new BPE tokenizer on {perc_to_download}% of {cfg.dataset_name} of dataset...\n")
 
-    # TODO fix issue with tokenizer being trained every time, and if its trained on 1% of database, and I then use a larger database.
+        # Init BPE model
+        tokenizer = Tokenizer(BPE(unk_token="<UNK>"))
 
-    # Tell the tokenizer how to merge sub-words back into words, e.g., ["rab", "bit"] → "rabbit"
-    #   and ["_The", "_rabbit"] → "The rabbit"
-    tokenizer.decoder = decoders.Metaspace()  # Paper used -> decoders.BPEDecoder()
+        # Set the Pre-Tokenizer. Turns "The rabbit" → ["_The", "_rabbit"]
+        tokenizer.pre_tokenizer = (
+            pre_tokenizers.Metaspace() # Paper used used whitespace -> pre_tokenizers.Whitespace()
+        )  
 
-    # Note: If you don't have enough memory to store large parts of the dataset, for example a massive paragraph than use a truncation -> tokenizer.enable_truncation(max_length=...)
 
-    # Configure the Trainer
-    trainer = BpeTrainer(
-        vocab_size=cfg.vocab_size_constraint,
-        special_tokens=["<PAD>", "<UNK>", "<SOS>", "<EOS>"],
-        # Integer representations: <PAD> = 0, "<UNK>" = 1, "<SOS>" = 2,  "<EOS>" = 3
-        show_progress=True,
-    )
+        # Tell the tokenizer how to merge sub-words back into words, e.g., ["rab", "bit"] → "rabbit"
+        #   and ["_The", "_rabbit"] → "The rabbit"
+        tokenizer.decoder = decoders.Metaspace()  # Paper used -> decoders.BPEDecoder()
 
-    # Train the tokenizer on the shared dataset
-    tokenizer.train_from_iterator(dataset_iterator, trainer=trainer)
+        # Note: If you don't have enough memory to store large parts of the dataset, for example a massive paragraph than use a truncation -> tokenizer.enable_truncation(max_length=...)
 
-    # Save the tokenizer
-    save_path = os.path.join(cfg.MODEL_DIR, "saved_models")
-    file_name = f"wmt_14_shared_bpe_tokenizer_{perc_to_download}_ds_percent_.json"
+        # Configure the Trainer
+        trainer = BpeTrainer(
+            vocab_size=cfg.vocab_size,
+            special_tokens=["<PAD>", "<UNK>", "<SOS>", "<EOS>"],
+            # Integer representations: <PAD> = 0, "<UNK>" = 1, "<SOS>" = 2,  "<EOS>" = 3
+            show_progress=True,
+        )
 
-    os.makedirs(save_path, exist_ok=True)
-    tokenizer.save(f"{save_path}/{file_name}")
-    print(f"Tokenizer saved to {save_path}/{file_name}")
+        # Train the tokenizer on the shared dataset
+        tokenizer.train_from_iterator(dataset_iterator, trainer=trainer)
 
-    # Add <SOS> and <EOS> tokens.
+        # Save the tokenizer
+        os.makedirs(save_path, exist_ok=True)
+        tokenizer.save(full_file_path)
+        print(f"\nTokenizer saved to {full_file_path}")
+
+    # Re-apply the post-processor whether we loaded or trained the tokenizer to be safe.
     tokenizer.post_processor = processors.TemplateProcessing(
-        single="<SOS> $A <EOS>", # Is the sentence sequence tokens.
+        single="<SOS> $A <EOS>", # $A is the sentence sequence tokens.
         special_tokens=[
             ("<SOS>", tokenizer.token_to_id("<SOS>")),
             ("<EOS>", tokenizer.token_to_id("<EOS>")),
@@ -124,10 +129,10 @@ def test():
 
     if "model" in os.getcwd():
         sys.path.append(os.path.abspath(".."))  # We need to grab load_wmt14_en_de
-    from configs import english_german_config
+    from configs import English_german_config
     from utils.load_wmt14_en_de_dataset import load_wmt14_en_de, get_training_corpus
 
-    cfg = english_german_config()
+    cfg = English_german_config()
 
     raw_ds = load_wmt14_en_de(save_path=cfg.DATA_DIR, perc_to_download=cfg.perc_to_download)
     tokenizer = build_and_train_BPE_tokenizer(

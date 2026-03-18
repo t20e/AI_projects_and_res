@@ -24,7 +24,7 @@ def load_wmt14_en_de(save_path: str, perc_to_download: int = 1)-> DatasetDict:
     dataset = load_dataset(
         ds_name, ds_config, split=f"train[:{perc_to_download}%]", cache_dir=save_path
     )
-    print("successfully loaded dataset!\n")
+    print("\nSuccessfully loaded dataset!\n")
     return dataset
 
 

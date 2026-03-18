@@ -41,13 +41,13 @@ except ImportError:
 # %%
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING: # for type checks example cfg: english_german_config
-    from configs.english_german_config import english_german_config
+if TYPE_CHECKING: # for type checks example cfg: English_german_config
+    from configs.english_german_config import English_german_config
 
 class Transformer(nn.Module):
     def __init__(
         self,
-        cfg: english_german_config
+        cfg: English_german_config
     ):
         super().__init__()
         """
@@ -66,7 +66,7 @@ class Transformer(nn.Module):
 
         # The embedded Source sequence
         self.src_embed = nn.Sequential(
-            Embeddings(d_model=cfg.d_model, vocab_size_dim=cfg.vocab_size_dim),
+            Embeddings(d_model=cfg.d_model, vocab_size=cfg.vocab_size),
             PositionalEncoding(
                 d_model=cfg.d_model, pos_seq_len=cfg.pos_seq_len, dropout=cfg.dropout
             ),
@@ -74,12 +74,12 @@ class Transformer(nn.Module):
 
         # The embedded Target sequence
         self.tgt_embed = nn.Sequential(
-            Embeddings(d_model=cfg.d_model, vocab_size_dim=cfg.vocab_size_dim),
+            Embeddings(d_model=cfg.d_model, vocab_size=cfg.vocab_size),
             PositionalEncoding(
                 d_model=cfg.d_model, pos_seq_len=cfg.pos_seq_len, dropout=cfg.dropout
             ),
         )
-        self.generator = Generator(self.cfg.d_model, self.cfg.vocab_size_dim)
+        self.generator = Generator(self.cfg.d_model, self.cfg.vocab_size)
 
     def encode(self, src, src_padding_mask):
         """
@@ -106,7 +106,7 @@ class Transformer(nn.Module):
         # Run Decoder
         decoder_out = self.decode(tgt, encoder_out, src_padding_mask, tgt_no_peek_mask)
 
-        # Project to vocabulary probabilities
+        # Run last Linear + Softmax layers
         return self.generator(decoder_out)
 
 # %%

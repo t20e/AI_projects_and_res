@@ -1,1 +1,1 @@
-from .english_german_config import english_german_config
+from .english_german_config import English_german_config

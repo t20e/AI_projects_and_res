@@ -54,9 +54,9 @@ import math
 
 # %%
 class Embeddings(nn.Module):
-    def __init__(self, d_model, vocab_size_dim):
+    def __init__(self, d_model, vocab_size):
         super().__init__()
-        self.look_up_table = nn.Embedding(vocab_size_dim, d_model)
+        self.look_up_table = nn.Embedding(vocab_size, d_model)
         self.d_model = d_model
 
     def forward(self, x):
@@ -73,13 +73,13 @@ except ImportError:
 def test():
     print("Testing Embedding...")
     d_model = 512  # Dimensionality of the vectors
-    vocab_size_dim = 1000  # Size of the dictionary
+    vocab_size = 1000  # Size of the dictionary
     batch_size = 2
     seq_len = 5  # num of words in each sentence
 
-    em = Embeddings(d_model, vocab_size_dim)
+    em = Embeddings(d_model, vocab_size)
 
-    dummy_input = torch.randint(0, vocab_size_dim, (batch_size, seq_len))
+    dummy_input = torch.randint(0, vocab_size, (batch_size, seq_len))
     print(f"Input shape: {dummy_input.shape}")
 
     output = em(dummy_input)

@@ -88,9 +88,9 @@ except ImportError:
 # %%
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:  # for type checks example cfg: english_german_config below
+if TYPE_CHECKING:  # for type checks example cfg: English_german_config below
     from .Transformer import Transformer
-    from ..configs import english_german_config
+    from ..configs import English_german_config
     from tokenizers import Tokenizer
 
 
@@ -222,7 +222,7 @@ def lrate_growth_example():
 # ## Losss
 
 # %%
-if TYPE_CHECKING:  # for type checks example cfg: english_german_config below
+if TYPE_CHECKING:
     from .generator import Generator
 
 
@@ -241,7 +241,7 @@ class SimpleLossCompute:
         self.opt = opt
 
     def __call__(self, x, y, norm):
-        x = self.generator(x)
+        # x = self.generator(x) # TODO: Delete this line its already called in Transformer()
         loss = (
             self.criterion(x.contiguous().view(-1, x.size(-1)), y.contiguous().view(-1))
             / norm
@@ -265,7 +265,7 @@ import os
 
 
 class TrainModel(nn.Module):
-    def __init__(self, cfg: english_german_config, model: Transformer, device):
+    def __init__(self, cfg: English_german_config, model: Transformer, device):
         super().__init__()
         self.cfg = cfg
         self.model = model

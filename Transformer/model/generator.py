@@ -26,9 +26,9 @@ import torch.nn as nn
 import torch
 
 class Generator(nn.Module):
-    def __init__(self, d_model, vocab_size_dim):
+    def __init__(self, d_model, vocab_size):
         super().__init__()
-        self.proj = nn.Linear(d_model, vocab_size_dim)
+        self.proj = nn.Linear(d_model, vocab_size)
     
     def forward(self, x):
         return torch.log_softmax(self.proj(x), dim=-1)

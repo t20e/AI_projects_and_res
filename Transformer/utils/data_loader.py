@@ -4,11 +4,6 @@ from tokenizers import Tokenizer
 from torch.nn.utils.rnn import pad_sequence
 from model.training import Batch
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING: 
-    from model.Transformer import Transformer
-    from ..configs import english_german_config
-
 
 def create_data_loaders(dataset, tokenizer: Tokenizer, batch_size, pad_token):
     """

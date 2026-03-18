@@ -110,21 +110,28 @@ class Multi_Head_Attention(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, q, k, v, mask=None):
+        """
+        Args:
+            q: The Quires sequence.
+            k: The Keys sequence.
+            v: The values sequence.
+            mask: Whether this is a Mask Multi-Head Attention (will contain a mask) or the regular Multi-Head Attention (will be None)
+        """
         batch_size = q.size(0)
-        seq_len = q.size(1)
 
-        # 1. Projections and Reshape
-        # (batch, seq, d_model) -> (batch, seq, h, d_k) -> (batch, h, seq, d_k)
-        q = self.w_q(q).view(batch_size, seq_len, self.h, self.d_k).transpose(1, 2)
-        k = self.w_k(k).view(batch_size, seq_len, self.h, self.d_k).transpose(1, 2)
-        v = self.w_v(v).view(batch_size, seq_len, self.h, self.d_k).transpose(1, 2)
+        query_seq_len = q.size(1)
+        keys_value_seq_len = k.size(1) # keys and value have the same length
+
+        # 1. Projection and reshape the quires, keys, and values and Reshape
+        q = self.w_q(q).view(batch_size, query_seq_len, self.h, self.d_k).transpose(1, 2)
+        k = self.w_k(k).view(batch_size, keys_value_seq_len, self.h, self.d_k).transpose(1, 2)
+        v = self.w_v(v).view(batch_size, keys_value_seq_len, self.h, self.d_k).transpose(1, 2)
 
         # 2. Scaled Dot-Product Attention
-        # x shape: (batch, h, seq, d_k)
         out, self.attn_weights = scaled_dot_product_attention(q, k, v, mask, self.dropout)
 
-        # 3. Concat back to (batch, seq, h, d_k)
-        out = out.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
+        # 3. Concat back
+        out = out.transpose(1, 2).contiguous().view(batch_size, query_seq_len, self.d_model)
 
         # 4. Final Linear
         return self.w_o(out)

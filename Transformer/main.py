@@ -3,7 +3,7 @@ from datasets import load_dataset
 import torch.nn as nn
 import torch
 
-from configs.english_german_config import english_german_config
+from configs.english_german_config import English_german_config
 from utils.load_wmt14_en_de_dataset import load_wmt14_en_de, get_training_corpus
 from model.bpe_tokenizer import build_and_train_BPE_tokenizer
 from model.Transformer import Transformer
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     for folder in folders_to_make:
         os.makedirs(folder, exist_ok=True)
 
-    cfg = english_german_config()
+    cfg = English_german_config()
 
     device = torch.device(
         "mps"
@@ -54,13 +54,9 @@ if __name__ == "__main__":
         pad_token=cfg.special_tokens["pad_token"],
     )
 
-    cfg.total_sentence_pairs = len(raw_ds)
-
     # Set warmup to end after the first epoch
     cfg.warmup_steps = cfg.total_sentence_pairs // cfg.batch_size
 
-    print("Total sentence", cfg.total_sentence_pairs)
-    print("WARMUP", cfg.warmup_steps)
 
     # ====== Init model ======
     model = Transformer(cfg=cfg)
