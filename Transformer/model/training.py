@@ -62,9 +62,7 @@
 # - The paper used a fixed number of **tokens per batch**, not a fixed number of sentence pairs → "Each training batch contained a set of sentence pairs containing approximately $25000$ source tokens and $25000$ target tokens."
 
 # %% [markdown]
-#  
-# - #TODO **Validation**: Uses **Beam Search** to validate how well the model is perform during training.
-#   - Paper: "For the base models, we used a single model obtained by averaging the last 5 checkpoints, which were written at 10-minute intervals. For the big models, we averaged the last 20 checkpoints. We used beam search with a beam size of 4 and length penalty α = 0.6 [38]. These hyperparameters were chosen after experimentation on the development set. We set the maximum output length during inference to input length + 50, but terminate early when possible [38]."
+# - **Validation**: check [beam_search.ipynb](./beam_search.ipynb)
 
 # %% [markdown]
 # - **Loss function**

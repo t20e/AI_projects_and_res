@@ -11,11 +11,11 @@ Useful Resources:
 
 **TODO:**
 
-
 - Training
   - Make sure all tensors are on GPU
 - Inference
   - Make sure all tensors are on GPU
+- Calculate **BLEU** scores
 
 - If I create the jupyter library implement it here.
 

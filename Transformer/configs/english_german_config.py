@@ -3,6 +3,7 @@ import os
 # TODO add  default english_german_config the one that was used to train the base model, I will only train on a small percentage of te dataset
 class english_german_config:
     # TODO Add Docstring
+    device = "mps" # if using NVIDIA GPU set to "cuda" or if no GPU available set to "cpu".
     d_model = 512  # All sub-layers in the model, as well as the embedding layers, produce outputs of dimension d_model = 512
 
     special_tokens = {  # The integer representations
@@ -12,14 +13,14 @@ class english_german_config:
         "eos_token": 3,  # '<EOS>'
     }
 
-    # ===Encoder & Decoder
+    # ================== Encoder & Decoder ==================
     h = 8  # How many H heads in the Multi-Head Attention
     dropout = 0.1
     d_ff = 2048
     N = 6
     enc_dec_N = 6  # Num of stacks of encoders and decoders
 
-    # ====== Dataset ======
+    # ================== Dataset ==================
     pos_seq_len = 5000 # Positional Encoding sequence length
     batch_size = 64
     vocab_size = ( # TODO since were training on smaller ds, what is the best value here?
@@ -31,12 +32,13 @@ class english_german_config:
     perc_to_download: int = 1  # percentage of database to download
     total_sentence_pairs = None # The total number of English-German sentence pairs, will be set later in code.
 
-    # ====== Training ======
+    # ================== Training ==================
     warmup_steps = None # It Depends on size of loaded database, it is set later in code.  Paper: 4_000
     step_num_limit = 100_000 # Total number of steps to train the model.
     num_epochs = 10
 
-    # ====== Folder Structure ======
+
+    # ================== Folder Structure ==================
     CFG_PATH = os.path.dirname(os.path.abspath(__file__))
     PROJECT_ROOT = os.path.abspath(os.path.join(CFG_PATH, ".."))
     DATA_DIR = os.path.join(PROJECT_ROOT, "data")

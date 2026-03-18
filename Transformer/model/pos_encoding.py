@@ -14,6 +14,9 @@
 # ---
 
 # %% [markdown]
+# <!-- Reviewed: ✅ -->
+
+# %% [markdown]
 # # Implement Positional Encoding
 #
 # ![Alt text](../showcase_images/from_paper/pos_encoding.png)
@@ -33,7 +36,7 @@
 # - $i$ is the dimension. Each dimension corresponds to a sinusoid.
 #
 # - **Regularization**:
-#   - Dropout from paper: "In addition, we apply dropout to the sums of the embeddings and the positional encodings in both the encoder and decoder stacks. For the base model, we use a rate of $p_{drop} = 0.1$.
+#   - Dropout from paper: "In addition, we apply dropout to the sums of the embeddings and the positional encodings in both the encoder and decoder stacks. For the base model, we use a rate of $p_{drop} = 0.1$."
 
 # %%
 import torch.nn as nn

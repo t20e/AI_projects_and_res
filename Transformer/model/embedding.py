@@ -14,13 +14,34 @@
 # ---
 
 # %% [markdown]
+# <!-- Reviewed: ✅ -->
+
+# %% [markdown]
 # # Implement Embedding
 # ![Embedding section image](../showcase_images/from_paper/embedding.png)
 
 # %% [markdown]
-# Notes from paper:
+# **Word Embeddings** are numerical representations of words in a **higher-dimensional space**, that capture semantic, syntactic, and contextual information. Words with similar meanings are positioned close to each other. The distance between vectors encodes the **degree of similarity between words**.
+#
+# A good [Embedding Space Visualization](https://projector.tensorflow.org/) by tensorflow.org |  another by [google](https://developers.google.com/machine-learning/crash-course/embeddings/embedding-space)
+
+# %% [markdown]
+# ---
+#
+# **How It Works In The Transformer:**
+#
+# - The Transformer model uses **learned, task-specific embedding layers**, rather than a pre-existing algorithm like Word2Vec, or GloVe.
+#
+# - The embedding layer itself is a **static lookup table**. The **Self-Attention** mechanism in the encoder and decoder will mix these static vectors with the rest of the sequence to create **contextualized** representations.
+#
+#
+#
+# **Notes From Paper:**
+#
 # - "To facilitate these residual connections, all sub-layers in the model, as well as the **embedding layers**, produce outputs of dimension $d_{model}$ = 512."
-# - "In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]. In the embedding layers, we multiply those weights by $\sqrt{d_{model})}$"
+# - "In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]. In the embedding layers, we multiply those weights by $\sqrt{d_{model}}$"
+#
+#
 #
 # **Regularization**:
 # - **Dropout**: "In addition, we apply dropout to the sums of the embeddings and the positional encodings in both the encoder and decoder stacks. For the base model, we use a rate of $P_{drop} = 0.1$".
@@ -78,6 +99,8 @@ def test():
     assert not torch.equal(x_em, x_final)
     print("Success\n")
 
-test()
+# test()
+
+# %%
 
 # %%

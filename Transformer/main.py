@@ -46,37 +46,35 @@ if __name__ == "__main__":
         perc_to_download=cfg.perc_to_download,
     )
 
-    cfg.vocab_size_dim = tokenizer.get_vocab_size()
-    print("HERE",cfg.vocab_size_dim)
 
-    # train_dataloader = create_data_loaders(
-    #     raw_ds,
-    #     tokenizer,
-    #     batch_size=cfg.batch_size,
-    #     pad_token=cfg.special_tokens["pad_token"],
-    # )
+    train_dataloader = create_data_loaders(
+        raw_ds,
+        tokenizer,
+        batch_size=cfg.batch_size,
+        pad_token=cfg.special_tokens["pad_token"],
+    )
 
-    # cfg.total_sentence_pairs = len(raw_ds)
+    cfg.total_sentence_pairs = len(raw_ds)
 
-    # # Set warmup to end after the first epoch
-    # cfg.warmup_steps = cfg.total_sentence_pairs // cfg.batch_size
+    # Set warmup to end after the first epoch
+    cfg.warmup_steps = cfg.total_sentence_pairs // cfg.batch_size
 
-    # print("Total sentence", cfg.total_sentence_pairs)
-    # print("WARMUP", cfg.warmup_steps)
+    print("Total sentence", cfg.total_sentence_pairs)
+    print("WARMUP", cfg.warmup_steps)
 
-    # # ====== Init model ======
-    # model = Transformer(cfg=cfg)
+    # ====== Init model ======
+    model = Transformer(cfg=cfg)
 
-    # # Xavier Init
-    # initialize_weight(model)
-    # model.to(device)
+    # Xavier Init
+    initialize_weight(model)
+    model.to(device)
 
-    # # 💡 From paper: "In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]."
-    # #   - The pre-softmax linear transformation is the Generator, which is the last softmax + linear in the model.
-    # #   - So, we need to share weights between the scr_embed (Source Embedding), tgt_embed (Target Embedding), and the generator!
-    # shared_weights = model.src_embed[0].look_up_table.weight
-    # model.tgt_embed[0].look_up_table.weight = shared_weights
-    # model.generator.proj.weight = shared_weights
+    # 💡 From paper: "In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]."
+    #   - The pre-softmax linear transformation is the Generator, which is the last softmax + linear in the model.
+    #   - So, we need to share weights between the scr_embed (Source Embedding), tgt_embed (Target Embedding), and the generator!
+    shared_weights = model.src_embed[0].look_up_table.weight
+    model.tgt_embed[0].look_up_table.weight = shared_weights
+    model.generator.proj.weight = shared_weights
 
-    # trainer = TrainModel(cfg, model, device=device)
-    # trainer.train(train_dataloader)
+    trainer = TrainModel(cfg, model, device=device)
+    trainer.train(train_dataloader)
