@@ -1,51 +1,113 @@
 import torch
+import os
 from torch.utils.data import DataLoader
-from tokenizers import Tokenizer
 from torch.nn.utils.rnn import pad_sequence
-from model.training import Batch
+from model.training import TokenBatchSampler, Batch
 from functools import partial
+from datasets import load_from_disk, load_dataset, DatasetDict
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..configs.english_german_config import English_german_config
 
 
-def pre_tokenize(ds, tokenizer):
+def load_wmt14_en_de(save_path: str, perc_to_download: int = 1) -> DatasetDict:
     """
-    Pre-Tokenize the dataset before training starts, and not during each batching.
+    Load the WMT14 English-German dataset
+
+    Args:
+        perc_to_download: How much of the dataset to download.
+        save_path: Full path to the ./data directory in project.
     """
+
+    print(
+        f"\n\nAttempting to get ({perc_to_download}%) of the WMT English-German dataset..."
+    )
+    ds_name = "wmt14"
+    ds_config = "de-en"
+
+    dataset = load_dataset(
+        ds_name, ds_config, split=f"train[:{perc_to_download}%]", cache_dir=save_path
+    )
+    print("\nSuccessfully loaded raw dataset!\n")
+    return dataset
+
+
+def get_training_corpus(dataset):
+    # Yield both English and German sentences for a shared Vocabulary.
+    for example in dataset:
+        yield example["translation"]["en"]
+        yield example["translation"]["de"]
+
+
+def get_pre_tokenized_ds(cfg):
+    """Retrieves a Pre-Tokenized dataset"""
+
+    # Create storage directory
+    tokenized_path = os.path.join(
+        cfg.DATA_DIR, f"tokenized_{cfg.dataset_name}_{cfg.perc_to_download}_percent_ds"
+    )
+
+    # Load pre-tokenized dataset if it exists
+    if os.path.exists(tokenized_path):
+        print(f"Loading existing pre-tokenized dataset from {tokenized_path}...")
+        return load_from_disk(tokenized_path)
+    return None
+
+
+def pre_tokenize(cfg: English_german_config, ds, tokenizer):
+    """
+    Pre-Tokenizes the raw sentences into lists of integers token IDs. This is done once before training.
+    Saves the processed dataset to disk and to be loaded for later training with the same dataset percentage size.
+    """
+
+    # Create storage directory
+    tokenized_path = os.path.join(
+        cfg.DATA_DIR, f"tokenized_{cfg.dataset_name}_{cfg.perc_to_download}_percent_ds"
+    )
 
     def _process_example(e):
-        # en_encoded = tokenizer.encode(e["translation"]["en"]).ids
-        # de_encoded = tokenizer.encode(e["translation"]["de"]).ids
-
         en_encoded = [tokenizer.encode(item["en"]).ids for item in e["translation"]]
         de_encoded = [tokenizer.encode(item["de"]).ids for item in e["translation"]]
 
         return {"src_ids": en_encoded, "tgt_ids": de_encoded}
 
-    return ds.map(_process_example, batched=True)
+    # batched=True uses Tokenizer's rust backend, which speeds up data prep
+    tokenized_ds = ds.map(_process_example, batched=True)
+
+    print(f"Saving pre-tokenized dataset to {tokenized_path}...")
+    tokenized_ds.save_to_disk(tokenized_path)
+
+    return tokenized_ds
 
 
-def filter_ds(tokenized_ds, max_seq_len: int):
+def filter_ds(tokenized_ds, max_indiv_seq_len: int):
     """
-    Apply a sequence limit if needed.
+    Applies a max sequence limit to **individual** sequences. I.e., Removes sequence outliers from the dataset. This prevents something like a single 500-word paragraph from causing a massive memory spike.
 
     Args:
-        tokenized_ds: A dataset that has called pre-tokenized().
-        max_seq_len: Max length each sequence should be.
+        tokenized_ds: A dataset containing 'src_ids' and 'tgt_ids' keys.
+        max_indiv_seq_len: The maximum number of tokens allowed in a sentence.
     """
     return tokenized_ds.filter(
-        lambda x: len(x["src_ids"]) <= max_seq_len and len(x["tgt_ids"]) <= max_seq_len
+        lambda x: len(x["src_ids"]) <= max_indiv_seq_len
+        and len(x["tgt_ids"]) <= max_indiv_seq_len
     )
 
 
-def collate_fn(batch, pad_token):
+def collate_fn(batch, pad_token=0):
     """
-    Sequence length batching: Ensure that for every batch, all sequences are padded to the length of the longest sequence in that specific batch, rather than a fixed global maximum.
+    Transforms a list of raw dataset dictionaries into a single, padded Batch.
+
+    Take raw list of integers and converts into torch Tensors.
+        1. Finds the longest sequence in a specific batch.
+        2. Pads all the shorter sequences in that batch to the length of the longest sequence in that batch with <PAD> tokens.
+        3. Stacks them into a single, rectangular 2D tensor.
 
     Args:
-        batch: A List of samples, note its not the Batch() class
+        batch: A List of dictionaries, each containing 'src_ids' and 'tgt_ids' keys, fetched by the DatLoader.
+        pad_token: The integer ID representation for the '<PAD>' token.
     """
     src_list, tgt_list = [], []
 
@@ -61,26 +123,26 @@ def collate_fn(batch, pad_token):
     return Batch(src_batch, tgt_batch, pad_token)
 
 
-def create_data_loaders(
-    cfg: English_german_config, device, dataset, batch_size, pad_token
-):
+def create_data_loaders(cfg: English_german_config, device, dataset, pad_token=0):
     """
+    Assembles the sampler, collate_fn function and dataset into a PyTorch DataLoader.
+
     Args:
         pad_token: <PAD> integer ID representation.
     """
     bound_collate = partial(collate_fn, pad_token=pad_token)
 
-    if device.type == "mps":
-        pin_memory = False  # MPS (Metal) device uses Unified Memory,
-    elif device.type == "cuda":
-        pin_memory = True
-    else:
-        pin_memory = False
+    pin_memory = (
+        True if device.type == "cuda" else False
+    )  # Mac MPS (Metal) device uses Unified Memory, so pin_memory is False.
+
+    batch_sampler = TokenBatchSampler(
+        dataset=dataset, max_tokens=cfg.max_batch_seq_tokens, shuffle=True
+    )
 
     return DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=True,
+        dataset=dataset,
+        batch_sampler=batch_sampler,
         collate_fn=bound_collate,
         num_workers=cfg.num_workers,
         pin_memory=pin_memory,

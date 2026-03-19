@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch
 
 from configs.english_german_config import English_german_config
-from utils.load_wmt14_en_de_dataset import load_wmt14_en_de, get_training_corpus
 from model.bpe_tokenizer import build_and_train_BPE_tokenizer
 from model.Transformer import Transformer
 from model.generator import Generator
@@ -12,8 +11,14 @@ from model.embedding import Embeddings
 from model.pos_encoding import PositionalEncoding
 from model.training import TrainModel
 from model.utils import load_checkpoint
-
-from utils.data_loader import create_data_loaders, filter_ds, pre_tokenize
+from utils.data_loader import (
+    create_data_loaders,
+    filter_ds,
+    pre_tokenize,
+    load_wmt14_en_de,
+    get_training_corpus,
+    get_pre_tokenized_ds,
+)
 
 
 if __name__ == "__main__":
@@ -32,25 +37,32 @@ if __name__ == "__main__":
         os.makedirs(folder, exist_ok=True)
 
     # ====== Dataset ======
-    raw_ds = load_wmt14_en_de(
-        save_path=cfg.DATA_DIR, perc_to_download=cfg.perc_to_download
-    )
+    # Check if we already downloaded the dataset and pre-tokenized it
+    tokenized_ds = get_pre_tokenized_ds(cfg)
 
-    tokenizer = build_and_train_BPE_tokenizer(
-        cfg=cfg,
-        dataset_iterator=get_training_corpus(raw_ds),
-        perc_to_download=cfg.perc_to_download,
-    )
-
-    print("\n\nPre-tokenizing dataset...")
-    tokenized_ds = pre_tokenize(raw_ds, tokenizer)
-
-    if not cfg.is_paper_config:
-        # Filter out long sentences
-        print(
-            f"\n\nFiltering out long sentences with a max sequence len = {cfg.max_seq_len}"
+    if tokenized_ds is None:  # Need to download the dataset and pre-tokenize it
+        raw_ds = load_wmt14_en_de(
+            save_path=cfg.DATA_DIR, perc_to_download=cfg.perc_to_download
         )
-        tokenized_ds = filter_ds(tokenized_ds, cfg.max_seq_len)
+        tokenizer = build_and_train_BPE_tokenizer(
+            cfg=cfg,
+            dataset_iterator=get_training_corpus(raw_ds),
+            perc_to_download=cfg.perc_to_download,
+        )
+
+        print("\n\nPre-Tokenizing dataset...")
+        tokenized_ds = pre_tokenize(cfg, raw_ds, tokenizer)
+    else:
+        tokenizer = build_and_train_BPE_tokenizer(
+            cfg=cfg,
+            dataset_iterator=None,
+            perc_to_download=cfg.perc_to_download,
+        )
+
+    print(
+        f"\n\nFiltering out individual sentences with a max sequence len = {cfg.max_indiv_seq_len}"
+    )
+    tokenized_ds = filter_ds(tokenized_ds, cfg.max_indiv_seq_len)
 
     cfg.total_sentence_pairs = len(tokenized_ds)
 
@@ -58,12 +70,11 @@ if __name__ == "__main__":
         cfg=cfg,
         device=device,
         dataset=tokenized_ds,
-        batch_size=cfg.batch_size,
         pad_token=cfg.special_tokens["pad_token"],
     )
 
     # Set warmup to end after the first epoch
-    cfg.warmup_steps = cfg.total_sentence_pairs // cfg.batch_size
+    cfg.warmup_steps = len(train_dataloader)
 
     # ====== Init model ======
     model = Transformer(cfg=cfg)

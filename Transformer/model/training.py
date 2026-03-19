@@ -89,24 +89,77 @@ if TYPE_CHECKING:  # for type checks example cfg: English_german_config below
     from ..configs import English_german_config
     from tokenizers import Tokenizer
 
-
 # %% [markdown]
 # ## Batch
+
+# %%
+import torch
+from  torch.utils.data import Sampler
+import random
+
+class TokenBatchSampler:
+    def __init__(self, dataset, max_tokens, shuffle=True):
+        """
+        Groups sentences into batches based on their total token count.
+
+        Provide a list of indices (e.g., [5, 102, 43]), which the dataloader uses to identify which sentences belong to current batch it is processing.
+
+        Args:
+            dataset: A dataset.
+            max_tokens: The maximum number of tokens per sequence.
+            shuffle: Whether to shuffle the dataset before sampling.
+        """
+        self.max_tokens = max_tokens
+        self.shuffle = shuffle
+
+        # Find teh length of the longest sentence, either source or target for each pair.
+        lengths = [max(len(item["src_ids"]), len(item["tgt_ids"])) for item in dataset]
+
+        # Get the indices that would sort the dataset from shortest to longest sentences.
+        sorted_indices = sorted(range(len(lengths)), key=lambda i: lengths[i])
+
+        self.batches = []
+        curr_batch = []
+        max_batch_len = 0
+
+        for idx in sorted_indices:
+            seq_len = lengths[idx]
+
+            max_batch_len = max(max_batch_len, seq_len)
+
+            # Update the max length for the current batch we are building.
+            if max_batch_len * (len(curr_batch) + 1) > self.max_tokens:
+                self.batches.append(curr_batch)
+                curr_batch = [idx]
+                max_batch_len = seq_len
+            else:
+                curr_batch.append(idx)
+        
+        # Add the last partially filled batch to the list of batches.
+        if curr_batch:
+            self.batches.append(curr_batch)
+    
+    def __iter__(self):
+        # Shuffle the order of batches, not the contents inside them.
+        if self.shuffle:
+            random.shuffle(self.batches)
+        return iter(self.batches)
+
+    def __len__(self):
+        return len(self.batches)
+
 
 # %%
 class Batch:
     def __init__(self, src, tgt=None, pad_token: int = 0):
         """
-        A batch in the dataloader.
+        A single batch.
 
         Args:
-            src = A batch of tokenized Source Sequence sentences. Example: if batch_size=64, than 
-                `src` holds 64 English sentences and `tgt` holds the corresponding 64 German sentences.
+            src = A batch of tokenized Source Sequence sentences.
             tgt = A batch of tokenized Target Sequence.
             pad_token: The integer representation for the '<PAD>' token
         """
-
-        """Object to hold a batch of data with mask during training."""
         self.src = src
 
         # Make source mask
@@ -281,8 +334,8 @@ def plot_loss_history(loss_history, cfg: English_german_config):
 
     config_info = (
         f"Model: d_model={cfg.d_model}, N={cfg.N}, h ={cfg.H}, d_ff={cfg.d_ff}\n"
-        f"Training: batch_size={cfg.batch_size}, vocab_size={cfg.vocab_size}, num_epochs={cfg.num_epochs}, step_limit={cfg.step_num_limit}, num_workers={cfg.num_workers}, "
-        f"max_seq={cfg.max_seq_len}, warmup_steps={cfg.warmup_steps},\n"
+        f"Training: batch_size={cfg.batch_size}, vocab_size={cfg.vocab_size}, num_epochs={cfg.num_epochs}, step_limit={cfg.step_num_limit}, num_workers={cfg.num_workers}, max_batch_seq_tokens={cfg.max_batch_seq_tokens}, "
+        f"max_indiv_seq_len={cfg.max_indiv_seq_len}, warmup_steps={cfg.warmup_steps},\n"
         f"{cfg.perc_to_download}% Percent of {cfg.dataset_name} dataset, "
         f"Total Sentence Pairs: {cfg.total_sentence_pairs},\n"
         f"Final Step: {len(loss_history):,}"
@@ -436,30 +489,45 @@ class TrainModel(nn.Module):
             self.scheduler.step()
             self.step_counter += 1
 
-            if i % 50 == 0:
-                # Print steps plus how much time remains
-                elapsed = time.time() - self.start_time
-                steps_completed = self.step_counter
-
-                if steps_completed > 0:
-                    avg_time_per_step = elapsed / steps_completed
-                    remaining_steps = self.cfg.step_num_limit - steps_completed
-                    eta_seconds = remaining_steps * avg_time_per_step
-
-                    # Convert seconds to readable
-                    eta_str = str(timedelta(seconds=int(eta_seconds)))
-                    elapsed_str = str(timedelta(seconds=int(elapsed)))
-
-                    print(
-                        f"[{datetime.now().strftime('%m-%d %H:%M:%S')}] "
-                        f"Step: {self.step_counter}/{self.cfg.step_num_limit} | "
-                        f"Loss: {loss/non_tokens.item():.4f} | "
-                        f"Tokens: {total_tokens} | "
-                        f"Elapsed: {elapsed_str} | "
-                        f"ETA: {eta_str}"
-                    )
+            if i % 10 == 0:
+                self.print_step_info(
+                    total_tokens, loss, non_tokens, num_batches=len(dataloader)
+                )
 
         # Average the loss over the exact number of real words, excluding all the special tokens!
         return total_loss / total_tokens
+
+    def print_step_info(self, total_tokens, loss, non_tokens, num_batches):
+        elapsed = time.time() - self.start_time
+        steps_completed = self.step_counter
+
+        if steps_completed > 0:  # So it doesn't divide by zero
+            avg_time_per_step = elapsed / steps_completed
+
+            # Calculate the actual total steps expected to go for this run
+            total_epochs = self.cfg.num_epochs
+            steps_per_epoch = num_batches
+
+            # There is a step_num_limit=100_000, but the training can also end before that depending on config.
+            actual_total_steps = min(
+                self.cfg.step_num_limit, total_epochs * steps_per_epoch
+            )
+
+            remaining_steps = actual_total_steps - steps_completed
+            remaining_steps = max(0, remaining_steps)  # Prevent negative ETA
+            eta_seconds = remaining_steps * avg_time_per_step
+
+            # Convert seconds to readable
+            eta_str = str(timedelta(seconds=int(eta_seconds)))
+            elapsed_str = str(timedelta(seconds=int(elapsed)))
+
+            print(
+                f"[{datetime.now().strftime('%m-%d %H:%M:%S')}] "
+                f"Step: {self.step_counter}/{actual_total_steps} | "
+                f"Loss: {loss/non_tokens.item():.4f} | "
+                f"Tokens: {total_tokens} | "
+                f"Time Elapsed: {elapsed_str} | "
+                f"ETA: {eta_str}"
+            )
 
 # %%

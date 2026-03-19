@@ -32,13 +32,15 @@ class Paper_english_german_config:
 
     # ================== Dataset ==================
     pos_seq_len = 5000  # Positional Encoding sequence length
-    batch_size = 64  # ‼️ Not sure what the paper used. Paper: "Sentence pairs were batched together by approximate sequence length. Each training batch contained a set of sentence pairs containing approximately 25000 source tokens and 25000 target tokens."
+    max_indiv_seq_len = 256 # Applies to individual sentences, not sure about paper, 256 is arbitrary.
+    max_batch_seq_tokens = 25_000. # Applies sequence limit to an entire batch of sequences. Paper: "Sentence pairs were batched together by approximate sequence length. Each training batch contained a set of sentence pairs containing approximately 25000 source tokens and 25000 target tokens."
+
     vocab_size = (
         37000  # Limit to let tokenizer trainer know when to stop merging sub-words.
     )
 
     tokenizer = "BPE"
-    dataset_name = "WMT 2014 English-German"
+    dataset_name = "WMT_2014_English_German"
     perc_to_download: int = 100  # percentage of database to download
     total_sentence_pairs = None  # The total number of English-German sentence pairs, will be set later in code.
 
@@ -50,7 +52,7 @@ class Paper_english_german_config:
     num_epochs = 16
     continue_from_chpt:bool = False # Continue training the model from a check point
     checkpoint_name:str = "" # Checkpoint filename
-    num_workers = 4
+    num_workers = None # 🚨 NOTE: If using NVIDIA GPU Golden Rule: num_worker = 4 * num_GPU | On Mac Silicone even though I have a 32 core GPU, it is still only one GPU, best to num_workers = 0.
 
     # ================== Folder Structure ==================
     CFG_PATH = os.path.dirname(os.path.abspath(__file__))

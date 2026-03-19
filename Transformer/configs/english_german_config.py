@@ -20,14 +20,14 @@ class English_german_config:
 
 
     # ================== Dataset ==================
-    max_seq_len = 128 # When training smaller model, not one from paper, to train faster we limit the size of each sequence.
+    max_indiv_seq_len = 128 # Applies to individual sentences
+    max_batch_seq_tokens = 6400 # Paper: 25_000. Applies sequence limit to an entire batch of sequences.
     pos_seq_len = 5000  # Positional Encoding sequence length
-    batch_size = 128
     vocab_size = (
         37000  # Limit to let tokenizer trainer know when to stop merging sub-words.
     )
     tokenizer = "BPE"
-    dataset_name = "WMT 2014 English-German"
+    dataset_name = "WMT_2014_English_German"
 
     # Percentage of database to download
     perc_to_download: int = 50
@@ -43,7 +43,7 @@ class English_german_config:
 
 
     # ================== Training ==================
-    num_workers = 4
+    num_workers = 0 # 🚨 NOTE: For NVIDIA GPU Golden Rule: num_worker = 4 * num_GPU | On Mac Silicone even though I have a 32 core GPU, but it is still only one GPU, best to num_workers = 0.
     warmup_steps = None  # It Depends on size of loaded database, it is set later in code.  Paper: 4_000
     step_num_limit = 100_000  # Total number of steps to train the model.
     num_epochs = 15

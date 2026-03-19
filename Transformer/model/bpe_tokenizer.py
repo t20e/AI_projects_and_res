@@ -78,8 +78,9 @@ def build_and_train_BPE_tokenizer(
 
     # Check if a tokenizer has already been trained for this dataset size
     if os.path.exists(full_file_path):
-        print(f"\nLoading existing BPE tokenizer from: ({full_file_path})...")
         tokenizer = Tokenizer.from_file(full_file_path)
+        print(f"\nLoading existing BPE tokenizer from: ({full_file_path})...")
+        return tokenizer
     else:
         print(
             f"\nNo existing tokenizer found. Training new BPE tokenizer on {perc_to_download}% of {cfg.dataset_name} of dataset...\n"
@@ -110,21 +111,20 @@ def build_and_train_BPE_tokenizer(
         # Train the tokenizer on the shared dataset
         tokenizer.train_from_iterator(dataset_iterator, trainer=trainer)
 
+        # Apply the post-processor whether we loaded or trained the tokenizer to be safe.
+        tokenizer.post_processor = processors.TemplateProcessing(
+            single="<SOS> $A <EOS>",  # $A is the sentence sequence tokens.
+            special_tokens=[
+                ("<SOS>", tokenizer.token_to_id("<SOS>")),
+                ("<EOS>", tokenizer.token_to_id("<EOS>")),
+            ],
+        )
+
         # Save the tokenizer
         os.makedirs(save_path, exist_ok=True)
         tokenizer.save(full_file_path)
         print(f"\nTokenizer saved to {full_file_path}")
-
-    # Re-apply the post-processor whether we loaded or trained the tokenizer to be safe.
-    tokenizer.post_processor = processors.TemplateProcessing(
-        single="<SOS> $A <EOS>",  # $A is the sentence sequence tokens.
-        special_tokens=[
-            ("<SOS>", tokenizer.token_to_id("<SOS>")),
-            ("<EOS>", tokenizer.token_to_id("<EOS>")),
-        ],
-    )
-
-    return tokenizer
+        return tokenizer
 
 
 # %%
@@ -132,11 +132,15 @@ def test():
     import sys
     import os
 
-    os.chdir("..")  # We need to grab load_wmt14_en_de
+    # We need to grab load_wmt14_en_de
+    project_root = os.path.abspath("..")
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    print(f"Project root added to sys.path: {project_root}")
     print(os.getcwd())
 
     from configs import English_german_config
-    from utils.load_wmt14_en_de_dataset import load_wmt14_en_de, get_training_corpus
+    from utils.data_loader import load_wmt14_en_de, get_training_corpus
 
     cfg = English_german_config()
 
@@ -160,7 +164,6 @@ def test():
     # De-Tokenize
     detokenize = tokenizer.decode(tokenized.ids)
     print(f"Detokenized: {detokenize}")
-
 
 # test()
 
