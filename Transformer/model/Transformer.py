@@ -55,10 +55,10 @@ class Transformer(nn.Module):
         """
         self.cfg = cfg
         self.decoder = Decoder(
-            DecoderLayer(cfg.d_model, cfg.h, cfg.d_ff, cfg.dropout), cfg.N
+            DecoderLayer(cfg.d_model, cfg.H, cfg.d_ff, cfg.dropout), cfg.N
         )
         self.encoder = Encoder(
-            EncoderLayer(cfg.d_model, cfg.h, cfg.d_ff, cfg.dropout), cfg.N
+            EncoderLayer(cfg.d_model, cfg.H, cfg.d_ff, cfg.dropout), cfg.N
         )
 
         # The embedded Source sequence

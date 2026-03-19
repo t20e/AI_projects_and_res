@@ -55,7 +55,9 @@ if __name__ == "__main__":
     cfg.total_sentence_pairs = len(tokenized_ds)
 
     train_dataloader = create_data_loaders(
-        tokenized_ds,
+        cfg=cfg,
+        device=device,
+        dataset=tokenized_ds,
         batch_size=cfg.batch_size,
         pad_token=cfg.special_tokens["pad_token"],
     )

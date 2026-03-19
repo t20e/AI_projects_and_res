@@ -78,7 +78,7 @@ def build_and_train_BPE_tokenizer(
 
     # Check if a tokenizer has already been trained for this dataset size
     if os.path.exists(full_file_path):
-        print(f"\nLoading existing BPE tokenizer from: {full_file_path}...")
+        print(f"\nLoading existing BPE tokenizer from: ({full_file_path})...")
         tokenizer = Tokenizer.from_file(full_file_path)
     else:
         print(

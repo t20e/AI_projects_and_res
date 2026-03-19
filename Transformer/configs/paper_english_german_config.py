@@ -22,11 +22,10 @@ class Paper_english_german_config:
 
 
     # ================== Encoder & Decoder ==================
-    h = 8  # How many H heads in the Multi-Head Attention
+    H = 8  # How many H heads in the Multi-Head Attention
     dropout = 0.1
     d_ff = 2048
-    N = 6
-    enc_dec_N = 6  # Num of stacks of encoders and decoders
+    N = 6  # Num of stacks of encoders and decoders
 
 
 
@@ -51,7 +50,7 @@ class Paper_english_german_config:
     num_epochs = 16
     continue_from_chpt:bool = False # Continue training the model from a check point
     checkpoint_name:str = "" # Checkpoint filename
-
+    num_workers = 4
 
     # ================== Folder Structure ==================
     CFG_PATH = os.path.dirname(os.path.abspath(__file__))

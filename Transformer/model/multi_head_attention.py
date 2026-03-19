@@ -20,16 +20,13 @@
 #
 # * From Figure 2 in the paper.
 
-# %%
-#TODO ADD MORE INFO TO THE IMAGE ABOVE
-
 # %% [markdown]
 # Notes:
 # 1. The **Masked Multi-Head Attention** also uses this, its just that it does it with a different set of Keys, Values, Queries!
 # 2.  **Projection**: The MHA layer first creates 3 different representations of each token in the sequence: $V$ (Values), $K$ (Keys), $Q$ (Queries).
-#    - The $V$ answers "If I am relevant, what information should I actually pass forward?".
-#    - The $K$ answers "What information do I contain?".
 #    - The $Q$ asks "What am I looking for?".
+#    - The $K$ answers "What information do I contain?".
+#    - The $V$ answers "If I am relevant, what information should I actually pass forward?".
 #    - Example: In a sentence the tokens would be words:
 #     - "The brown rabbit ate the apple."
 #       - The token for the word "rabbit":
@@ -91,13 +88,13 @@ class Multi_Head_Attention(nn.Module):
     Implement Multi-Head Attention as shown in the right side from Figure 2 in the paper.
     """
 
-    def __init__(self, d_model=512, h=8, dropout=0.1):
+    def __init__(self, d_model=512, H=8, dropout=0.1):
         super().__init__()
-        assert d_model % h == 0, "d_model must be divisible by h"
+        assert d_model % H == 0, "d_model must be divisible by h"
 
         self.d_model = d_model
-        self.h = h  # Num heads
-        self.d_k = d_model // h  # Defaults then d_k=64
+        self.H = H  # Num heads
+        self.d_k = d_model // H  # Defaults then d_k=64
 
         # Linear for the Queries, Keys, and Values
         self.w_q = nn.Linear(d_model, d_model)
@@ -123,9 +120,9 @@ class Multi_Head_Attention(nn.Module):
         keys_value_seq_len = k.size(1) # keys and value have the same length
 
         # 1. Projection and reshape the quires, keys, and values and Reshape
-        q = self.w_q(q).view(batch_size, query_seq_len, self.h, self.d_k).transpose(1, 2)
-        k = self.w_k(k).view(batch_size, keys_value_seq_len, self.h, self.d_k).transpose(1, 2)
-        v = self.w_v(v).view(batch_size, keys_value_seq_len, self.h, self.d_k).transpose(1, 2)
+        q = self.w_q(q).view(batch_size, query_seq_len, self.H, self.d_k).transpose(1, 2)
+        k = self.w_k(k).view(batch_size, keys_value_seq_len, self.H, self.d_k).transpose(1, 2)
+        v = self.w_v(v).view(batch_size, keys_value_seq_len, self.H, self.d_k).transpose(1, 2)
 
         # 2. Scaled Dot-Product Attention
         out, self.attn_weights = scaled_dot_product_attention(q, k, v, mask, self.dropout)
@@ -142,12 +139,12 @@ def test():
     print("\n\nRunning MHA Test...")
 
     d_model = 512
-    h = 8
+    H = 8
     dropout = 0.1
     batch_size = 2
     seq_len = 10
 
-    MHA = Multi_Head_Attention(d_model, h, dropout)
+    MHA = Multi_Head_Attention(d_model, H, dropout)
     # print(MHA.dropout)
 
     # Inputs as they would come from the Embedding layer
@@ -167,3 +164,5 @@ def test():
 # test()
 
 # %%
+
+

@@ -1,6 +1,5 @@
 import os
 
-# TODO use a parent config for both configs, and make sure to set it so both configs need to implement all of the parents attributes
 
 class English_german_config:
     """
@@ -8,31 +7,30 @@ class English_german_config:
     """
     is_paper_config = False
 
-    d_model = 256  # All sub-layers in the model, as well as the embedding layers, produce outputs of dimension d_model = 512
+    d_model = 512  # All sub-layers in the model, as well as the embedding layers, produce outputs of dimension d_model = 512
 
 
 
     # ================== Encoder & Decoder ==================
-    h = 8  # How many H heads in the Multi-Head Attention
+    H = 8  # How many H heads in the Multi-Head Attention
     dropout = 0.1
-    d_ff = 1024
-    N = 4
-    enc_dec_N = 4  # Num of stacks of encoders and decoders
+    d_ff = 2048
+    N = 6 # Num of stacks of encoders and decoders
 
 
 
     # ================== Dataset ==================
-    max_seq_len = 100 # When training smaller model, not one from paper, to train faster we limit the size of each sequence.
+    max_seq_len = 128 # When training smaller model, not one from paper, to train faster we limit the size of each sequence.
     pos_seq_len = 5000  # Positional Encoding sequence length
-    batch_size = 64
+    batch_size = 128
     vocab_size = (
-        16_000  # Limit to let tokenizer trainer know when to stop merging sub-words.
+        37000  # Limit to let tokenizer trainer know when to stop merging sub-words.
     )
     tokenizer = "BPE"
     dataset_name = "WMT 2014 English-German"
 
-    # Percentage of database to download, 10% is ~450,000 sentences
-    perc_to_download: int = 10
+    # Percentage of database to download
+    perc_to_download: int = 50
 
     total_sentence_pairs = None  # The total number of English-German sentence pairs, will be set later in code.
     special_tokens = {  # The integer representations
@@ -45,11 +43,14 @@ class English_german_config:
 
 
     # ================== Training ==================
+    num_workers = 4
     warmup_steps = None  # It Depends on size of loaded database, it is set later in code.  Paper: 4_000
     step_num_limit = 100_000  # Total number of steps to train the model.
     num_epochs = 15
-    continue_from_chpt:bool = True # Continue training the model from a check point
-    checkpoint_name:str = "transformer_epoch_2_10_percent_ds.pt" # Checkpoint filename
+    continue_from_chpt:bool = False # Continue training the model from a check point
+
+    # Checkpoint filename to load! 🚨 NOTE: The same config that was used to train the checkpoint must be used to load it!
+    checkpoint_name:str = "" 
 
 
 

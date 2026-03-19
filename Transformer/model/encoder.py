@@ -105,14 +105,14 @@ class Encoder(nn.Module):
 def test():
     print("\n\nTesting the Encoder...")
     d_model = 512
-    h = 8
+    H = 8
     d_ff = 2048
     N = 6
     dropout = 0.1
     batch_size = 2
     seq_len = 10
 
-    base_enc_layer = EncoderLayer(d_model, h, d_ff, dropout)
+    base_enc_layer = EncoderLayer(d_model, H, d_ff, dropout)
     encoder = Encoder(base_enc_layer, N)
 
     dummy_input = torch.randn(batch_size, seq_len, d_model)

@@ -40,7 +40,14 @@ import torch.nn.functional as F
 # %%
 class FeedForwardNetwork(nn.Module):
     def __init__(self, d_model=512, d_ff=2048, dropout=0.1):
-        # TODO add docstring
+        """
+        Implement The Feed Forward Network layer
+
+        Args:
+            d_model: model size
+            d_ff: How much to expand the first layer in the FFN
+            dropout: The dropout rate
+        """
         super().__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)

@@ -18,14 +18,11 @@
 # %% [markdown]
 # **How the data flow through the model during training:**
 # - During training, we use **Teacher Forcing** method.
-#   - **Input:** The Encoder receives the full Source sequence, and creates a context vector representation of it. # TODO correct?
-#   - **Shifted Target:** The Decoder receives the shifted Target sequence, e.g., if the goal is to predict "The brown rabbit", the Decoder receives `<SOS>, The, brown]`.
+#   - **Input:** The Encoder receives the full Source sequence, and creates a context vector representation of it.
+#   - **Shifted Target:** The Decoder receives the shifted Target sequence, e.g., if the goal is to predict "The brown rabbit", the Decoder receives `[<SOS>, The, brown]`.
 #   - **Masking:** The padding mask ensures the model ignores the `<PAD>` tokens, and specifically the **Masked Multi-Head Attention** will ignore both the `<PAD>`, and the future tokens, e.g., (same example as shifted target) when the model is predicting "brown", it can't peek at the answer "rabbit".
 #   - **Decoder's output:** Produces a vector if size $d_{model} = 512$ for every token position.
-#   - **Generator:** *(The last two layers: linear→softmax)* take those $512$-dim vectors and projects them on the size of the vocabulary (tokenizer=37000).
-
-# %%
-# TODO the warmup in the markdown below is more complicated than it needs to be to be explained.
+#   - **Generator:** *(The last two layers: linear→softmax)* take those $512$-dim vectors and projects them on the size of the vocabulary (tokenizer=$37000$).
 
 # %% [markdown]
 #
@@ -41,20 +38,20 @@
 #       -  **Decay** $\text{min}( \text{stepNum}^{-0.5} > ...)$: After $4000$ steps, the $\text{stepNum}^{-0.5}$ is smaller inside the $\text{min}()$. This causes the learning rate to decrease following the inverse square root.  
 #          -  Paper: "This corresponds to increasing the learning rate linearly for the first $\text{warmupSteps}$ training steps, and decreasing it thereafter proportionally to the inverse square root of the step number. We used $\text{warmupSteps} = 4000$."
 #       -  The dim ($d^{-0.5}_{model}$): This scales the entire learning rate based on the model size.
-#   -  Note: that these $\quad d_{model} = 512,\quad \text{stepNum} = 100000,\quad \text{warmupSteps} = 4000$ is what the paper used to train on the full 4.5 million sentence from the **WMT14 dataset**, we will not use the entire dataset, the lrate will be updated differently depending on the size of the dataset.
-#   - **Dataset Size Adjustment:** 
-#     - **Example:** If we were to train on only $45088$ ($1$%) of the WMT14 en-de dataset with a batch_size $= 64$, than $45088/64 = 704$ **steps per epoch**.
-#        - The $= 704$ means the optimizer will update the model's weights $= 704$ times per epoch.
-#        - **Formulas:**
-#          - **1 Step (or iteration):** One forward pass + one backward pass on **one batch**.
-#          - **Steps Per Epoch** (i.e., $\text{warmupSteps}) =$ Total_sentence_pairs $\div$ batch_size
-#          - **Total Training Steps:** Steps per epoch $\times$ Total Epochs
-#          - So, in this example set $\text{warmupSteps} = 704$ so that the learning rate starts to decrease at about the end of the first epoch, which coincides with the end of the warmup and the model can start training. 
-#            - Result: 
-#              - Batch 1 & $\text{stepNum}$ = 1, learning rate is small.
-#              - Batch 704 & $\text{stepNum}$ = 704, learning rate is at its **peak** (end of epoch 1)
-#              - Batch 705 & $\text{stepNum}$ = 705, learning rate begins to **decay** (start of epoch 2)
-#        - This example is shown in `lrate_growth_example()` below
+#   -  Note: that these $\quad d_{model} = 512,\quad \text{stepNum} = 100000,\quad \text{warmupSteps} = 4000$ is what the paper used to train on the full 4.5 million sentence from the **WMT14 dataset**, I will not use the entire dataset, the lrate will be updated differently depending on the size of the dataset.
+#      - **Dataset Size Adjustment:** 
+#        - **Example:** If we were to train on only $45088$ sentence pairs ($1$% of the WMT14 en-de dataset) with a batch_size $= 64$, than $45088/64 = 704$ **steps per epoch**.
+#           - The $= 704$ means the optimizer will update the model's weights $= 704$ times per epoch.
+#           - **Formulas:**
+#             - **1 Step (or iteration) $=$** One forward pass + one backward pass on **one batch**.
+#             - **Steps Per Epoch** $=$ Total_sentence_pairs $\div$ batch_size
+#             - **Total Training Steps $=$** Steps per epoch $\times$ Total Epochs
+#             - So, in this example set $\text{warmupSteps} = 704$ so that the learning rate starts to decrease at about the end of the first epoch, which coincides with the end of the warmup and the model can start training. 
+#               - Result: 
+#                 - Batch $1$ & $\text{stepNum} = 1$, learning rate is small.
+#                 - Batch $704$ & $\text{stepNum} = 704$, learning rate is at its **peak** (end of epoch $1$)
+#                 - Batch $705$ & $\text{stepNum} = 705$, learning rate begins to **decay** (start of epoch $2$)
+#           - This example is shown in `lrate_growth_example()` below
 #
 
 # %% [markdown]
@@ -71,14 +68,12 @@
 #       - Its added to the loss
 
 # %%
-# <!-- #TODO make sure formulas are displayed correct on the repo -->
-
-# %%
 import torch.nn as nn
 import torch
 from torch.optim.lr_scheduler import LambdaLR
-from datetime import datetime
-
+from datetime import datetime, timedelta
+import time
+import os
 
 try:  # works when ran via main.py (package mode)
     from .utils import make_target_mask
@@ -102,7 +97,7 @@ if TYPE_CHECKING:  # for type checks example cfg: English_german_config below
 class Batch:
     def __init__(self, src, tgt=None, pad_token: int = 0):
         """
-        Handles token masking logic.
+        A batch in the dataloader.
 
         Args:
             src = A batch of tokenized Source Sequence sentences. Example: if batch_size=64, than 
@@ -111,9 +106,10 @@ class Batch:
             pad_token: The integer representation for the '<PAD>' token
         """
 
-        # TODO understand this?
         """Object to hold a batch of data with mask during training."""
         self.src = src
+
+        # Make source mask
         self.src_padding_mask = (src != pad_token).unsqueeze(-2).unsqueeze(-2)
 
         self.tgt = tgt
@@ -125,9 +121,10 @@ class Batch:
             # 🌟 OUTPUTS (SHIFTED RIGHT): We take all tokens except for the first one (<SOS>), this start with the first actual word and ends with <EOS>
             self.tgt_y = tgt[:, 1:] # this is what the model is trying to predict at each time step
 
+            # High future tokens so model doesn't cheat
             self.tgt_no_peek_mask = make_target_mask(self.tgt, pad_token)
 
-            # non_tokens: Used to divide the total loss by the number of non-padding tokens.
+            # non_tokens: Used to divide the total loss by the number of non-special tokens.
             self.non_tokens = (self.tgt_y != pad_token).data.sum()
 
 
@@ -139,7 +136,6 @@ def get_std_opt(model: Transformer, d_model=512, warmup_steps=4_000):
     """
     Get the scheduler and optimizer.
     """
-    # TODO understand this?
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=1,  # lr=1 so the scheduler controls the absolute value.
@@ -251,16 +247,73 @@ class SimpleLossCompute:
         if self.opt is not None:
             self.opt.step()
             self.opt.zero_grad()  # Clear gradients before the next batch.
-        return loss.item() * norm 
+        return loss.item() * norm
+
+
+# %% [markdown]
+# ## plot
+
+# %%
+import matplotlib.pyplot as plt
+
+
+def plot_loss_history(loss_history, cfg: English_german_config):
+    plt.figure(figsize=(12, 8))
+    plt.plot(loss_history, label="Raw Loss", alpha=0.3, color="blue")
+
+    if len(loss_history) > 100:
+        window = 100
+        import numpy as np
+
+        smoothed = np.convolve(loss_history, np.ones(window) / window, mode="valid")
+        plt.plot(
+            range(window - 1, len(loss_history)),
+            smoothed,
+            label="Smoothed Loss",
+            color="red",
+        )
+
+    plt.title(f"Training Loss - {cfg.perc_to_download}% of Dataset")
+    plt.xlabel("Steps")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.grid(True)
+
+    config_info = (
+        f"Model: d_model={cfg.d_model}, N={cfg.N}, h ={cfg.H}, d_ff={cfg.d_ff}\n"
+        f"Training: batch_size={cfg.batch_size}, vocab_size={cfg.vocab_size}, num_epochs={cfg.num_epochs}, step_limit={cfg.step_num_limit}, num_workers={cfg.num_workers}, "
+        f"max_seq={cfg.max_seq_len}, warmup_steps={cfg.warmup_steps},\n"
+        f"{cfg.perc_to_download}% Percent of {cfg.dataset_name} dataset, "
+        f"Total Sentence Pairs: {cfg.total_sentence_pairs},\n"
+        f"Final Step: {len(loss_history):,}"
+    )
+
+    # Place config info at bottom of plot
+    plt.figtext(
+        0.5,
+        0.01,
+        config_info,
+        wrap=True,
+        horizontalalignment="center",
+        fontsize=10,
+        bbox={"facecolor": "orange", "alpha": 0.1, "pad": 10},
+    )
+    plt.tight_layout(rect=[0, 0.10, 1, 1])
+
+    plot_path = os.path.join(
+        cfg.MODEL_DIR,
+        "checkpoints",
+        f"training_loss_plot_{cfg.perc_to_download}_percent_ds.png",
+    )
+    plt.savefig(plot_path)
+    print(f"Loss plot saved to {plot_path}")
+    plt.close()
 
 
 # %% [markdown]
 # ## Train Model
 
 # %%
-import os
-
-
 class TrainModel(nn.Module):
     def __init__(self, cfg: English_german_config, model: Transformer, device):
 
@@ -287,6 +340,10 @@ class TrainModel(nn.Module):
         # Track the steps. Once it reaches `step_num_limit` we end training
         self.step_counter = 0
 
+        self.loss_history = []
+
+        self.start_time = None
+
     def save_checkpoint(self, epoch, avg_loss):
         checkpoint_name = (
             f"transformer_epoch_{epoch+1}_{self.cfg.perc_to_download}_percent_ds.pt"
@@ -301,6 +358,7 @@ class TrainModel(nn.Module):
                 "optimizer_state_dict": self.optimizer.state_dict(),
                 "scheduler_state_dict": self.scheduler.state_dict(),
                 "step_counter": self.step_counter,
+                "loss_history": self.loss_history,
                 "loss": avg_loss,
             },
             checkpoint_path,
@@ -314,9 +372,14 @@ class TrainModel(nn.Module):
             start_epoch: Will depend on if we are training from a checkpoint or training a new model.
         """
         num_epochs = self.cfg.num_epochs
+        self.start_time = time.time()
+        total_steps_to_go = self.cfg.step_num_limit - self.step_counter
+
         print("\n" + "#" * 64)
         print(f"\nTraining Model")
-        print(f"Num epochs: {num_epochs} | device: {self.device}")
+        print(
+            f"Num epochs: {num_epochs} | device: {self.device} | Max steps {self.cfg.step_num_limit:,}"
+        )
         print("\n" + "#" * 64)
 
         for epoch in range(start_epoch, num_epochs):
@@ -330,10 +393,11 @@ class TrainModel(nn.Module):
                     f"Reached step limit: {self.cfg.step_num_limit}. Final Checkpoint..."
                 )
                 self.save_checkpoint(epoch=epoch, avg_loss=avg_loss)
-                return
+                break
 
             self.save_checkpoint(epoch=epoch, avg_loss=avg_loss)
 
+        plot_loss_history(loss_history=self.loss_history, cfg=self.cfg)
         print("Training complete!\n\n")
 
     def run_epoch(self, dataloader):
@@ -354,25 +418,48 @@ class TrainModel(nn.Module):
             tgt_y = batch.tgt_y.to(device)
             src_padding_mask = batch.src_padding_mask.to(device)
             tgt_no_peek_mask = batch.tgt_no_peek_mask.to(device)
+            non_tokens = batch.non_tokens.to(device)
 
             # Forward Pass (The model returns decoder output before the generator (last linear + softmax layers))
             output = self.model(src, tgt, src_padding_mask, tgt_no_peek_mask)
 
             # Loss compute, performs backward prop
-            loss = self.compute_loss(output, tgt_y, batch.non_tokens)
+            loss = self.compute_loss(output, tgt_y, non_tokens)
+
+            curr_step_loss = loss / non_tokens.item()
+            self.loss_history.append(curr_step_loss)
 
             total_loss += loss.item()
-            total_tokens += batch.non_tokens
+            total_tokens += non_tokens.item()
 
             # Update Learning Rate per step
             self.scheduler.step()
             self.step_counter += 1
 
             if i % 50 == 0:
-                print(
-                    f"{datetime.now().strftime('%m-%d %H:%M:%S')} | Step: {self.step_counter} | Loss: {loss/batch.non_tokens:.4f} | Tokens: {total_tokens}"
-                )
+                # Print steps plus how much time remains
+                elapsed = time.time() - self.start_time
+                steps_completed = self.step_counter
 
+                if steps_completed > 0:
+                    avg_time_per_step = elapsed / steps_completed
+                    remaining_steps = self.cfg.step_num_limit - steps_completed
+                    eta_seconds = remaining_steps * avg_time_per_step
+
+                    # Convert seconds to readable
+                    eta_str = str(timedelta(seconds=int(eta_seconds)))
+                    elapsed_str = str(timedelta(seconds=int(elapsed)))
+
+                    print(
+                        f"[{datetime.now().strftime('%m-%d %H:%M:%S')}] "
+                        f"Step: {self.step_counter}/{self.cfg.step_num_limit} | "
+                        f"Loss: {loss/non_tokens.item():.4f} | "
+                        f"Tokens: {total_tokens} | "
+                        f"Elapsed: {elapsed_str} | "
+                        f"ETA: {eta_str}"
+                    )
+
+        # Average the loss over the exact number of real words, excluding all the special tokens!
         return total_loss / total_tokens
 
 # %%

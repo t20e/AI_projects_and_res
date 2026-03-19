@@ -31,6 +31,8 @@ class Generator(nn.Module):
         self.proj = nn.Linear(d_model, vocab_size)
     
     def forward(self, x):
-        return torch.log_softmax(self.proj(x), dim=-1)
+        # return torch.log_softmax(self.proj(x), dim=-1)
+        # I use nn.CrossEntropyLoss() in the loss function, which will automatically apply softmax
+        return self.proj(x)
 
 # %%
