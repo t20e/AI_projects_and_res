@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..configs.english_german_config import English_german_config
-
+    from tokenizers import Tokenizer
 
 def load_wmt14_en_de(save_path: str, perc_to_download: int = 1) -> DatasetDict:
     """
@@ -22,7 +22,7 @@ def load_wmt14_en_de(save_path: str, perc_to_download: int = 1) -> DatasetDict:
     """
 
     print(
-        f"\n\nAttempting to get ({perc_to_download}%) of the WMT English-German dataset..."
+        f"\nAttempting to get ({perc_to_download}%) of the WMT English-German dataset..."
     )
     ds_name = "wmt14"
     ds_config = "de-en"
@@ -41,8 +41,14 @@ def get_training_corpus(dataset):
         yield example["translation"]["de"]
 
 
-def get_pre_tokenized_ds(cfg):
-    """Retrieves a Pre-Tokenized dataset"""
+def get_pre_tokenized_ds(cfg, load_wmt14_en_de, tokenizer: Tokenizer):
+    """Retrieves a Pre-Tokenized dataset
+
+    Args:
+        cfg: Configs
+        load_wmt14_en_de: Function to load the dataset
+        tokenizer: Tokenizer
+    """
 
     # Create storage directory
     tokenized_path = os.path.join(
@@ -53,18 +59,28 @@ def get_pre_tokenized_ds(cfg):
     if os.path.exists(tokenized_path):
         print(f"Loading existing pre-tokenized dataset from {tokenized_path}...")
         return load_from_disk(tokenized_path)
-    return None
+
+
+    print(f"Loading {cfg.perc_to_download}% of the dataset from disk...")
+    raw_ds = load_wmt14_en_de(
+        save_path=cfg.DATA_DIR, perc_to_download=cfg.perc_to_download
+    )
+    tokenized_ds = pre_tokenize_ds(cfg, raw_ds, tokenizer)
+    del raw_ds # we only need to tokenized ds.
+    return tokenized_ds
 
 
 def pre_tokenize_ds(cfg: English_german_config, ds, tokenizer):
     """
     Pre-Tokenizes the raw sentences into lists of integers token IDs. This is done once before training.
-    Saves the processed dataset to disk and to be loaded for later training with the same dataset percentage size.
+    Saves the processed dataset to disk and to be loaded for later training runs with the same dataset percentage size.
     """
+    print("\nPre-Tokenizing dataset...")
 
     # Create storage directory
     tokenized_path = os.path.join(
-        cfg.DATA_DIR, f"tokenized_{cfg.dataset_name}_dataset_{cfg.perc_to_download}_percent_ds"
+        cfg.DATA_DIR,
+        f"tokenized_{cfg.dataset_name}_dataset_{cfg.perc_to_download}_percent_ds",
     )
 
     def _process_example(e):

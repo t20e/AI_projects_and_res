@@ -13,6 +13,7 @@ from configs.english_german_config import English_german_config
 from model.bpe_tokenizer import build_and_train_BPE_tokenizer
 from model.Transformer import Transformer
 from model.beam_search import BeamSearch
+from utils.data_loader import load_wmt14_en_de, get_training_corpus
 
 
 def load_trained_model(cfg: English_german_config, device) -> Transformer:
@@ -68,7 +69,7 @@ if __name__ == "__main__":
 
     # TODO: Update with better model
     # NOTE: Config must be the same as the one used to train the this checkpoint!
-    cfg.checkpoint_name = "transformer_epoch_1_OVERFIT_TEST_percent_ds.pt"
+    cfg.checkpoint_name = ""
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -78,7 +79,9 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     tokenizer = build_and_train_BPE_tokenizer(
-        cfg=cfg, dataset_iterator=None
+        cfg=cfg,
+        load_wmt14_en_de=load_wmt14_en_de,
+        get_training_corpus=get_training_corpus,
     )
 
     model = load_trained_model(cfg, device)

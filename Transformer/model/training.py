@@ -531,6 +531,74 @@ class TrainModel(nn.Module):
                 f"ETA: {eta_str}"
             )
 
+
 # %%
+def overfit_test(cfg, train_dataloader, tokenizer, trainer):
+    """Overfit test: Train the model on a single sentence"""
+    print("\n\n\nTraining an Overfitted Model on a single sentence...")
+    single_batch = next(iter(train_dataloader))
+
+    # Keep only one sentence
+    single_batch.src = single_batch.src[0:1]
+    single_batch.tgt = single_batch.tgt[0:1]
+    single_batch.tgt_y = single_batch.tgt_y[0:1]
+    single_batch.src_padding_mask = single_batch.src_padding_mask[0:1]
+    single_batch.tgt_no_peek_mask = single_batch.tgt_no_peek_mask[0:1]
+    single_batch.non_tokens = (
+        single_batch.tgt_y != cfg.special_tokens["pad_token"]
+    ).data.sum()
+
+    fake_dataloader = [
+        single_batch
+    ] * 2000  # Multiple by 2000 to make a massive 1-epoch dataset, so it only runs for 1 epoch.
+
+    # Decode the first sentence in the batch
+    src_ids = single_batch.src[0].cpu().tolist()
+    tgt_ids = single_batch.tgt[0].cpu().tolist()
+
+    # Sentences
+    en_sentence = tokenizer.decode(src_ids, skip_special_tokens=True)
+    de_sentence = tokenizer.decode(tgt_ids, skip_special_tokens=True)
+
+    print(f"\n[Source English Sentence]: {en_sentence}")
+    print(f"\n[Target German Sentence]: {de_sentence}")
+    print(
+        "\n ⚠️ Copy the English sentence above to use in inference.py later. The German sentence should be the one generated for it!\n"
+    )
+
+    # Override the optimizer and scheduler
+    trainer.optimizer = torch.optim.Adam(trainer.model.parameters(), lr=5e-4)
+    trainer.compute_loss.opt = trainer.optimizer
+
+    # Turn off Dropout
+    for module in trainer.model.modules():
+        if isinstance(module, nn.Dropout):
+            module.p = 0
+
+    # Turn off label smoothing
+    trainer.criterion = nn.CrossEntropyLoss(
+        ignore_index=cfg.special_tokens["pad_token"],
+        reduction="sum",
+    )
+    trainer.compute_loss.criterion = trainer.criterion
+
+    # Dummy scheduler, so when its called doesn't nothing and code continues
+    class DummyScheduler:
+        def step(self):
+            pass
+
+        def state_dict(self):
+            return {}
+
+    trainer.scheduler = DummyScheduler()
+
+    trainer.cfg.num_epochs = 1
+    trainer.cfg.step_num_limit = 2000
+    trainer.cfg.perc_to_download = "OVERFIT_TEST"
+    trainer.cfg.max_batch_seq_tokens = 6_000
+
+    trainer.train(train_dataloader=fake_dataloader, start_epoch=0)
+
+    print("\n\nOverfitted model saved! Test it in inference!\n")
 
 # %%

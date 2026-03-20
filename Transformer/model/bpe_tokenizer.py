@@ -60,7 +60,8 @@ if TYPE_CHECKING:
 
 def build_and_train_BPE_tokenizer(
     cfg: English_german_config,
-    dataset_iterator: DatasetDict = None,
+    load_wmt14_en_de,
+    get_training_corpus
 ):
     """
     Build and train a Universal BPE tokenizer that the paper used for the standard WMT 2014 English-German dataset.
@@ -78,12 +79,20 @@ def build_and_train_BPE_tokenizer(
     # If a tokenizer has already been trained load it
     if os.path.exists(full_file_path):
         tokenizer = Tokenizer.from_file(full_file_path)
-        print(f"\nLoading existing Universal BPE tokenizer from: ({full_file_path})...")
+        print(f"\nLoading existing trained Universal BPE Tokenizer from: ({full_file_path})...")
         return tokenizer
 
     print(
-        f"\nNo existing tokenizer found. Training new BPE tokenizer on the full dataset...\n"
+        f"\nTraining new universal BPE tokenizer on 100% of the dataset...\n"
     )
+
+    # Download full dataset
+    full_raw_ds = load_wmt14_en_de(
+        save_path=cfg.DATA_DIR, perc_to_download=100
+    )
+
+    dataset_iterator=get_training_corpus(full_raw_ds)
+
 
     if dataset_iterator is None:
         raise ValueError("A dataset iterator must be provided to train the tokenizer for the first time!") 
@@ -126,6 +135,10 @@ def build_and_train_BPE_tokenizer(
     os.makedirs(save_path, exist_ok=True)
     tokenizer.save(full_file_path)
     print(f"\nUniversal Tokenizer saved to {full_file_path}")
+
+    # Delete the full dataset to save memory, even if we are still using 100% for training the Transformer(), it will be loaded from disk, very fast!
+    del full_raw_ds
+
     return tokenizer
 
 

@@ -19,12 +19,17 @@
 # ![residual_layer_normalization](../showcase_images/from_paper/residual_layer_norm.png)
 
 # %% [markdown]
+# Paper's **Post-Layer Normalization** Formula:
 #
 # $$\text{LayerNorm}(x + \text{Sublayer}(x))$$
 #
-# Where:
+# - Where:
+#   - $\text{Sublayer}(x)$ "is the function implemented by the sub-layer itself. To facilitate these residual connections, all sub-layers in the model, as well as the embedding layers, produce an output of dimension $d_{model} = 512$"
 #
-# - $\text{Sublayer}(x)$ "is the function implemented by the sub-layer itself. To facilitate these residual connections, all sub-layers in the model, as well as the embedding layers, produce an output of dimension $d_{model} = 512$"
+# ⭐️ Note: Modern best practice is to apply **Pre-Layer Normalization**, so instead of using above formula, we use:
+#
+# $$x + \text{Sublayer}(\text{LayerNorm}(x))$$
+#
 
 # %% [markdown]
 # ## Layer Normalization
@@ -38,9 +43,6 @@
 # - Utilizing layer normalization helps keep training stable, e,g., keeping gradients in check to prevent exploding gradients or vanishing gradients.
 #
 # LayerNorm looks at a vector for a single token and ensures its mean is $0$ and its standard deviation is $1$. Then, it applies two learned parameters: $\gamma$ (gamma) to scale it, and $\beta$ (beta) to shift it.
-
-# %%
-# TODO review markdown adn code
 
 # %%
 import torch.nn as nn
@@ -59,12 +61,12 @@ class LayerNorm(nn.Module):
 
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
+        var = x.var(-1, unbiased=False, keepdim=True)
+        return self.gamma * (x - mean) / torch.sqrt(var + self.eps) + self.beta
+    
         # std = x.std(-1, keepdim=True)
         # return self.gamma * (x - mean) / (std + self.eps) + self.beta
 
-        # TODO fixed?
-        var = x.var(-1, unbiased=False, keepdim=True)
-        return self.gamma * (x - mean) / torch.sqrt(var + self.eps) + self.beta
         
 
 
@@ -93,18 +95,6 @@ class ResidualConnection(nn.Module):
         out = sublayer(self.norm(x))
         out = self.dropout(out)
         return x + out
-
-        #TODO fixed?
-        # 1. Apply sublayer
-        out = sublayer(x)
-        # 2. Apply dropout
-        out = self.dropout(out)
-        # 3. Add to original input (residual)
-        x = x + out
-        # 4. Apply LayerNorm
-        return self.norm(x)
-        # Note: Modern best practice is to apply LayerNorm before the sublayer (Pre-LN)   
-        #   Example: return x + self.dropout(sublayer(self.norm(x)))
 
 # %%
 

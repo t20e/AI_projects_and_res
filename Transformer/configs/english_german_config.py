@@ -22,13 +22,13 @@ class English_german_config:
     # ================== Dataset ==================
     pos_seq_len = 5000  # Positional Encoding sequence length
     max_indiv_seq_len = 128 # Applies to individual sentences
-    max_batch_seq_tokens = 6_000 # #TODO Paper: 25_000. Applies sequence limit to an entire batch of sequences.
+    max_batch_seq_tokens = 25_000 # Paper: 25_000. Applies sequence limit to an entire batch of sequences.
     vocab_size = 37_000 # Limit to let tokenizer trainer know when to stop merging sub-words.
     tokenizer = "BPE"
     dataset_name = "WMT_2014_English_German"
 
     # Percentage of database to download
-    perc_to_download: int = 1 #TODO test with 50
+    perc_to_download: int = 50
 
     total_sentence_pairs = None  # The total number of English-German sentence pairs, will be set later in code.
     special_tokens = {  # The integer representations
@@ -54,8 +54,8 @@ class English_german_config:
     # Checkpoint filename to load! 🚨 NOTE: The same config that was used to train the checkpoint must be used to load it!
     checkpoint_name:str = "" 
 
-    # Train a overfitted model on the dataset, and see how it performs on one single sentence. Also change dataset percent to 1!
-    train_overfitted_model:bool = True
+    # Train a overfitted model on the dataset, and see how it performs on one single sentence. Also change `perc_to_download=1`
+    train_overfitted_model:bool = False
 
 
 
@@ -83,8 +83,8 @@ class English_german_config:
         print(f"  - Dropout = {cfg.dropout}")
 
         print(f"\n[Dataset & Tokenizer]")
-        print(f"  - dataset_name = {cfg.dataset_name}%")
-        print(f"  - perc_to_download = {cfg.perc_to_download}")
+        print(f"  - dataset_name = {cfg.dataset_name}")
+        print(f"  - perc_to_download = {cfg.perc_to_download}%")
         print(f"  - Tokenizer = {cfg.tokenizer}")
         print(f"  - pos_seq_len = {cfg.pos_seq_len}")
         print(f"  - total_sentence_pairs = {cfg.total_sentence_pairs}")

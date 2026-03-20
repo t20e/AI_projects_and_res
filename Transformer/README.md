@@ -11,7 +11,6 @@ Useful Resources:
 
 **TODO:**
 
-- [ ] Train an overfitted model on the dataset, and see how it performs.
 - [ ] Once I have a good model store it on huggingface with its tokenizer, and let user know to download it.
 
 - [ ] If I create the EasyJupyter library implement it here.
@@ -51,7 +50,7 @@ conda activate transformer_env;
 
 ### Run Inference Translation With My Pre-Trained Model
 
-1. Download model and tokenizer from here #TODO
+1. Download model and tokenizer from huggingface here #TODO
    - Config is already set for this pre-trained model!
 
 ```bash
