@@ -47,7 +47,7 @@ Goal: Identify objects in images.
 
 - 🚨 Note: The VOC Dataset is very large (~4GB). The main goal with this repo is to overfit to a number of images which is included, however, if you want to download and train on the entire dataset then add `--download_VOC` flag to `python setup.py`
 
-    - If any errors occur when downloading the dataset; then manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `data/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
+    - If any errors occur when downloading the dataset; manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `data/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
 
 1. Create a conda environment.
     ```shell 

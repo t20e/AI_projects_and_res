@@ -56,7 +56,7 @@ def get_pre_tokenized_ds(cfg):
     return None
 
 
-def pre_tokenize(cfg: English_german_config, ds, tokenizer):
+def pre_tokenize_ds(cfg: English_german_config, ds, tokenizer):
     """
     Pre-Tokenizes the raw sentences into lists of integers token IDs. This is done once before training.
     Saves the processed dataset to disk and to be loaded for later training with the same dataset percentage size.
@@ -64,13 +64,12 @@ def pre_tokenize(cfg: English_german_config, ds, tokenizer):
 
     # Create storage directory
     tokenized_path = os.path.join(
-        cfg.DATA_DIR, f"tokenized_{cfg.dataset_name}_{cfg.perc_to_download}_percent_ds"
+        cfg.DATA_DIR, f"tokenized_{cfg.dataset_name}_dataset_{cfg.perc_to_download}_percent_ds"
     )
 
     def _process_example(e):
         en_encoded = [tokenizer.encode(item["en"]).ids for item in e["translation"]]
         de_encoded = [tokenizer.encode(item["de"]).ids for item in e["translation"]]
-
         return {"src_ids": en_encoded, "tgt_ids": de_encoded}
 
     # batched=True uses Tokenizer's rust backend, which speeds up data prep

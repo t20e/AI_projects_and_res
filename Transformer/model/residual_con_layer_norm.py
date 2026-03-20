@@ -40,6 +40,9 @@
 # LayerNorm looks at a vector for a single token and ensures its mean is $0$ and its standard deviation is $1$. Then, it applies two learned parameters: $\gamma$ (gamma) to scale it, and $\beta$ (beta) to shift it.
 
 # %%
+# TODO review markdown adn code
+
+# %%
 import torch.nn as nn
 import torch
 
@@ -56,8 +59,13 @@ class LayerNorm(nn.Module):
 
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
-        std = x.std(-1, keepdim=True)
-        return self.gamma * (x - mean) / (std + self.eps) + self.beta
+        # std = x.std(-1, keepdim=True)
+        # return self.gamma * (x - mean) / (std + self.eps) + self.beta
+
+        # TODO fixed?
+        var = x.var(-1, unbiased=False, keepdim=True)
+        return self.gamma * (x - mean) / torch.sqrt(var + self.eps) + self.beta
+        
 
 
 # %% [markdown]
@@ -81,6 +89,12 @@ class ResidualConnection(nn.Module):
         self.dropout = nn.Dropout(dropout)
     
     def forward(self, x, sublayer):
+        # Note: Paper used (Post_LN), e.g., self.norm(x). But modern best practice is to apply LayerNorm before the sublayer (Pre-LN). I am using the latter.  
+        out = sublayer(self.norm(x))
+        out = self.dropout(out)
+        return x + out
+
+        #TODO fixed?
         # 1. Apply sublayer
         out = sublayer(x)
         # 2. Apply dropout
@@ -89,7 +103,6 @@ class ResidualConnection(nn.Module):
         x = x + out
         # 4. Apply LayerNorm
         return self.norm(x)
-    
         # Note: Modern best practice is to apply LayerNorm before the sublayer (Pre-LN)   
         #   Example: return x + self.dropout(sublayer(self.norm(x)))
 

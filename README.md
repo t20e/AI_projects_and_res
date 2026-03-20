@@ -5,8 +5,10 @@
 *Dev Note:* Every sub project must have its own .gitignore
 
 
-
 ### How To Download A Sub-Project
+
+- [ ] #TODO change this using sparse like in the transformer project!
+  - [ ] Also add that to yolo_v1_orig!
 
 Unfortunately Github makes cloning a sub-project difficult, the workaround is to use Github's `github.dev` web-based editor.
 

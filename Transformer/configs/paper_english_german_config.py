@@ -57,6 +57,9 @@ class Paper_english_german_config:
     continue_from_chpt:bool = False # Continue training the model from a check point
     checkpoint_name:str = "" # Checkpoint filename
 
+    # Train a overfitted model on the dataset, and see how it performs on one single sentence. Also change dataset percent to 1!
+    train_overfitted_model:bool = False
+
     # ================== Folder Structure ==================
     CFG_PATH = os.path.dirname(os.path.abspath(__file__))
     PROJECT_ROOT = os.path.abspath(os.path.join(CFG_PATH, ".."))
@@ -68,3 +71,36 @@ class Paper_english_german_config:
         "./model/saved_models",
         "./model/checkpoints",
     ]
+
+
+    @classmethod
+    def print(cfg):
+        print(f"{'='*20} Config {'='*20}")
+
+        print(f"\n[Model Architecture]")
+        print(f"  - d_model = {cfg.d_model}")
+        print(f"  - N Stacks = {cfg.N}")
+        print(f"  - Heads (H) = {cfg.H}")
+        print(f"  - d_ff = {cfg.d_ff}")
+        print(f"  - Dropout = {cfg.dropout}")
+
+        print(f"\n[Dataset & Tokenizer]")
+        print(f"  - dataset_name = {cfg.dataset_name}%")
+        print(f"  - perc_to_download = {cfg.perc_to_download}")
+        print(f"  - Tokenizer = {cfg.tokenizer}")
+        print(f"  - pos_seq_len = {cfg.pos_seq_len}")
+        print(f"  - total_sentence_pairs = {cfg.total_sentence_pairs}")
+        print(f"  - vocab_size = {cfg.vocab_size}")
+        print(f"  - Max Seq Length (Individual) = {cfg.max_indiv_seq_len}")
+        print(f"  - Max Seq Length (Batch) = {cfg.max_batch_seq_tokens}")
+
+        print(f"\n[Training]")
+        print(f"  - num_workers = {cfg.num_workers}")
+        print(f"  - warmup_steps = {cfg.warmup_steps}")
+        print(f"  - step_num_limit = {cfg.step_num_limit}")
+        print(f"  - num_epochs = {cfg.num_epochs}")
+        print(f"  - continue_from_chpt = {cfg.continue_from_chpt}")
+        print(f"  - checkpoint_name = {cfg.checkpoint_name}")
+        print(f"  - train_overfitted_model = {cfg.train_overfitted_model}")
+
+        print("\n\n")

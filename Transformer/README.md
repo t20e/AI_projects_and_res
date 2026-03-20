@@ -11,7 +11,7 @@ Useful Resources:
 
 **TODO:**
 
-- [ ]  Calculate **BLEU** scores
+- [ ] Train an overfitted model on the dataset, and see how it performs.
 - [ ] Once I have a good model store it on huggingface with its tokenizer, and let user know to download it.
 
 - [ ] If I create the EasyJupyter library implement it here.
@@ -39,9 +39,12 @@ Useful Resources:
 
 1. **Prerequisites**:
    - Must have Conda installed.
-2. Follow the [instructions here](https://github.com/t20e/AI_projects_and_res?tab=readme-ov-file#how-to-download-a-sub-project) on how to download just this project from repository.
 
 ```bash
+git clone --filter=blob:none --sparse https://github.com/t20e/AI_projects_and_res.git;
+cd AI_projects_and_res;
+git sparse-checkout set Transformer;
+cd Transformer;
 conda env create -f environment.yml;
 conda activate transformer_env;
 ```

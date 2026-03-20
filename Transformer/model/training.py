@@ -40,11 +40,11 @@
 #       -  The dim ($d^{-0.5}_{model}$): This scales the entire learning rate based on the model size.
 #   -  Note: that these $\quad d_{model} = 512,\quad \text{stepNum} = 100000,\quad \text{warmupSteps} = 4000$ is what the paper used to train on the full 4.5 million sentence from the **WMT14 dataset**, I will not use the entire dataset, the lrate will be updated differently depending on the size of the dataset.
 #      - **Dataset Size Adjustment:** 
-#        - **Example:** If we were to train on only $45088$ sentence pairs ($1$% of the WMT14 en-de dataset) with a batch_size $= 64$, than $45088/64 = 704$ **steps per epoch**.
-#           - The $= 704$ means the optimizer will update the model's weights $= 704$ times per epoch.
+#        - **Example:** If we were to train on $45088$ sentence pairs ($1$% of the WMT14 en-de dataset) grouped dynamically by a `max_batch_seq_tokens` limit, the exact number of sentences per batch fluctuates. Let's assume this averages out to $704$ **steps per epoch**.
+#           - The $= 704$ means the optimizer will update the model's weights $704$ times per epoch.
 #           - **Formulas:**
 #             - **1 Step (or iteration) $=$** One forward pass + one backward pass on **one batch**.
-#             - **Steps Per Epoch** $=$ Total_sentence_pairs $\div$ batch_size
+#             - **Steps Per Epoch** $\approx$ Total_tokens_in_dataset $\div$ max_batch_seq_tokens
 #             - **Total Training Steps $=$** Steps per epoch $\times$ Total Epochs
 #             - So, in this example set $\text{warmupSteps} = 704$ so that the learning rate starts to decrease at about the end of the first epoch, which coincides with the end of the warmup and the model can start training. 
 #               - Result: 
@@ -223,20 +223,19 @@ def lrate(step_num, d_model, warmup_steps, factor=1.0):
 
 # %%
 def lrate_growth_example():
-    batch_size = 64
+    # How many steps make up one epoch
+    approx_steps_per_epoch = 704  # In dynamic token-based batching, steps_per_epoch = is determined at runtime. This estimate is where 1 epoch ~= 704 steps.
     total_sentences = 45088
     d_model = 512
-    # Calculate how many steps (batches) make up one epoch
-    steps_per_epoch = total_sentences // batch_size
-    warmup = steps_per_epoch
+
+    warmup = approx_steps_per_epoch
 
     print(f"Lrate example on 1% of WMT 14 dataset")
-    print(f"Batch size: {batch_size}")
     print(f"Total sentences in dataset: {total_sentences:,}")
-    print(f"Steps per epoch: {steps_per_epoch:,}")
-    print(f"Warmup ends at step: {warmup} (End of epoch 1)")
+    print(f"Approx Steps per epoch: {approx_steps_per_epoch:,}")
+    print(f"Warmup ends at step: {warmup} (~ End of epoch 1)")
     print(
-        f"\n\n{'Step':>8} | {'Approx Epoch':>12} | {'Sentences Seen':>16} | {'Learning-Rate':>12} | {'Phase'}"
+        f"\n\n{'Step':>8} | {'Approx Epoch':>12} | {'Approx Sentences Seen':>18} | {'Learning-Rate':>12} | {'Phase'}"
     )
 
     milestones = [
@@ -252,9 +251,11 @@ def lrate_growth_example():
     for step in milestones:
         lr = lrate(step_num=step, d_model=d_model, factor=1.0, warmup_steps=warmup)
 
-        # Calculate progress
-        curr_epoch = step / steps_per_epoch
-        sentences_seen = step * batch_size
+        # Calculate approx progress
+        curr_epoch = step / approx_steps_per_epoch
+
+        # Estimate sentences seen 
+        approx_sentences_seen = int(curr_epoch * total_sentences)
 
         if step <= warmup:
             phase = "Warmup (Linear up ↑)"
@@ -262,7 +263,7 @@ def lrate_growth_example():
             phase = "Decay (Inverse Square Root ↓)"
 
         print(
-            f"{step:8d} | {curr_epoch:12.2f} | {sentences_seen:16,d} | {lr:12.8f} | {phase}"
+            f"{step:8d} | {curr_epoch:12.2f} | {approx_sentences_seen:21,d} | {lr:13.8f} | {phase}"
         )
 
 
@@ -334,11 +335,11 @@ def plot_loss_history(loss_history, cfg: English_german_config):
 
     config_info = (
         f"Model: d_model={cfg.d_model}, N={cfg.N}, h ={cfg.H}, d_ff={cfg.d_ff}\n"
-        f"Training: batch_size={cfg.batch_size}, vocab_size={cfg.vocab_size}, num_epochs={cfg.num_epochs}, step_limit={cfg.step_num_limit}, num_workers={cfg.num_workers}, max_batch_seq_tokens={cfg.max_batch_seq_tokens}, "
+
+        f"Training: vocab_size={cfg.vocab_size}, num_epochs={cfg.num_epochs}, step_num_limit={cfg.step_num_limit}, num_workers={cfg.num_workers}, max_batch_seq_tokens={cfg.max_batch_seq_tokens}, "
         f"max_indiv_seq_len={cfg.max_indiv_seq_len}, warmup_steps={cfg.warmup_steps},\n"
         f"{cfg.perc_to_download}% Percent of {cfg.dataset_name} dataset, "
         f"Total Sentence Pairs: {cfg.total_sentence_pairs},\n"
-        f"Final Step: {len(loss_history):,}"
     )
 
     # Place config info at bottom of plot
@@ -480,7 +481,7 @@ class TrainModel(nn.Module):
             loss = self.compute_loss(output, tgt_y, non_tokens)
 
             curr_step_loss = loss / non_tokens.item()
-            self.loss_history.append(curr_step_loss)
+            self.loss_history.append(curr_step_loss.item())
 
             total_loss += loss.item()
             total_tokens += non_tokens.item()
@@ -489,7 +490,7 @@ class TrainModel(nn.Module):
             self.scheduler.step()
             self.step_counter += 1
 
-            if i % 10 == 0:
+            if i % 50 == 0:
                 self.print_step_info(
                     total_tokens, loss, non_tokens, num_batches=len(dataloader)
                 )

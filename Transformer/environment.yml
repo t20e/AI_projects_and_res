@@ -5,11 +5,14 @@ channels:
   - defaults
 dependencies:
   - python>=3.14
+  - ipykernel>=7.2.0
   - pytorch>=2.10
   - numpy>=2.4.2
   - matplotlib>=3.10.8
-  - pip
+  - pip>=26.0.1
   - pip:
     - tokenizers>=0.22.2
     - datasets>=4.7.0
     - jupytext>=1.19.1
+    - evaluate>=0.4.6
+    - SacreBLEU>=2.6.0

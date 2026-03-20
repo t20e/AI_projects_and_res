@@ -40,6 +40,7 @@ def translate_sentence(english_input, model, tokenizer, cfg, device):
     pad_symbol = cfg.special_tokens["pad_token"]
     src_padding_mask = (src_tensor != pad_symbol).unsqueeze(-2).unsqueeze(-2).to(device)
 
+    # Failsafe so model does not get stuck in an infinite loop generating gibberish. If you feed model a 10-word English sentence, the max_len is set to $10+50=60$. From paper: "We set the maximum output length during inference to input length + 50, but terminate early when possible"
     max_len = src_tensor.size(1) + 50
 
     with torch.no_grad():
@@ -63,10 +64,11 @@ def translate_sentence(english_input, model, tokenizer, cfg, device):
 if __name__ == "__main__":
 
     cfg = English_german_config()
+    English_german_config.print()
 
-
+    # TODO: Update with better model
     # NOTE: Config must be the same as the one used to train the this checkpoint!
-    cfg.checkpoint_name = "transformer_epoch_1_50_percent_ds.pt"
+    cfg.checkpoint_name = "transformer_epoch_1_OVERFIT_TEST_percent_ds.pt"
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -76,15 +78,16 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     tokenizer = build_and_train_BPE_tokenizer(
-        cfg=cfg, perc_to_download=cfg.perc_to_download, dataset_iterator=None
+        cfg=cfg, dataset_iterator=None
     )
 
     model = load_trained_model(cfg, device)
 
-    print("\n\n\nType 'quit', 'exit', 'q' to quit!")
+    print("\n\nUsing device:", device)
+    print("\nType 'quit', 'exit', 'q' to quit!")
     while True:
-        english_input = input("\nEnglish you want to translate to german: ")
+        english_input = input("\nEnglish you want to translate to German: ")
         if english_input.lower() in ["quit", "exit", "q"]:
             break
         german_output = translate_sentence(english_input, model, tokenizer, cfg, device)
-        print(f"German: {german_output}")
+        print(f"\nGerman Translation: {german_output}")

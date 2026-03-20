@@ -22,15 +22,13 @@ class English_german_config:
     # ================== Dataset ==================
     pos_seq_len = 5000  # Positional Encoding sequence length
     max_indiv_seq_len = 128 # Applies to individual sentences
-    max_batch_seq_tokens = 6400 # Paper: 25_000. Applies sequence limit to an entire batch of sequences.
-    vocab_size = (
-        37000  # Limit to let tokenizer trainer know when to stop merging sub-words.
-    )
+    max_batch_seq_tokens = 6_000 # #TODO Paper: 25_000. Applies sequence limit to an entire batch of sequences.
+    vocab_size = 37_000 # Limit to let tokenizer trainer know when to stop merging sub-words.
     tokenizer = "BPE"
     dataset_name = "WMT_2014_English_German"
 
     # Percentage of database to download
-    perc_to_download: int = 50
+    perc_to_download: int = 1 #TODO test with 50
 
     total_sentence_pairs = None  # The total number of English-German sentence pairs, will be set later in code.
     special_tokens = {  # The integer representations
@@ -48,13 +46,16 @@ class English_german_config:
 
     # Either num_epochs or step_num_limit is reached first, and training stops.
     step_num_limit = 100_000  # Total number of steps to train the model.
-    num_epochs = 15 # Paper trained til step_num_limit: "We trained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the bottom line of table 3), step time was 1.0 seconds. The big models were trained for 300,000 steps (3.5 days)."
+    num_epochs = 1 # Paper trained til step_num_limit: "We trained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the bottom line of table 3), step time was 1.0 seconds. The big models were trained for 300,000 steps (3.5 days)."
 
 
     continue_from_chpt:bool = False # Continue training the model from a check point
 
     # Checkpoint filename to load! 🚨 NOTE: The same config that was used to train the checkpoint must be used to load it!
     checkpoint_name:str = "" 
+
+    # Train a overfitted model on the dataset, and see how it performs on one single sentence. Also change dataset percent to 1!
+    train_overfitted_model:bool = True
 
 
 
@@ -68,3 +69,36 @@ class English_german_config:
         "./model/saved_models",
         "./model/checkpoints",
     ]
+
+
+    @classmethod
+    def print(cfg):
+        print(f"{'='*20} Config {'='*20}")
+
+        print(f"\n[Model Architecture]")
+        print(f"  - d_model = {cfg.d_model}")
+        print(f"  - N Stacks = {cfg.N}")
+        print(f"  - Heads (H) = {cfg.H}")
+        print(f"  - d_ff = {cfg.d_ff}")
+        print(f"  - Dropout = {cfg.dropout}")
+
+        print(f"\n[Dataset & Tokenizer]")
+        print(f"  - dataset_name = {cfg.dataset_name}%")
+        print(f"  - perc_to_download = {cfg.perc_to_download}")
+        print(f"  - Tokenizer = {cfg.tokenizer}")
+        print(f"  - pos_seq_len = {cfg.pos_seq_len}")
+        print(f"  - total_sentence_pairs = {cfg.total_sentence_pairs}")
+        print(f"  - vocab_size = {cfg.vocab_size}")
+        print(f"  - Max Seq Length (Individual) = {cfg.max_indiv_seq_len}")
+        print(f"  - Max Seq Length (Batch) = {cfg.max_batch_seq_tokens}")
+
+        print(f"\n[Training]")
+        print(f"  - num_workers = {cfg.num_workers}")
+        print(f"  - warmup_steps = {cfg.warmup_steps}")
+        print(f"  - step_num_limit = {cfg.step_num_limit}")
+        print(f"  - num_epochs = {cfg.num_epochs}")
+        print(f"  - continue_from_chpt = {cfg.continue_from_chpt}")
+        print(f"  - checkpoint_name = {cfg.checkpoint_name}")
+        print(f"  - train_overfitted_model = {cfg.train_overfitted_model}")
+
+        print("\n\n")

@@ -60,71 +60,73 @@ if TYPE_CHECKING:
 
 def build_and_train_BPE_tokenizer(
     cfg: English_german_config,
-    perc_to_download: int,
     dataset_iterator: DatasetDict = None,
 ):
     """
-    Build and train the BPE tokenizer that the paper used for the standard WMT 2014 English-German dataset.
+    Build and train a Universal BPE tokenizer that the paper used for the standard WMT 2014 English-German dataset.
+     - It is trained on the full dataset, so it can be used with any Transformer() model with different dataset percentages.
 
     Args:
         cfg: Adds the correct vocab_size to it.
-        perc_to_download: Percentage of the database to append to BPE tokenizer filename.
         dataset_iterator: None if loading tokenizer for inference, else dataset iterator.
     """
 
     save_path = os.path.join(cfg.MODEL_DIR, "saved_models", "tokenizer")
-    file_name = f"wmt_14_shared_bpe_tokenizer_{perc_to_download}_ds_percent.json"
+    file_name = f"wmt_14_shared_bpe_tokenizer_universal.json"
     full_file_path = os.path.join(save_path, file_name)
 
-    # Check if a tokenizer has already been trained for this dataset size
+    # If a tokenizer has already been trained load it
     if os.path.exists(full_file_path):
         tokenizer = Tokenizer.from_file(full_file_path)
-        print(f"\nLoading existing BPE tokenizer from: ({full_file_path})...")
+        print(f"\nLoading existing Universal BPE tokenizer from: ({full_file_path})...")
         return tokenizer
-    else:
-        print(
-            f"\nNo existing tokenizer found. Training new BPE tokenizer on {perc_to_download}% of {cfg.dataset_name} of dataset...\n"
-        )
 
-        # Init BPE model
-        tokenizer = Tokenizer(BPE(unk_token="<UNK>"))
+    print(
+        f"\nNo existing tokenizer found. Training new BPE tokenizer on the full dataset...\n"
+    )
 
-        # Set the Pre-Tokenizer. Turns "The rabbit" → ["_The", "_rabbit"]
-        tokenizer.pre_tokenizer = (
-            pre_tokenizers.Metaspace()  # Paper used used whitespace -> pre_tokenizers.Whitespace()
-        )
+    if dataset_iterator is None:
+        raise ValueError("A dataset iterator must be provided to train the tokenizer for the first time!") 
 
-        # Tell the tokenizer how to merge sub-words back into words, e.g., ["rab", "bit"] → "rabbit"
-        #   and ["_The", "_rabbit"] → "The rabbit"
-        tokenizer.decoder = decoders.Metaspace()  # Paper used -> decoders.BPEDecoder()
+    # Init BPE model
+    tokenizer = Tokenizer(BPE(unk_token="<UNK>"))
 
-        # Note: If you don't have enough memory to store large parts of the dataset, for example a massive paragraph than use a truncation -> tokenizer.enable_truncation(max_length=...)
+    # Set the Pre-Tokenizer. Turns "The rabbit" → ["_The", "_rabbit"]
+    tokenizer.pre_tokenizer = (
+        pre_tokenizers.Metaspace()  # Paper used used whitespace -> pre_tokenizers.Whitespace()
+    )
 
-        # Configure the Trainer
-        trainer = BpeTrainer(
-            vocab_size=cfg.vocab_size,
-            special_tokens=["<PAD>", "<UNK>", "<SOS>", "<EOS>"],
-            # Integer representations: <PAD> = 0, "<UNK>" = 1, "<SOS>" = 2,  "<EOS>" = 3
-            show_progress=True,
-        )
+    # Tell the tokenizer how to merge sub-words back into words, e.g., ["rab", "bit"] → "rabbit"
+    #   and ["_The", "_rabbit"] → "The rabbit"
+    tokenizer.decoder = decoders.Metaspace()  # Paper used -> decoders.BPEDecoder()
 
-        # Train the tokenizer on the shared dataset
-        tokenizer.train_from_iterator(dataset_iterator, trainer=trainer)
+    # Note: If you don't have enough memory to store large parts of the dataset, for example a massive paragraph than use a truncation -> tokenizer.enable_truncation(max_length=...)
 
-        # Apply the post-processor whether we loaded or trained the tokenizer to be safe.
-        tokenizer.post_processor = processors.TemplateProcessing(
-            single="<SOS> $A <EOS>",  # $A is the sentence sequence tokens.
-            special_tokens=[
-                ("<SOS>", tokenizer.token_to_id("<SOS>")),
-                ("<EOS>", tokenizer.token_to_id("<EOS>")),
-            ],
-        )
+    # Configure the Trainer
+    trainer = BpeTrainer(
+        vocab_size=cfg.vocab_size,
+        special_tokens=["<PAD>", "<UNK>", "<SOS>", "<EOS>"],
+        # Integer representations: <PAD> = 0, "<UNK>" = 1, "<SOS>" = 2,  "<EOS>" = 3
+        show_progress=True,
+    )
 
-        # Save the tokenizer
-        os.makedirs(save_path, exist_ok=True)
-        tokenizer.save(full_file_path)
-        print(f"\nTokenizer saved to {full_file_path}")
-        return tokenizer
+    # Train the tokenizer on the shared dataset
+    tokenizer.train_from_iterator(dataset_iterator, trainer=trainer)
+
+    # Apply the post-processor whether we loaded or trained the tokenizer to be safe.
+    tokenizer.post_processor = processors.TemplateProcessing(
+        single="<SOS> $A <EOS>",  # $A is the sentence sequence tokens.
+        special_tokens=[
+            ("<SOS>", tokenizer.token_to_id("<SOS>")),
+            ("<EOS>", tokenizer.token_to_id("<EOS>")),
+        ],
+    )
+
+    # Save the tokenizer
+    os.makedirs(save_path, exist_ok=True)
+    tokenizer.save(full_file_path)
+    print(f"\nUniversal Tokenizer saved to {full_file_path}")
+    return tokenizer
 
 
 # %%
