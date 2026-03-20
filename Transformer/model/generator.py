@@ -32,7 +32,7 @@ class Generator(nn.Module):
     
     def forward(self, x):
         # return torch.log_softmax(self.proj(x), dim=-1)
-        # I use nn.CrossEntropyLoss() in the loss function, which will automatically apply softmax
+        # NOTE: I use nn.CrossEntropyLoss() in the loss function, which will automatically apply softmax. You will have to apply softmax during inference, after calling the generator!
         return self.proj(x)
 
 # %%

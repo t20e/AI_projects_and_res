@@ -3,6 +3,7 @@ from datasets import load_dataset
 import torch.nn as nn
 import torch
 
+
 from configs.english_german_config import English_german_config
 from model.bpe_tokenizer import build_and_train_BPE_tokenizer
 from model.Transformer import Transformer
@@ -78,6 +79,7 @@ if __name__ == "__main__":
 
     # ====== Init model ======
     model = Transformer(cfg=cfg)
+    model.to(device)
 
     trainer = TrainModel(cfg, model, device=device)
 
@@ -87,15 +89,9 @@ if __name__ == "__main__":
         start_epoch = load_checkpoint(trainer, cfg, device)
     else:
         # Xavier Init
-        model.initialize_weight()
+        model.initialize_weights()
 
-    # Tie Weights:💡 From paper: "In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]."
-    #   - The pre-softmax linear transformation is the Generator, which is the last softmax + linear in the model.
-    #   - So, we need to share weights between the scr_embed (Source Embedding), tgt_embed (Target Embedding), and the generator!
-    shared_weights = model.src_embed[0].look_up_table.weight
-    model.tgt_embed[0].look_up_table.weight = shared_weights
-    model.generator.proj.weight = shared_weights
-
-    model.to(device)
 
     trainer.train(train_dataloader, start_epoch=start_epoch)
+
+ 

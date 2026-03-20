@@ -30,7 +30,7 @@
 #     3. Beam Search takes these logits, applies a **log-softmax** to get log probabilities, and selects the top $\boldsymbol{k}$ candidates, where $\boldsymbol{k}$ is the set to **beam width**.
 #     4. **Loop**: Beam Search creates a new separate $\boldsymbol{k}$ sequences by appending each chosen token to the original start token. It then feeds all $\boldsymbol{k}$ sequences back into the model for another forward pass to predict the next token for each branch.
 #         1. The model outputs logits for these new positions, and Beam Search calculates the cumulative score for all possible next steps across all branches.
-#         2. It the prunes the possibilities, keeping only the top $\boldsymbol{k}$ sequences overall.
+#         2. It then prunes the possibilities, keeping only the top $\boldsymbol{k}$ sequences overall.
 #         3. This loop continues until a sequence generates an end-of-sequences token (<EOS>), or hits a predefined maximum length limit.
 #         4. Finally (after the loop), the **tokenizer** takes over to decode the winning sequence of integer IDs back into human-readable string.
 #
@@ -115,7 +115,10 @@ def BeamSearch(
             decoder_out = model.decode(
                 alive_seq, exp_encoder_out, exp_src_mask, tgt_no_peek_mask
             )
-            log_probs = model.generator(decoder_out[:, -1, :])
+            raw_logits = model.generator(decoder_out[:, -1, :])
+
+            # Apply softmax, since my generator doesn't do that
+            log_probs = torch.log_softmax(raw_logits, dim=-1)
 
             # Add new log_probs to cumulative scores
             scores = alive_scores + log_probs
@@ -153,7 +156,7 @@ def BeamSearch(
                 break
 
             alive_seq = torch.stack(next_seqs)
-            alive_scores = torch.tensor(next_scores, device=device).unsqueeze(1)
+            alive_scores = torch.stack(next_scores).unsqueeze(1)
 
         # If max_len reached before <EOS> is generated, add remaining active beams to finished
         if not finished_beams:

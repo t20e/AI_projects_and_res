@@ -27,7 +27,7 @@
 #   - The first linear expands the dimension from $d_{model} = 512$ to $d_{ff} = 2048$
 #     - By expanding we give the model more parameters to learn non-linear functions. This is also where the heavy pattern recognition happens.
 #   - The second linear brings it back down to $512$
-# - While the linear transformations are the same across different positions, they use different parameters from layer ot layer.
+# - While the linear transformations are the same across different positions, they use different parameters from layer to layer.
 # - **Regularization**:
 #   - Dropout: "We apply dropout [33] to the output of each sub-layer, before it is added to the sub-layer input and normalized." The base model has a dropout $= 0.1$
 

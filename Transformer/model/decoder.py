@@ -30,7 +30,6 @@
 #         - **tgt_no_peek_mask**: This mask hides both the &lt;PAD&gt; tokens like the src_padding_mask, but it also hides the future generated tokens as well, so that model can't cheat.
 
 # %%
-import torch.nn as nn
 import torch
 
 import torch.nn as nn

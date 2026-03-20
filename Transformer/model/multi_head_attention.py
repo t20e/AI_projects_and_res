@@ -109,7 +109,7 @@ class Multi_Head_Attention(nn.Module):
     def forward(self, q, k, v, mask=None):
         """
         Args:
-            q: The Quires sequence.
+            q: The Queries sequence.
             k: The Keys sequence.
             v: The values sequence.
             mask: Whether this is a Mask Multi-Head Attention (will contain a mask) or the regular Multi-Head Attention (will be None)
@@ -119,7 +119,7 @@ class Multi_Head_Attention(nn.Module):
         query_seq_len = q.size(1)
         keys_value_seq_len = k.size(1) # keys and value have the same length
 
-        # 1. Projection and reshape the quires, keys, and values and Reshape
+        # 1. Projection and reshape the Queries, keys, and values and Reshape
         q = self.w_q(q).view(batch_size, query_seq_len, self.H, self.d_k).transpose(1, 2)
         k = self.w_k(k).view(batch_size, keys_value_seq_len, self.H, self.d_k).transpose(1, 2)
         v = self.w_v(v).view(batch_size, keys_value_seq_len, self.H, self.d_k).transpose(1, 2)

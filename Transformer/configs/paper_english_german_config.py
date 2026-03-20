@@ -3,7 +3,7 @@ import os
 
 class Paper_english_german_config:
     """
-    🚨 This config is what the paper used to train its base model. It will likely take days to train on GPU, maybe more deepening on your hardware.
+    🚨 This config is what the paper used to train its base model. It will likely take days to train on GPU, maybe more depending on your hardware.
     ‼️ Note: I did not train on this config, so I can't verify if it will work or break!
     """
 
@@ -47,12 +47,15 @@ class Paper_english_german_config:
 
 
     # ================== Training ==================
+    num_workers = None # 🚨 NOTE: If using NVIDIA GPU Golden Rule: num_worker = 4 * num_GPU | On Mac Silicone even though I have a 32 core GPU, it is still only one GPU, best to num_workers = 0.
     warmup_steps = 4_000
+
+    # Either num_epochs or step_num_limit is reached first, and training stops.
     step_num_limit = 100_000  # Total number of steps to train the model.
-    num_epochs = 16
+    num_epochs = None  # Paper trained til step_num_limit: "We trained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the bottom line of table 3), step time was 1.0 seconds. The big models were trained for 300,000 steps (3.5 days)."
+
     continue_from_chpt:bool = False # Continue training the model from a check point
     checkpoint_name:str = "" # Checkpoint filename
-    num_workers = None # 🚨 NOTE: If using NVIDIA GPU Golden Rule: num_worker = 4 * num_GPU | On Mac Silicone even though I have a 32 core GPU, it is still only one GPU, best to num_workers = 0.
 
     # ================== Folder Structure ==================
     CFG_PATH = os.path.dirname(os.path.abspath(__file__))

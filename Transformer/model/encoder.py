@@ -22,7 +22,7 @@
 # **Encoder Stack**:
 # - Composed of a stack of $Nx=6$ identical encoding layers.
 # - The stacked encoding layers are identical in structure but do not share weights.
-# - The Encoder's **input** would look, e.g., "The brown rabbit ate the apple. &lt;PAD&gt; &lt;PAD&gt; &lt;PAD&gt;". We want to ensure that the &lt;PAD&gt; tokens have zero influence on the other tokens, to that order we use a **src_padding_mask** filter to hide the padding.
+# - The Encoder's **input** would look, e.g., "The brown rabbit ate the apple. &lt;PAD&gt; &lt;PAD&gt; &lt;PAD&gt;". We want to ensure that the &lt;PAD&gt; tokens have zero influence on the other tokens, to that end we use a **src_padding_mask** filter to hide the padding.
 #
 # 1. The Encoder starts at the top of the Nx stack of EncoderLayers. 
 #    1. It passes its input into its [Multi-Head Attention](./multi_head_attention.ipynb) sublayer. 

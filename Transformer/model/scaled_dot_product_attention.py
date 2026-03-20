@@ -32,7 +32,7 @@
 
 # %% [markdown]
 # 1. **MatMul**: Compute the dot products of the query with all keys of dimension $d_k$. As shown above: $Q K^T$. Determines which tokens are relevant, we take the dot-product between a token's $Q$ and the $K$ of all other tokens in the sequence,
-# 2. **Scale**: Divide the each result by $\sqrt{d_k}$, this prevents gradients from vanishing during softmax.  
+# 2. **Scale**: Divide each result by $\sqrt{d_k}$, this prevents gradients from vanishing during softmax.  
 # 3. **Mask (optional)**: Apply a mask $-∞$, this is only used for the **Masked Multi-Head Attention**, which ensures that future generated tokens from the Decoder's output, do not have any influence on the current token.
 # 4. **Softmax**: Then we normalize with a softmax to turn them into attention weights, these weights act as focus levels.
 # 5. **Weighted Sum/ last MatMul**: Multiply the weights by the Values. As shown above: $softmax(...)V$

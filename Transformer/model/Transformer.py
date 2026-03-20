@@ -18,6 +18,9 @@
 #
 # ![Transformer model](../showcase_images/from_paper/main.png)
 
+# %% [markdown]
+# - Tie Weights:💡 From paper: "In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]."
+
 # %%
 import torch.nn as nn
 
@@ -78,6 +81,9 @@ class Transformer(nn.Module):
         )
         self.generator = Generator(self.cfg.d_model, self.cfg.vocab_size)
 
+        # Tie weights after all other layers have been initialized
+        self.tie_weights()
+
     def encode(self, src, src_padding_mask):
         """
         Args:
@@ -106,13 +112,23 @@ class Transformer(nn.Module):
         # Run last Linear + Softmax layers
         return self.generator(decoder_out)
 
-    def initialize_weight(self):
+    def initialize_weights(self):
         """Initialize parameters with Xavier uniform"""
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
         print(f"\n\nModel initialized with {sum(p.numel() for p in self.parameters()):,} parameters!\n\n")
+
+    def tie_weights(self):
+        """
+        Tie Weights:💡 From paper: "In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]."
+           - The pre-softmax linear transformation is the Generator, which is the last softmax + linear in the model.
+           - So, we need to share weights between the src_embed (Source Embedding), tgt_embed (Target Embedding), and the generator!
+        """
+        shared_weights = self.src_embed[0].look_up_table.weight
+        self.tgt_embed[0].look_up_table.weight = shared_weights
+        self.generator.proj.weight = shared_weights
 
 
 # %%

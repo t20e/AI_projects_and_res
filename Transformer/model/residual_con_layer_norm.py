@@ -24,7 +24,7 @@
 #
 # Where:
 #
-# - $\text{Sublayer}(x)$ "is the function implemented by the sub-layer itself. To facilitate these residual connections, all sub-layers in the model, as well as the embedding layers, produce an outputs of dimension $d_{model} = 512$"
+# - $\text{Sublayer}(x)$ "is the function implemented by the sub-layer itself. To facilitate these residual connections, all sub-layers in the model, as well as the embedding layers, produce an output of dimension $d_{model} = 512$"
 
 # %% [markdown]
 # ## Layer Normalization
@@ -92,5 +92,7 @@ class ResidualConnection(nn.Module):
     
         # Note: Modern best practice is to apply LayerNorm before the sublayer (Pre-LN)   
         #   Example: return x + self.dropout(sublayer(self.norm(x)))
+
+# %%
 
 # %%

@@ -1,0 +1,15 @@
+name: transformer_env
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.14
+  - pytorch>=2.10
+  - numpy>=2.4.2
+  - matplotlib>=3.10.8
+  - pip
+  - pip:
+    - tokenizers>=0.22.2
+    - datasets>=4.7.0
+    - jupytext>=1.19.1

@@ -269,7 +269,7 @@ def lrate_growth_example():
 # lrate_growth_example()
 
 # %% [markdown]
-# ## Losss
+# ## Loss
 
 # %%
 if TYPE_CHECKING:
@@ -529,5 +529,7 @@ class TrainModel(nn.Module):
                 f"Time Elapsed: {elapsed_str} | "
                 f"ETA: {eta_str}"
             )
+
+# %%
 
 # %%
