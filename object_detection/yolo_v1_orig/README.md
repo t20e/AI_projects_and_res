@@ -1,7 +1,5 @@
 # YOLO V1 Implementation
 
-💡 [How to download this project](../../README.md#how-to-download-a-sub-project)
-
 ---
 
 Goal: Identify objects in images.
@@ -45,26 +43,27 @@ Goal: Identify objects in images.
 
 **Setup Project**  -> Create the environment, optionally download the **VOCDataset**, and structure the project.
 
+- Download this sub-project from Monorepo:
+    ```bash
+    git clone --filter=blob:none --sparse https://github.com/t20e/AI_projects_and_res.git
+    cd AI_projects_and_res
+    git sparse-checkout set object_detection/yolo_v1_orig
+    cd object_detection/yolo_v1_orig
+    conda env create -f configs/environment.yaml
+    conda activate yolov1_env
+    ```
+
+
 - 🚨 Note: The VOC Dataset is very large (~4GB). The main goal with this repo is to overfit to a number of images which is included, however, if you want to download and train on the entire dataset then add `--download_VOC` flag to `python setup.py`
 
     - If any errors occur when downloading the dataset; manually download it from [kaggle link](#Dataset_link) -> rename the zip file to: `VOC_dataset.zip` and add the zip file to `data/datasets` and run `python setup.py` again. VOC tree will look like this [VOCDataset tree](#Dataset_tree_link).
 
-1. Create a conda environment.
-    ```shell 
-        conda env create -f configs/environment.yaml
-    ```
-
-2. Activate the conda environment.
-    ```shell 
-        conda activate yolov1_env
-    ```
-
-3. Setup project.
+1. **Setup project.**
     ```shell
         python setup.py # --download_VOC
     ```
 
-4. Overfit test:
+2. **Overfit test:**
     - Note: If you don't have a GPU available, you can use your CPU for the overfitting (took ~10mins to train on my *M1 max CPU*).
     1. Make configurations edits in [config](configs/config_voc_dataset.yaml).
         - Set:
@@ -74,14 +73,16 @@ Goal: Identify objects in images.
             - USE_PRE_TRAIN_BACKBONE -> Set to True or False
                 - Whether to replace YOLOv1 CNN backbone with a pre-trained VGG16 backbone.
         - Note: When overfitting [config_loader.py](configs/config_loader.py) will adjusts some configurations.
-    2. Train model:
+    2. **Train model:**
         ```shell
             caffeinate -d python main.py
         ```
-        - After add the trained model's filename (which is saved to [checkpoints](model/checkpoints)) to LOAD_MODEL_FILENAME="" in [config](configs/config_voc_dataset.yaml).
+        - After add the trained model's filename (which is saved to [./model/checkpoints](./model/checkpoints)) to LOAD_MODEL_FILENAME="" in [configs/config_voc_dataset.yaml](configs/config_voc_dataset.yaml).
+          - Example:
+            - LOAD_MODEL_FILENAME: "Overfit_first_5_images_yolo_v1_dataset_VOCDataset_date_2026-03-21_EPOCHS_200_LOSS_1.2685_SIZE_448.pt"
 
-    3. Plot on those same images.
-        - Plot in [test-plot-model-predictions.ipynb](notebooks/test-plot-model-predictions.ipynb)
+    3. **Inference:**
+        - Plot in [inference.ipynb](inference.ipynb)
 
 ## Vocab
 

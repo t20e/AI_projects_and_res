@@ -4,6 +4,10 @@
 - Model will translate English to German.
 - Model weights are hosted on [huggingface.co](https://huggingface.co/t20e/Transformer/blob/main/README.md).
 
+- My Model's **BLEU** score: **26.01**
+  - The paper's base model achieved a BLEU score of **27.3 BLEU** on the same dataset.
+  - [More info of my model](20_percent_ds_model_info.md)
+
 Useful Resources:
 
 - [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/)
@@ -34,6 +38,7 @@ Useful Resources:
    - Must have Conda installed.
 
 ```bash
+# Download this sub-project from the Monorepo:
 git clone --filter=blob:none --sparse https://github.com/t20e/AI_projects_and_res.git
 cd AI_projects_and_res
 git sparse-checkout set Transformer

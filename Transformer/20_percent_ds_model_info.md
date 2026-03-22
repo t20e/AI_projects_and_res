@@ -14,7 +14,7 @@ Epoch [15/15] completed. Average Loss: 2.6815
 
 - Took **~17 hours** to train on a M1 Mac with 32 core GPU and 64GB RAM.
 
-- **Model's BLEU** score: **26.01**
+- **My Model's BLEU** score: **26.01**
   - The paper's base model achieved a BLEU score of **27.3 BLEU** on the same dataset.
 
 **Model's Config:**
@@ -31,4 +31,17 @@ max_indiv_seq_len = 128
 max_batch_seq_tokens = 8_000  
 vocab_size = 37_000  
 num_epochs = 15
+```
+
+- Translation example:
+
+```bash
+English you want to translate to German: The cat is fat
+# Because of not adding a period at the end of the sentence, the model got the sentence wrong.
+German Translation: Die Katze ist tödlich.
+
+English you want to translate to German: The cat is fat.
+# Adding a period at the end of the sentence, the model got the sentence right.
+
+German Translation: Die Katze ist Fett.
 ```
