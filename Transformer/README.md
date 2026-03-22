@@ -45,12 +45,18 @@ conda activate transformer_env
 ### Run Inference Translation With My Pre-Trained Model
 
 ```bash
+# Download my pre-trained model
+python load_my_model.py
 python inference.py
 ```
 
 ### How To Evaluate A Model
 
-- Run [evaluate.ipynb](./evaluate.ipynb)
+```bash
+# Download my pre-trained model
+python load_my_model.py
+python evaluate_model.py
+```
 
 ### How To Train A Model
 
