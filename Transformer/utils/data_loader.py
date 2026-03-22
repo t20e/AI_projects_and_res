@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from ..configs.english_german_config import English_german_config
     from tokenizers import Tokenizer
 
+
 def load_wmt14_en_de(save_path: str, perc_to_download: int = 1) -> DatasetDict:
     """
     Load the WMT14 English-German dataset
@@ -60,13 +61,12 @@ def get_pre_tokenized_ds(cfg, load_wmt14_en_de, tokenizer: Tokenizer):
         print(f"Loading existing pre-tokenized dataset from {tokenized_path}...")
         return load_from_disk(tokenized_path)
 
-
     print(f"Loading {cfg.perc_to_download}% of the dataset from disk...")
     raw_ds = load_wmt14_en_de(
         save_path=cfg.DATA_DIR, perc_to_download=cfg.perc_to_download
     )
     tokenized_ds = pre_tokenize_ds(cfg, raw_ds, tokenizer)
-    del raw_ds # we only need to tokenized ds.
+    del raw_ds  # we only need to tokenized ds.
     return tokenized_ds
 
 
@@ -161,4 +161,31 @@ def create_data_loaders(cfg: English_german_config, device, dataset, pad_token=0
         collate_fn=bound_collate,
         num_workers=cfg.num_workers,
         pin_memory=pin_memory,
+    )
+
+
+def download_my_pretrained_model(cfg: English_german_config):
+    """Model is hosted on huggingface.co"""
+    from huggingface_hub import snapshot_download
+
+    print(f"\n\n⭐️ Downloading my pretrained model from huggingface.co (~700MB)...\n")
+    repo_id = "t20e/Transformer"
+
+    # Download model weights
+    checkpoint_path = os.path.join(cfg.MODEL_DIR, "checkpoints")
+    print(f"Downloading the model weights to {checkpoint_path}/...")
+    snapshot_download(
+        repo_id=repo_id,
+        local_dir=checkpoint_path,
+        repo_type="model",
+        allow_patterns=["transformer_epoch_15_20_percent_ds.pt"],
+    )
+
+    # Download the tokenizer
+    tokenizer_path = os.path.join(cfg.MODEL_DIR, "saved_models", "tokenizer")
+    print(f"Downloading the model's tokenizer to {tokenizer_path}/...")
+    snapshot_download(
+        repo_id=repo_id,
+        local_dir=tokenizer_path,
+        allow_patterns=["wmt_14_shared_bpe_tokenizer_universal.json"],
     )

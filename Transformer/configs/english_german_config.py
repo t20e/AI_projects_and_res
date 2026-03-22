@@ -22,13 +22,13 @@ class English_german_config:
     # ================== Dataset ==================
     pos_seq_len = 5000  # Positional Encoding sequence length
     max_indiv_seq_len = 128 # Applies to individual sentences
-    max_batch_seq_tokens = 25_000 # Paper: 25_000. Applies sequence limit to an entire batch of sequences.
+    max_batch_seq_tokens = 8_000 # Paper: 25_000. Applies sequence limit to an entire batch of sequences.
     vocab_size = 37_000 # Limit to let tokenizer trainer know when to stop merging sub-words.
     tokenizer = "BPE"
     dataset_name = "WMT_2014_English_German"
 
     # Percentage of database to download
-    perc_to_download: int = 50
+    perc_to_download: int = 20
 
     total_sentence_pairs = None  # The total number of English-German sentence pairs, will be set later in code.
     special_tokens = {  # The integer representations
@@ -46,7 +46,7 @@ class English_german_config:
 
     # Either num_epochs or step_num_limit is reached first, and training stops.
     step_num_limit = 100_000  # Total number of steps to train the model.
-    num_epochs = 1 # Paper trained til step_num_limit: "We trained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the bottom line of table 3), step time was 1.0 seconds. The big models were trained for 300,000 steps (3.5 days)."
+    num_epochs = 15 # Paper trained til step_num_limit: "We trained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the bottom line of table 3), step time was 1.0 seconds. The big models were trained for 300,000 steps (3.5 days)."
 
 
     continue_from_chpt:bool = False # Continue training the model from a check point

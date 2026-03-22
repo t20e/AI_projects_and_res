@@ -15,4 +15,4 @@ dependencies:
     - datasets>=4.7.0
     - jupytext>=1.19.1
     - evaluate>=0.4.6
-    - SacreBLEU>=2.6.0
+    - sacrebleu>=2.6.0

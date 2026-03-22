@@ -13,7 +13,7 @@ from configs.english_german_config import English_german_config
 from model.bpe_tokenizer import build_and_train_BPE_tokenizer
 from model.Transformer import Transformer
 from model.beam_search import BeamSearch
-from utils.data_loader import load_wmt14_en_de, get_training_corpus
+from utils.data_loader import load_wmt14_en_de, get_training_corpus, download_my_pretrained_model
 
 
 def load_trained_model(cfg: English_german_config, device) -> Transformer:
@@ -63,13 +63,17 @@ def translate_sentence(english_input, model, tokenizer, cfg, device):
 
 
 if __name__ == "__main__":
-
     cfg = English_german_config()
     English_german_config.print()
 
-    # TODO: Update with better model
+    for folder in cfg.folders_to_make:
+        os.makedirs(folder, exist_ok=True)
+
+    # Download the model weights and tokenizer
+    download_my_pretrained_model(cfg)
+
     # NOTE: Config must be the same as the one used to train the this checkpoint!
-    cfg.checkpoint_name = ""
+    cfg.checkpoint_name = "transformer_epoch_15_20_percent_ds.pt"
 
     if torch.cuda.is_available():
         device = torch.device("cuda")

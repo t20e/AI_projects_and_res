@@ -1,19 +1,13 @@
 # Implement The Transformer Model From The OG Paper
 
 - Paper → [Attention Is All You Need](https://arxiv.org/pdf/1706.03762)
+- Model will translate English to German.
+- Model weights are hosted on [huggingface.co](https://huggingface.co/t20e/Transformer/blob/main/README.md).
 
 Useful Resources:
 
 - [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/)
 - [Transformers Step-by-Step Explained by ByteByteGo](https://www.youtube.com/watch?v=avjX3QrYkls)
-
----
-
-**TODO:**
-
-- [ ] Once I have a good model store it on huggingface with its tokenizer, and let user know to download it.
-
-- [ ] If I create the EasyJupyter library implement it here.
 
 ---
 
@@ -50,12 +44,13 @@ conda activate transformer_env;
 
 ### Run Inference Translation With My Pre-Trained Model
 
-1. Download model and tokenizer from huggingface here #TODO
-   - Config is already set for this pre-trained model!
-
 ```bash
 python inference.py
 ```
+
+### How To Evaluate A Model
+
+- Run [evaluate.ipynb](./evaluate.ipynb)
 
 ### How To Train A Model
 
