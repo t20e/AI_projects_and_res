@@ -34,12 +34,12 @@ Useful Resources:
    - Must have Conda installed.
 
 ```bash
-git clone --filter=blob:none --sparse https://github.com/t20e/AI_projects_and_res.git;
-cd AI_projects_and_res;
-git sparse-checkout set Transformer;
-cd Transformer;
-conda env create -f environment.yml;
-conda activate transformer_env;
+git clone --filter=blob:none --sparse https://github.com/t20e/AI_projects_and_res.git
+cd AI_projects_and_res
+git sparse-checkout set Transformer
+cd Transformer
+conda env create -f environment.yml
+conda activate transformer_env
 ```
 
 ### Run Inference Translation With My Pre-Trained Model
