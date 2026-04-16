@@ -1,6 +1,12 @@
 # Trained Model Info
 
-- Trained on only $\bold{20}$% of the WMT 2014 English-German dataset for 15 epochs.
+- Trained on only **20%** of the WMT 2014 English-German dataset for 15 epochs.
+
+- Took **~17 hours** to train on a M1 Mac with 32 core GPU and 64GB RAM.
+- It's not a SOTA model, but it's a good baseline.
+
+- **My Model's BLEU** score: **26.01**
+  - The paper's base model achieved a BLEU score of **27.3 BLEU** on the same dataset.
 
 Last step print:
 
@@ -10,12 +16,9 @@ Last step print:
 Epoch [15/15] completed. Average Loss: 2.6815
 ```
 
+![Training Loss](./showcase_images/training_loss_plot_20_percent_ds.png)
+
 - **Loss Image**: training_loss_plot_20_percent_ds.png
-
-- Took **~17 hours** to train on a M1 Mac with 32 core GPU and 64GB RAM.
-
-- **My Model's BLEU** score: **26.01**
-  - The paper's base model achieved a BLEU score of **27.3 BLEU** on the same dataset.
 
 **Model's Config:**
 
@@ -33,7 +36,7 @@ vocab_size = 37_000
 num_epochs = 15
 ```
 
-- Translation example:
+**Translation example:**
 
 ```bash
 English you want to translate to German: The cat is fat

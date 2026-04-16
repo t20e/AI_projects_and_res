@@ -1,20 +1,24 @@
 # AI_projects_and_res
 
-💡 *A repo that contains all my public AI projects and resources.*
+💡 *This repo that contains all my public AI projects and resources.*
+
+- *If you only want to download a sub-project, read & follow that sub-project's README.md*
 
 *Dev Note:* Every sub project must have its own .gitignore
 
-*If you only want to download a sub-project, read & follow that sub-project's README.md*
-
 ## 📌 Notable projects
+
+### LLM
+
+- 🌟 [How To Build An LLM (Llama 3)](./How_to_build_an_LLM/)
 
 ### NLP
 
-- 🌟 [Transformer model (Attention Is All You Need)](./Transformer)
+- 🌟 [Transformer Model (Attention Is All You Need)](./Transformer)
 
 ### Object detection
 
-- [yolo_v1_orig](./object_detection/yolo_v1_orig/)
+- [You Only Look Once (YOLO v1)](./object_detection/yolo_v1_orig/)
   - Implements the YOLO v1 paper.
   - [YOLOv1 Resources](Resouces/object_detection/YOLO_v1.res)
 

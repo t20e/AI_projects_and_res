@@ -1,11 +1,13 @@
 # Implement The Transformer Model From The OG Paper
 
 - Paper → [Attention Is All You Need](https://arxiv.org/pdf/1706.03762)
-- Model will translate English to German.
-- Model weights are hosted on [huggingface.co](https://huggingface.co/t20e/Transformer/blob/main/README.md).
+- My model:
+  - will translate English to German.
+  - Model weights are hosted on [huggingface.co](https://huggingface.co/t20e/Transformer/blob/main/README.md).
+  - It is trained on only 20% of the WMT 2014 English-German dataset for 15 epochs. Took ~17 hours to train on a M1 Mac with 32 core GPU and 64GB RAM. It's not a SOTA model, but it's a good baseline.
 
-- My Model's **BLEU** score: **26.01**
-  - The paper's base model achieved a BLEU score of **27.3 BLEU** on the same dataset.
+  - My Model's **BLEU** score: **26.01**
+    - The paper's base model achieved a BLEU score of **27.3 BLEU** on the same dataset.
   - [More info of my model](20_percent_ds_model_info.md)
 
 Useful Resources:
@@ -49,6 +51,8 @@ conda activate transformer_env
 
 ### Run Inference Translation With My Pre-Trained Model
 
+Make sure to read my model's [details](20_percent_ds_model_info.md).
+
 ```bash
 # Download my pre-trained model
 python load_my_model.py
@@ -56,6 +60,8 @@ python inference.py
 ```
 
 ### How To Evaluate A Model
+
+Make sure to read my model's [details](20_percent_ds_model_info.md).
 
 ```bash
 # Download my pre-trained model

@@ -1,12 +1,12 @@
-# Creating Conda Env
+# Creating A Conda Environment
 
-### Rules
+## Rules
 
 - Always try to install packages with conda first (conda install -c conda-forge <package_name>).
 
 - Only use pip inside a Conda environment to install packages that are not available on any Conda channel.
 
-### Creating AI Environment
+## Creating AI Environment
 
 ```shell
 # create the env
@@ -18,9 +18,11 @@ conda activate env_name;
 # Install a full suite of packages commonly used in pytorch ML.
 conda install -c conda-forge pytorch torchvision torchaudio;
 
+# ipykernel is needed for jupyter notebooks
+conda install conda-forge::ipykernel
 ```
 
-**Only install below if needed**
+## Install Below If Needed
 
 ```shell
 # Install jupyter lab

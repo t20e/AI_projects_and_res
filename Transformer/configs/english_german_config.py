@@ -41,7 +41,7 @@ class English_german_config:
 
 
     # ================== Training ==================
-    num_workers = 0 # 🚨 NOTE: For NVIDIA GPU Golden Rule: num_worker = 4 * num_GPU | On Mac Silicone even though I have a 32 core GPU, but it is still only one GPU, best to num_workers = 0.
+    num_workers = 0 # 🚨 NOTE: For NVIDIA GPUs the Golden Rule is: num_worker = 4 * num_GPU | On Mac Silicone even though I have a 32 core GPU, it is still only one GPU, best to set num_workers = 0.
     warmup_steps = None  # It Depends on size of loaded database, it is set later in code.  Paper: 4_000
 
     # Either num_epochs or step_num_limit is reached first, and training stops.

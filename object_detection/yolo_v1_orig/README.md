@@ -82,7 +82,7 @@ Goal: Identify objects in images.
             - LOAD_MODEL_FILENAME: "Overfit_first_5_images_yolo_v1_dataset_VOCDataset_date_2026-03-21_EPOCHS_200_LOSS_1.2685_SIZE_448.pt"
 
     3. **Inference:**
-        - Plot in [inference.ipynb](inference.ipynb)
+        - Use [inference.ipynb](inference.ipynb)
 
 ## Vocab
 
