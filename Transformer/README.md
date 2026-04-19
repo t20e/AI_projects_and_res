@@ -14,6 +14,7 @@ Useful Resources:
 
 - [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/)
 - [Transformers Step-by-Step Explained by ByteByteGo](https://www.youtube.com/watch?v=avjX3QrYkls)
+- [Hardvard The Annotated Transformer](https://nlp.seas.harvard.edu/2018/04/03/attention.html)
 
 ---
 
