@@ -17,6 +17,8 @@ from model.bpe_tokenizer import build_and_train_BPE_tokenizer
 from model.utils import load_checkpoint
 from inference import translate_sentence
 from utils.data_loader import load_wmt14_en_de, get_training_corpus
+from utils.safetensors_utils import load_trained_model
+
 
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -27,19 +29,19 @@ else:
 print(f"Using device: {device}")
 
 
-def load_chpt(cfg: English_german_config, device) -> Transformer:
-    model = Transformer(cfg)
-    chpt_path = os.path.join(cfg.MODEL_DIR, "checkpoints", cfg.checkpoint_name)
+# def load_chpt(cfg: English_german_config, device) -> Transformer:
+#     model = Transformer(cfg)
+#     chpt_path = os.path.join(cfg.MODEL_DIR, "checkpoints", cfg.checkpoint_name)
 
-    if not os.path.exists(chpt_path):
-        raise FileNotFoundError(f"Checkpoint not found at {chpt_path}")
+#     if not os.path.exists(chpt_path):
+#         raise FileNotFoundError(f"Checkpoint not found at {chpt_path}")
 
-    print(f"Loading checkpoint from {chpt_path}...")
-    checkpoint = torch.load(chpt_path, map_location=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.to(device)
-    model.eval()
-    return model
+#     print(f"Loading checkpoint from {chpt_path}...")
+#     checkpoint = torch.load(chpt_path, map_location=device)
+#     model.load_state_dict(checkpoint["model_state_dict"])
+#     model.to(device)
+#     model.eval()
+#     return model
 
 
 cfg = English_german_config()
@@ -51,7 +53,7 @@ tokenizer = build_and_train_BPE_tokenizer(
     cfg=cfg, load_wmt14_en_de=load_wmt14_en_de, get_training_corpus=get_training_corpus
 )
 
-model = load_chpt(cfg, device)
+model = load_trained_model(cfg, device)
 
 # Load the BLEU metric
 sacreblue = evaluate.load("sacrebleu")

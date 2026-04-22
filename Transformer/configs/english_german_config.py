@@ -9,6 +9,7 @@ class English_german_config:
 
     d_model = 512  # All sub-layers in the model, as well as the embedding layers, produce outputs of dimension d_model = 512
 
+    safetensors_filename = "transformer_epoch_15_20_percent_ds.safetensors"
 
 
     # ================== Encoder & Decoder ==================

@@ -14,24 +14,9 @@ from model.bpe_tokenizer import build_and_train_BPE_tokenizer
 from model.Transformer import Transformer
 from model.beam_search import BeamSearch
 from utils.data_loader import load_wmt14_en_de, get_training_corpus
+from utils.safetensors_utils import load_trained_model
 
 
-def load_trained_model(cfg: English_german_config, device) -> Transformer:
-    """Load a checkpoint, change config for which checkpoint"""
-
-    model = Transformer(cfg=cfg)
-
-    chpt_path = os.path.join(cfg.MODEL_DIR, "checkpoints", cfg.checkpoint_name)
-
-    if not os.path.exists(chpt_path):
-        raise FileNotFoundError(f"Checkpoint not found at {chpt_path}")
-
-    print(f"\nLoading weights from ({chpt_path})...")
-    checkpoint = torch.load(chpt_path, map_location=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.to(device)
-    model.eval()
-    return model
 
 
 def translate_sentence(english_input, model, tokenizer, cfg, device):
@@ -67,8 +52,6 @@ if __name__ == "__main__":
     English_german_config.print()
 
     # NOTE: Config must be the same as the one used to train the this checkpoint!
-    cfg.checkpoint_name = "transformer_epoch_15_20_percent_ds.pt"
-
     if torch.cuda.is_available():
         device = torch.device("cuda")
     elif torch.backends.mps.is_available():

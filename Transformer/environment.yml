@@ -3,6 +3,8 @@ channels:
   - pytorch
   - conda-forge
   - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
 dependencies:
   - python>=3.14
   - ipykernel>=7.2.0
@@ -10,6 +12,7 @@ dependencies:
   - numpy>=2.4.2
   - matplotlib>=3.10.8
   - pip>=26.0.1
+  - safetensors=0.7.0=py314h8d4a433_0
   - pip:
     - tokenizers>=0.22.2
     - datasets>=4.7.0

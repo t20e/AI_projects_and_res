@@ -5,7 +5,7 @@ from configs.english_german_config import English_german_config
 def download_my_pretrained_model(cfg: English_german_config):
     """Model is hosted on huggingface.co"""
 
-    print(f"\n\n⭐️ Downloading my pretrained model from huggingface.co (~700MB)...\n")
+    print(f"\n\n⭐️ Downloading my pretrained model from huggingface.co (~273MB)...\n")
     repo_id = "t20e/Transformer"
 
     # Download model weights
@@ -15,7 +15,7 @@ def download_my_pretrained_model(cfg: English_german_config):
         repo_id=repo_id,
         local_dir=checkpoint_path,
         repo_type="model",
-        allow_patterns=["transformer_epoch_15_20_percent_ds.pt"],
+        allow_patterns=["transformer_epoch_15_20_percent_ds.safetensors"],
     )
 
     # Download the tokenizer
