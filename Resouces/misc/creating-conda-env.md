@@ -16,20 +16,20 @@ conda create -n env_name python=3.14 -y;
 conda activate env_name;
 
 # Install a full suite of packages commonly used in pytorch ML.
-conda install -c conda-forge pytorch torchvision torchaudio;
+# conda install -c conda-forge pytorch torchvision torchaudio;
+# TODO i think pip install torch is recommended instead of conda ?
+pip install torch torchvision torchaudio numpy matplotlib pandas
 
 # ipykernel is needed for jupyter notebooks
 conda install conda-forge::ipykernel
 ```
+<!-- #TODO should I use pip if torch needs them?-->
 
 ## Install Below If Needed
 
 ```shell
 # Install jupyter lab
 conda install -c conda-forge jupyterlab;
-
-# Install pandas & matplotlib packages
-conda install -c conda-forge pandas matplotlib;
 
 # Install scikit-learn 
 conda install -c conda-forge scikit-learn;
