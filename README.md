@@ -10,7 +10,7 @@
 
 ### LLM
 
-- 🌟 [How To Build An LLM (Llama 3)](https://github.com/t20e/How_to_build_an_LLM)
+- 🌟 [How To Build An LLM (Llama 3)](https://github.com/t20e/Build_an_LLM)
 
 ### NLP
 
