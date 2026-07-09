@@ -1,6 +1,5 @@
 # Understanding Bounding Box Coordinate Formats
 
-
 💡 The two primary coordinate formats of bounding boxes (bbox) are: **mid-point** and **corner-points**.
 
 ### Vocab:

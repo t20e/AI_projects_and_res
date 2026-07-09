@@ -2,7 +2,7 @@
 
 ## Rules
 
-- Always try to install packages with conda first (conda install -c conda-forge <package_name>).
+- Always try to install packages with conda first (conda install -c conda-forge <package_name>), except PyTorch and its necessary packages use Pip instead.
 
 - Only use pip inside a Conda environment to install packages that are not available on any Conda channel.
 
@@ -14,18 +14,17 @@ conda create -n env_name python=3.14 -y;
 
 # Activate it
 conda activate env_name;
+```
 
+## Install Below If Needed
+
+```shell
 # Install a full suite of packages commonly used in pytorch ML.
-# conda install -c conda-forge pytorch torchvision torchaudio;
-# TODO i think pip install torch is recommended instead of conda ?
 pip install torch torchvision torchaudio numpy matplotlib pandas
 
 # ipykernel is needed for jupyter notebooks
 conda install conda-forge::ipykernel
 ```
-<!-- #TODO should I use pip if torch needs them?-->
-
-## Install Below If Needed
 
 ```shell
 # Install jupyter lab
